@@ -1,6 +1,6 @@
 # Architecture
 
-BestTimeToHike is a precomputed decision engine: approved public sources are ingested offline, compact snapshots are committed, TypeScript normalizes/scores/exports them, validation gates the result, and Next.js renders a static site. Cloudflare Pages serves only the contents of `out/`.
+BestTimeToHike is a precomputed decision engine: approved public sources are ingested by a Cloudflare Workflow and Container, compact snapshots are reviewed and committed, TypeScript normalizes/scores/exports them, validation gates the result, and Next.js renders a static site. Cloudflare Pages serves only the contents of `out/`; private ingest artifacts live in R2.
 
 There is no runtime database, ranking API, weather API, DEM call, or climate-source call. The finder is a client-side computation over the compact static search index and never changes the published hiking suitability score.
 

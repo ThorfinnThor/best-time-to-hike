@@ -1,0 +1,26 @@
+FROM node:22-bookworm-slim
+
+ENV DEBIAN_FRONTEND=noninteractive \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    BTH_DATA_PYTHON=/opt/bth-data-venv/bin/python3
+
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends ca-certificates python3 python3-pip python3-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && corepack enable \
+    && corepack prepare pnpm@11.22.0 --activate
+
+WORKDIR /app
+COPY package.json pnpm-lock.yaml requirements-data.txt ./
+RUN pnpm install --frozen-lockfile \
+    && python3 -m venv /opt/bth-data-venv \
+    && /opt/bth-data-venv/bin/python3 -m pip install --no-cache-dir -r requirements-data.txt
+
+COPY --chown=node:node . .
+USER node
+EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
+  CMD python3 -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health', timeout=3)"
+
+CMD ["python3", "cloudflare/data-pipeline/server.py"]

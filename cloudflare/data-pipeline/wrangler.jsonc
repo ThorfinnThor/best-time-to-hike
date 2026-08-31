@@ -1,0 +1,53 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "best-time-to-hike-data",
+  "main": "./worker.ts",
+  "compatibility_date": "2026-08-31",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "limits": {
+    "cpu_ms": 300000,
+    "subrequests": 10000
+  },
+  "secrets": {
+    "required": ["CDSAPI_KEY", "INGEST_ADMIN_TOKEN"]
+  },
+  "workflows": [
+    {
+      "binding": "INGEST_WORKFLOW",
+      "name": "best-time-to-hike-real-data",
+      "class_name": "RealDataIngestWorkflow"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "DATA_ARTIFACTS",
+      "bucket_name": "best-time-to-hike-data"
+    }
+  ],
+  "containers": [
+    {
+      "class_name": "DataPipelineContainer",
+      "image": "../../Dockerfile.data-pipeline",
+      "instance_type": "standard-2",
+      "max_instances": 1
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "DATA_PIPELINE",
+        "class_name": "DataPipelineContainer"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["DataPipelineContainer"]
+    }
+  ]
+}

@@ -6,6 +6,6 @@ The full gate is `pnpm verify`. A successful run also proves export determinism 
 
 `pnpm data:quality` writes the companion `generated/reports/data-quality.json`. Its configured warnings cover abrupt adjacent-month temperature changes, low completeness, identical cross-destination climate vectors, collapsed sampling coordinates, and strong elevation mismatch. Warnings are review signals and are never silently corrected.
 
-The data-ingest workflow is manual. It may write snapshots/public JSON only after every normalization, validation, test, and build step succeeds. If any source or gate fails, no commit and no deployment is created; the prior Git commit remains the last known good release.
+The data-ingest workflow is a manually triggered Cloudflare Workflow. A Cloudflare Container runs the source download and scientific processing, and the Workflow stores only checksum-verified artifacts in private R2. Publication remains blocked unless every source approval, normalization, validation, test, and build gate succeeds. If any source or gate fails, the prior Git commit remains the last known good release.
 
-Rollback is a normal Git revert followed by the Cloudflare deployment workflow. Rotate GitHub/Cloudflare/CDS/CDSE credentials in their respective secret stores, never in repository files.
+Rollback is a normal Git revert followed by the Cloudflare deployment workflow. Rotate GitHub credentials in GitHub and CDS/operator credentials in Cloudflare Worker Secrets, never in repository files.

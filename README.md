@@ -11,7 +11,9 @@ The public build currently ships a five-destination **fixture dataset** and ther
 - Static export to `out/`
 - Cloudflare Pages hosting
 - JSON-only public data, no runtime database or climate API
-- GitHub Actions for offline CI, rebuilds, guarded ingest, and Pages deployment
+- Cloudflare Workflows + Containers for guarded real-data ingestion
+- Cloudflare R2 for private versioned ingest artifacts
+- GitHub Actions for CI, deterministic rebuilds, and Pages deployment
 
 ## Local commands
 
@@ -31,24 +33,16 @@ pnpm verify
 
 `pnpm verify` rebuilds the committed snapshots, validates all public schemas and cross-file invariants, rejects runtime network/database drift, reproduces the export byte-for-byte, runs the scientific regression suite, creates the static site, type-checks it, and writes a local production-readiness report to `generated/reports/release-report.json`.
 
-## Real-data ingest
+## Real-data ingest on Cloudflare
 
-Stage the real terrain and sampling audit without altering committed/public data:
-
-```bash
-pnpm data:dem
-pnpm data:sampling
-pnpm data:era5 -- --plan
-```
-
-The ERA5 plan currently contains 35 unique point requests. To execute it, accept the dataset licence in the CDS portal, create a personal access token, then run:
+The production ingestion runtime does not depend on a developer machine or a GitHub Actions runner. A Cloudflare Workflow starts a Cloudflare Container, which runs the Python/NetCDF and TypeScript processing, verifies the output, and stores a versioned archive in R2.
 
 ```bash
-pnpm data:setup-python
-CDSAPI_KEY='your-personal-access-token' pnpm data:era5
+pnpm cloudflare:data:check
+pnpm cloudflare:data:deploy
 ```
 
-This writes only ignored staging artifacts. `--publish` is required to replace committed snapshots and remains blocked until the operator approval registry is complete. See `docs/data-sources.md`.
+`CDSAPI_KEY` and `INGEST_ADMIN_TOKEN` are encrypted Cloudflare Worker secrets. They are not repository, Pages-build, or local environment variables. The ERA5 plan currently contains 35 unique point requests. A run stages real DEM, sampling, and climate outputs by default; `publish: true` remains blocked until the source and release approval registries are complete. See `docs/cloudflare-data-pipeline.md`.
 
 ## Deployment
 
@@ -58,10 +52,10 @@ The static export deploys to Cloudflare Pages:
 pnpm deploy:cloudflare
 ```
 
-GitHub Actions expects `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. See `docs/going-live.md` before enabling production indexing or real data.
+GitHub Actions expects `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets only for the static Pages deployment. CDS credentials exist only on the data Worker. See `docs/going-live.md` before enabling production indexing or real data.
 
 ## Data boundary
 
-Public pages only read `public/data/hiking/**` during the build. `next build` never downloads source data. Heavy real ingest is an explicit operator workflow and must preserve the last-known-good committed snapshots on any failure.
+Public pages only read `public/data/hiking/**` during the build. `next build` never downloads source data. Heavy real ingest is an explicit Cloudflare Workflow and must preserve the last-known-good committed snapshots on any failure.
 
 The exact hourly processing implementation lives in `lib/hiking/climate.ts`. It keeps UTC instants canonical, groups by IANA local date without collapsing repeated DST hours, supports only explicit precipitation semantics, calculates daily hiking-window metrics, and derives monthly climatology without replacing missing observations with zero.

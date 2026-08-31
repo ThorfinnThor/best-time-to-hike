@@ -14,13 +14,14 @@ The implemented dataset is [`reanalysis-era5-land-timeseries`](https://cds.clima
 
 Required variables are 2 m temperature/dewpoint, 10 m u/v wind, total precipitation, snow cover and snow depth. The converter rejects unexpected units, discontinuous timestamps, material negative precipitation, non-fractional snow cover, missing variables, and any record count other than the expected 262,992 hours per point.
 
-CDS requires a personal account, one-time acceptance of the dataset terms, and a personal access token. The token is passed only as `CDSAPI_KEY`; it is never written to a request plan, snapshot, raw file, or public build.
+CDS requires a personal account, one-time acceptance of the dataset terms, and a personal access token. The token is stored only as the encrypted `CDSAPI_KEY` secret on the Cloudflare data Worker and is passed to the short-lived ingestion Container at startup. It is never written to a request plan, snapshot, raw file, R2 artifact, GitHub secret, or public build.
 
 ```bash
-pnpm data:setup-python
 pnpm data:era5 -- --plan
-CDSAPI_KEY='…' pnpm data:era5
+pnpm cloudflare:data:deploy
 ```
+
+The planning command is credential-free. Actual downloads run through the Cloudflare Workflow documented in `docs/cloudflare-data-pipeline.md`.
 
 The default real ingest writes ignored audit artifacts. Publishing committed snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. Run `pnpm preflight:sources` to verify that gate.
 
