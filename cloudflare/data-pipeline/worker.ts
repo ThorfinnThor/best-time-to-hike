@@ -25,8 +25,9 @@ type CdsDiagnosticResult = {
   credentialPresent: boolean;
   results: Record<string, {
     ok: boolean;
-    dataset: string;
+    dataset?: string;
     downloadBytes?: number;
+    nonMissingCount?: number;
     error?: string;
   }>;
 };

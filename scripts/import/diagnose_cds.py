@@ -117,32 +117,16 @@ def main() -> None:
                 if name != "era5_single_levels_timeseries":
                     files = extract_download(output, root / f"{name}_netcdf")
                     non_missing = 0
-                    resolved = {"latitude": None, "longitude": None}
-                    variable_name = None
-                    unit = None
                     for path in files:
                         with netCDF4.Dataset(path) as dataset:
-                            for coordinate in resolved:
-                                if coordinate in dataset.variables:
-                                    values = np.asarray(dataset.variables[coordinate][:]).reshape(-1)
-                                    if values.size:
-                                        resolved[coordinate] = float(values[0])
                             for candidate in ("t2m", "2m_temperature"):
                                 if candidate in dataset.variables:
                                     variable = dataset.variables[candidate]
-                                    variable_name = candidate
-                                    unit = str(getattr(variable, "units", ""))
                                     values = np.asarray(np.ma.filled(variable[:], np.nan), dtype=np.float64)
                                     non_missing += int(np.isfinite(values).sum())
                     results[name] = {
                         "ok": True,
-                        "dataset": specification["dataset"],
-                        "resolvedLocation": resolved,
-                        "temperature": {
-                            "variable": variable_name,
-                            "unit": unit,
-                            "nonMissingCount": non_missing,
-                        },
+                        "nonMissingCount": non_missing,
                     }
             except Exception as error:  # noqa: BLE001 - diagnostic boundary
                 results[name] = {
