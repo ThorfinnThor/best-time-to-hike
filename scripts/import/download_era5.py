@@ -185,7 +185,17 @@ def validate_series(times: list[datetime], arrays: dict[str, np.ndarray], start_
     precipitation = arrays["precipitationM"]
     finite_precipitation = precipitation[np.isfinite(precipitation)]
     if finite_precipitation.size and float(np.min(finite_precipitation)) < -1e-10:
-        raise RuntimeError("ERA5_PREC001 de-accumulated precipitation contains a material negative value")
+        negative_indexes = np.flatnonzero(np.isfinite(precipitation) & (precipitation < -1e-10))
+        sample_indexes = negative_indexes[:3]
+        samples = ", ".join(
+            f"{times[int(index)].isoformat()}={precipitation[int(index)]:.12g}m"
+            for index in sample_indexes
+        )
+        raise RuntimeError(
+            "ERA5_PREC001 de-accumulated precipitation contains material negative values: "
+            f"minimum={float(np.min(finite_precipitation)):.12g}m, "
+            f"count={negative_indexes.size}, samples=[{samples}]"
+        )
     precipitation[(precipitation < 0) & (precipitation >= -1e-10)] = 0
     snow_cover = arrays["snowCover"]
     finite_snow = snow_cover[np.isfinite(snow_cover)]
