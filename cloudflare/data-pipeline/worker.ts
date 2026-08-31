@@ -10,6 +10,7 @@ type IngestRequest = {
   publish: boolean;
   refresh: boolean;
   diagnostic?: "cds";
+  diagnosticLocations?: Array<{ name: string; lat: number; lon: number }>;
   reuseContainer?: boolean;
 };
 
@@ -33,6 +34,27 @@ type CdsDiagnosticResult = {
 const MAX_REQUEST_BYTES = 8 * 1024;
 const MAX_ARTIFACT_BYTES = 64 * 1024 * 1024;
 const DESTINATION_SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+function diagnosticLocations(payload: IngestRequest) {
+  const locations = payload.diagnosticLocations ?? [];
+  if (!Array.isArray(locations)
+    || locations.length > 20
+    || !locations.every((value) => value
+      && typeof value.name === "string"
+      && DESTINATION_SLUG.test(value.name)
+      && Number.isFinite(value.lat)
+      && value.lat >= -90
+      && value.lat <= 90
+      && Number.isFinite(value.lon)
+      && value.lon >= -180
+      && value.lon <= 180)) {
+    throw new Error("diagnosticLocations must contain at most 20 valid named coordinates");
+  }
+  if (new Set(locations.map((value) => value.name)).size !== locations.length) {
+    throw new Error("diagnosticLocations names must be unique");
+  }
+  return locations;
+}
 
 export class DataPipelineContainer extends Container<Env> {
   defaultPort = 8080;
@@ -161,12 +183,16 @@ export class RealDataIngestWorkflow extends WorkflowEntrypoint<Env, IngestReques
   override async run(event: WorkflowEvent<IngestRequest>, step: WorkflowStep) {
     if (event.payload.diagnostic === "cds") {
       return step.do<CdsDiagnosticResult>("compare CDS dataset authorization", { timeout: "10 minutes" }, async () => {
+        const locations = diagnosticLocations(event.payload);
         const container = this.env.DATA_PIPELINE.getByName("real-data-ingest");
         if (!event.payload.reuseContainer) await container.destroy();
         await container.startAndWaitForPorts({
           startOptions: {
             enableInternet: true,
-            envVars: { CDSAPI_KEY: this.env.CDSAPI_KEY.trim() },
+            envVars: {
+              CDSAPI_KEY: this.env.CDSAPI_KEY.trim(),
+              ...(locations.length ? { BTH_CDS_DIAGNOSTIC_LOCATIONS: JSON.stringify(locations) } : {}),
+            },
           },
         });
         const response = await container.fetch("http://container/diagnose-cds", { method: "POST" });

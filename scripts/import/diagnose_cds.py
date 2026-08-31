@@ -20,36 +20,65 @@ import numpy as np
 from download_era5 import extract_download
 
 
-DATASETS = {
-    "era5_single_levels_timeseries": {
-        "dataset": "reanalysis-era5-single-levels-timeseries",
-        "request": {
-            "variable": ["2m_temperature"],
-            "location": {"longitude": -16.5, "latitude": 28.3},
-            "date": ["2020-01-01/2020-01-01"],
-            "data_format": "csv",
-        },
-    },
-}
+DEFAULT_LOCATIONS = [
+    {"name": "madeira-32p7-m17p1", "lat": 32.7, "lon": -17.1},
+    {"name": "madeira-32p8-m16p9", "lat": 32.8, "lon": -16.9},
+    {"name": "madeira-32p8-m17p0", "lat": 32.8, "lon": -17.0},
+    {"name": "madeira-32p7-m17p0", "lat": 32.7, "lon": -17.0},
+    {"name": "madeira-32p8-m17p1", "lat": 32.8, "lon": -17.1},
+    {"name": "madeira-32p7-m16p9", "lat": 32.7, "lon": -16.9},
+]
 
-for latitude, longitude in (
-    (32.7, -17.1),
-    (32.8, -16.9),
-    (32.8, -17.0),
-    (32.7, -17.0),
-    (32.8, -17.1),
-    (32.7, -16.9),
-):
-    name = f"madeira_{str(latitude).replace('.', 'p')}_{str(longitude).replace('-', 'm').replace('.', 'p')}"
-    DATASETS[name] = {
-        "dataset": "reanalysis-era5-land-timeseries",
-        "request": {
-            "variable": ["2m_temperature"],
-            "location": {"longitude": longitude, "latitude": latitude},
-            "date": ["2020-01-01/2020-01-01"],
-            "data_format": "netcdf",
+
+def diagnostic_locations() -> list[dict[str, object]]:
+    raw = os.environ.get("BTH_CDS_DIAGNOSTIC_LOCATIONS", "")
+    if not raw:
+        return DEFAULT_LOCATIONS
+    values = json.loads(raw)
+    if not isinstance(values, list) or len(values) > 20:
+        raise RuntimeError("invalid CDS diagnostic locations")
+    names: set[str] = set()
+    for value in values:
+        if not isinstance(value, dict):
+            raise RuntimeError("invalid CDS diagnostic location")
+        name, latitude, longitude = value.get("name"), value.get("lat"), value.get("lon")
+        if (
+            not isinstance(name, str)
+            or not name.replace("-", "").isalnum()
+            or name in names
+            or not isinstance(latitude, (int, float))
+            or not -90 <= latitude <= 90
+            or not isinstance(longitude, (int, float))
+            or not -180 <= longitude <= 180
+        ):
+            raise RuntimeError("invalid CDS diagnostic location")
+        names.add(name)
+    return values
+
+
+def datasets() -> dict[str, dict[str, object]]:
+    values: dict[str, dict[str, object]] = {
+        "era5_single_levels_timeseries": {
+            "dataset": "reanalysis-era5-single-levels-timeseries",
+            "request": {
+                "variable": ["2m_temperature"],
+                "location": {"longitude": -16.5, "latitude": 28.3},
+                "date": ["2020-01-01/2020-01-01"],
+                "data_format": "csv",
+            },
         },
     }
+    for location in diagnostic_locations():
+        values[str(location["name"])] = {
+            "dataset": "reanalysis-era5-land-timeseries",
+            "request": {
+                "variable": ["2m_temperature"],
+                "location": {"longitude": location["lon"], "latitude": location["lat"]},
+                "date": ["2020-01-01/2020-01-01"],
+                "data_format": "netcdf",
+            },
+        }
+    return values
 
 
 def safe_error(error: Exception, token: str) -> str:
@@ -65,7 +94,7 @@ def main() -> None:
     results: dict[str, object] = {}
     with tempfile.TemporaryDirectory(prefix="bth-cds-diagnostic-") as directory:
         root = Path(directory)
-        for name, specification in DATASETS.items():
+        for name, specification in datasets().items():
             output = root / f"{name}.download"
             try:
                 client = cdsapi.Client(
@@ -85,7 +114,7 @@ def main() -> None:
                     "dataset": specification["dataset"],
                     "downloadBytes": output.stat().st_size,
                 }
-                if name.startswith("madeira_"):
+                if name != "era5_single_levels_timeseries":
                     files = extract_download(output, root / f"{name}_netcdf")
                     non_missing = 0
                     resolved = {"latitude": None, "longitude": None}
