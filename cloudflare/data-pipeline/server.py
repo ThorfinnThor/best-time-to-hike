@@ -178,6 +178,18 @@ def run_pipeline(payload: dict[str, Any]) -> tuple[int, str]:
     return build_artifact(artifact_inputs(publish))
 
 
+def diagnose_cds() -> dict[str, Any]:
+    environment = {**os.environ, "CDSAPI_KEY": (os.environ.get("CDSAPI_KEY") or "").strip()}
+    python = environment.get("BTH_DATA_PYTHON", "python3")
+    lines = run_command([python, "scripts/import/diagnose_cds.py"], environment)
+    if not lines:
+        raise RuntimeError("CDS diagnostic returned no result")
+    result = json.loads(lines[-1])
+    if not isinstance(result, dict):
+        raise RuntimeError("CDS diagnostic returned an invalid result")
+    return result
+
+
 class Handler(BaseHTTPRequestHandler):
     server_version = "BestTimeToHikeData/1"
 
@@ -197,6 +209,13 @@ class Handler(BaseHTTPRequestHandler):
             self.send_json(404, {"error": "not found"})
 
     def do_POST(self) -> None:
+        if self.path == "/diagnose-cds":
+            try:
+                self.send_json(200, diagnose_cds())
+            except Exception as error:  # noqa: BLE001 - diagnostic HTTP boundary
+                print(f"CDS diagnostic failed: {error}", flush=True)
+                self.send_json(500, {"error": str(error)[-16_384:]})
+            return
         if self.path != "/run":
             self.send_json(404, {"error": "not found"})
             return

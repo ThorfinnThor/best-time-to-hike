@@ -9,6 +9,7 @@ type IngestRequest = {
   destinations: string[];
   publish: boolean;
   refresh: boolean;
+  diagnostic?: "cds";
 };
 
 type ArtifactResult = {
@@ -16,6 +17,16 @@ type ArtifactResult = {
   artifactSha256: string;
   byteLength: number;
   published: boolean;
+};
+
+type CdsDiagnosticResult = {
+  credentialPresent: boolean;
+  results: Record<string, {
+    ok: boolean;
+    dataset: string;
+    downloadBytes?: number;
+    error?: string;
+  }>;
 };
 
 const MAX_REQUEST_BYTES = 8 * 1024;
@@ -147,6 +158,21 @@ async function writeRunState(bucket: R2Bucket, instanceId: string, value: unknow
 
 export class RealDataIngestWorkflow extends WorkflowEntrypoint<Env, IngestRequest> {
   override async run(event: WorkflowEvent<IngestRequest>, step: WorkflowStep) {
+    if (event.payload.diagnostic === "cds") {
+      return step.do<CdsDiagnosticResult>("compare CDS dataset authorization", { timeout: "10 minutes" }, async () => {
+        const container = this.env.DATA_PIPELINE.getByName("real-data-ingest");
+        await container.destroy();
+        await container.startAndWaitForPorts({
+          startOptions: {
+            enableInternet: true,
+            envVars: { CDSAPI_KEY: this.env.CDSAPI_KEY.trim() },
+          },
+        });
+        const response = await container.fetch("http://container/diagnose-cds", { method: "POST" });
+        if (!response.ok) throw new Error(await limitedError(response));
+        return response.json<CdsDiagnosticResult>();
+      });
+    }
     const artifactKey = `runs/${event.instanceId}/real-data.tar.gz`;
     await step.do("record start", async () => {
       await writeRunState(this.env.DATA_ARTIFACTS, event.instanceId, {
