@@ -1,0 +1,54 @@
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join, relative } from "node:path";
+import type { Comparison, DestinationConfig, PublicDestination, Ranking, SearchDestination } from "../../lib/data/types";
+import pageDefinitions from "../../data-config/seo/page-definitions.json";
+import { readJson, ROOT, sha256, writeJson } from "../lib/io";
+
+type Scored = {destination: DestinationConfig; dem: {area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]};
+const scored = readJson<Scored[]>("generated/intermediate/scored.json");
+const updatedAt = "2026-08-31T00:00:00.000Z";
+const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months}) => {
+  const bestMonths = [...months].sort((a,b) => b.overallScore-a.overallScore || a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
+  const alternatives = scored.filter((item)=>item.destination.slug!==destination.slug).sort((a,b)=>b.months.reduce((s,m)=>s+m.overallScore,0)-a.months.reduce((s,m)=>s+m.overallScore,0)).slice(0,3).map((item)=>item.destination.slug);
+  return {schemaVersion:1,algorithmVersion:"1.0.0",datasetStatus:"fixture",id:destination.id,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,countryName:destination.countryName,continent:destination.continent,region:destination.region,timezone:destination.timezone,tags:destination.tags,coordinates:destination.coordinates,elevationBands:destination.elevationBands,elevation:{minM:dem.area.minM,medianM:dem.area.medianM,maxM:dem.area.maxM},months,bestMonths,alternatives,provenance:{temperature:"synthetic fixture shaped like ERA5-Land",precipitation:"synthetic fixture shaped like ERA5-Land",snow:"synthetic fixture shaped like ERA5-Land",wind:"synthetic fixture shaped like ERA5-Land",elevation:"synthetic fixture shaped like Copernicus DEM GLO-30",daylight:"deterministic seed profile"},updatedAt};
+});
+
+for (const destination of publicDestinations) {
+  writeJson(`public/data/hiking/destinations/${destination.countryCode.toLowerCase()}/${destination.slug}.json`, destination);
+  writeJson(`public/data/hiking/monthly/${destination.slug}.json`, {slug:destination.slug,months:destination.months});
+}
+writeJson("public/data/hiking/destinations/index.json", publicDestinations.map(({id,slug,name,countryCode,countryName,continent,region,tags,bestMonths})=>({id,slug,name,countryCode,countryName,continent,region,tags,bestMonths})));
+
+const search: SearchDestination[] = publicDestinations.map((destination)=>({id:destination.id,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,continent:destination.continent,region:destination.region,tags:destination.tags,monthly:destination.months.map((month)=>({m:month.month,score:month.overallScore,temp:month.metrics.temperatureHikingMeanC,wet:month.metrics.wetDayProbability,snow:month.metrics.snowDayProbability,hot:month.metrics.hotDayProbability,wind:month.metrics.windHikingMeanKmh,daylight:month.metrics.daylightHoursMean,confidence:month.confidenceScore}))}));
+writeJson("public/data/hiking/search/destination-index.json", search);
+
+const rankingIds: string[] = [];
+for (let month = 1; month <= 12; month += 1) {
+  for (const theme of ["all","warm","snow-free","low-rain"] as const) {
+    const filtered = publicDestinations.filter((destination)=> {
+      const data = destination.months[month-1];
+      return theme === "all" || (theme === "warm" && data.metrics.temperatureHikingMeanC >= 15) || (theme === "snow-free" && data.metrics.snowDayProbability <= .08) || (theme === "low-rain" && data.metrics.wetDayProbability <= .2);
+    });
+    const sorted = filtered.sort((a,b)=>b.months[month-1].overallScore-a.months[month-1].overallScore || b.months[month-1].confidenceScore-a.months[month-1].confidenceScore || a.slug.localeCompare(b.slug));
+    const id = `${theme === "all" ? "global" : theme}-${month}`;
+    const ranking: Ranking = {schemaVersion:1,id,month,region:"global",theme,indexable:false,entries:sorted.map((destination,index)=>{const m=destination.months[month-1];return{rank:index+1,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,score:m.overallScore,confidence:m.confidenceScore,tempC:m.metrics.temperatureHikingMeanC,wet:m.metrics.wetDayProbability,snow:m.metrics.snowDayProbability}})};
+    writeJson(`public/data/hiking/rankings/${id}.json`, ranking);
+    rankingIds.push(id);
+  }
+}
+
+const comparisons: Comparison[] = pageDefinitions.comparisons.map((definition) => {
+  const [firstSlug, secondSlug] = definition.destinations;
+  const first = publicDestinations.find((destination)=>destination.slug===firstSlug)!;
+  const second = publicDestinations.find((destination)=>destination.slug===secondSlug)!;
+  return {schemaVersion:1,slug:definition.slug,destinations:[firstSlug,secondSlug],indexable:false,months:first.months.map((month,index)=>({month:month.month,firstScore:month.overallScore,secondScore:second.months[index].overallScore,winner:month.overallScore===second.months[index].overallScore?"tie":month.overallScore>second.months[index].overallScore?firstSlug:secondSlug}))};
+});
+comparisons.forEach((comparison)=>writeJson(`public/data/hiking/comparisons/${comparison.slug}.json`, comparison));
+writeJson("public/data/hiking/comparisons/comparison-index.json", comparisons.map(({slug,destinations,indexable})=>({slug,destinations,indexable})));
+
+function files(dir: string): string[] { return readdirSync(dir,{withFileTypes:true}).flatMap((entry)=>entry.isDirectory()?files(join(dir,entry.name)):[join(dir,entry.name)]); }
+const dataRoot = join(ROOT,"public/data/hiking");
+const existing = files(dataRoot).filter((path)=>!path.endsWith("manifest.json"));
+const fileChecksums = Object.fromEntries(existing.sort().map((path)=>[relative(dataRoot,path),sha256(readFileSync(path))]));
+writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:"1.0.0",datasetVersion:"fixture-2026-08-31.1",datasetStatus:"fixture",generatedAt:updatedAt,climateNormal:{startYear:1991,endYear:2020},sourceVersions:{climate:"synthetic-era5-compatible-fixture",elevation:"synthetic-dem-compatible-fixture"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
+console.log(`Exported ${publicDestinations.length} destinations, ${rankingIds.length} rankings and ${comparisons.length} comparisons.`);

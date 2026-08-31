@@ -1,0 +1,27 @@
+name: Rebuild static data
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["data-config/scoring/**", "data-config/seo/**", "scripts/normalize/**", "scripts/score/**", "scripts/export/**"]
+permissions:
+  contents: write
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.22.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm data:rebuild && pnpm test && pnpm typecheck && pnpm build
+        env: { BTH_EXECUTION_MODE: snapshot, NEXT_PUBLIC_DATA_STATUS: fixture }
+      - name: Commit only successful export
+        run: |
+          git config user.name "best-time-to-hike-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add public/data/hiking
+          git diff --cached --quiet || git commit -m "data: rebuild static hiking dataset"
+          git push

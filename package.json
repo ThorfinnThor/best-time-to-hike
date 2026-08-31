@@ -1,0 +1,48 @@
+{
+  "name": "best-time-to-hike",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "data:seed": "tsx scripts/import/build-seed.ts",
+    "data:dem": "tsx scripts/import/fetch-dem.ts",
+    "data:sampling": "tsx scripts/geo/build-sampling.ts",
+    "data:era5": "tsx scripts/import/fetch-era5.ts",
+    "data:images": "tsx scripts/import/fetch-images.ts",
+    "data:osm": "tsx scripts/import/fetch-osm.ts",
+    "data:normalize": "tsx scripts/normalize/normalize.ts",
+    "data:score": "tsx scripts/score/score.ts",
+    "data:export": "tsx scripts/export/export.ts",
+    "data:validate": "tsx scripts/validate/validate.ts",
+    "data:pipeline": "pnpm data:seed && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
+    "data:rebuild": "pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
+    "data:ingest": "pnpm data:dem && pnpm data:sampling && pnpm data:era5 && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
+    "verify": "pnpm data:rebuild && pnpm test && pnpm build && pnpm typecheck",
+    "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "next": "^15.5.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "wrangler": "^4.33.0"
+  }
+}

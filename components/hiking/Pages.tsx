@@ -1,0 +1,50 @@
+import Link from "next/link";
+import type { Comparison, Locale, PublicDestination, Ranking } from "@/lib/data/types";
+import { comparePath, destinationPath, monthName, rankingPath } from "@/lib/i18n/config";
+import { getDestination } from "@/lib/data/load";
+import { ScoreRing } from "./ScoreRing";
+import { ScoreChart } from "./ScoreChart";
+import { ComponentGrid } from "./ComponentGrid";
+
+const copy = {
+  en:{score:"Hiking score",confidence:"Data confidence",best:"Best months",elevation:"Elevation view",typical:"Typical historical conditions",why:"Why it scores this way",alternatives:"Similar alternatives",method:"Historical climatology, not a forecast",view:"View month",ranking:"Best hiking destinations",compare:"Side-by-side season guide"},
+  de:{score:"Wanderwert",confidence:"Datenvertrauen",best:"Beste Monate",elevation:"Höhenvergleich",typical:"Typische historische Bedingungen",why:"Warum dieser Wert",alternatives:"Ähnliche Alternativen",method:"Historische Klimatologie, keine Vorhersage",view:"Monat ansehen",ranking:"Beste Wanderziele",compare:"Saisonaler Direktvergleich"}
+};
+
+export function FixtureNotice({locale}:{locale:Locale}) { return <div className="fixture-notice"><strong>{locale === "de" ? "Demo-Datensatz" : "Demo dataset"}</strong><span>{locale === "de" ? "Diese Version nutzt klar gekennzeichnete synthetische Fixtures. Nicht für Reise- oder Sicherheitsentscheidungen." : "This build uses clearly labeled synthetic fixtures. Do not use it for travel or safety decisions."}</span></div>; }
+
+export function DestinationPage({destination,locale}:{destination:PublicDestination;locale:Locale}) {
+  const c=copy[locale]; const peak=Math.max(...destination.months.map((month)=>month.overallScore));
+  return <>
+    <FixtureNotice locale={locale}/>
+    <section className="destination-hero"><div className="eyebrow">{destination.countryName} · {destination.region}</div><div className="destination-title"><div><h1>{locale === "de" ? `Beste Wanderzeit für ${destination.name}` : `Best time to hike ${destination.name}`}</h1><p>{locale === "de" ? `Entdecke die angenehmsten Monate zwischen ${destination.elevation.minM} und ${destination.elevation.maxM} Metern.` : `See the most comfortable months across elevations from ${destination.elevation.minM} to ${destination.elevation.maxM} metres.`}</p></div><ScoreRing score={peak}/></div><div className="topo-lines" aria-hidden="true"/></section>
+    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {locale === "de" ? "Monate" : "months"}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section>
+    <section className="content-section split"><div><span className="eyebrow">{c.elevation}</span><h2>{locale === "de" ? "Ein Ziel, mehrere Klimazonen" : "One place, several climate zones"}</h2><p>{locale === "de" ? "Jeder Monatswert kombiniert die konfigurierten Höhenzonen. Öffne einen Monat für die einzelnen Bandwerte." : "Each monthly score combines the configured elevation bands. Open a month to inspect every band."}</p></div><div className="elevation-list">{destination.elevationBands.map((band)=><div key={band.id}><span>{band.id.replaceAll("-"," ")}</span><strong>{band.minM}–{band.maxM} m</strong><small>{Math.round(band.weight*100)}% {locale === "de" ? "Gewicht" : "weight"}</small></div>)}</div></section>
+    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.alternatives}</span><h2>{locale === "de" ? "Weiterdenken" : "Keep exploring"}</h2></div></div><div className="card-grid">{destination.alternatives.map((slug)=>{const item=getDestination(slug)!;return <Link className="destination-card" href={destinationPath(locale,slug)} key={slug}><span>{item.countryCode}</span><h3>{item.name}</h3><p>{item.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p><strong>{locale === "de" ? "Ziel ansehen →" : "Explore destination →"}</strong></Link>})}</div></section>
+    <MethodNote locale={locale}/>
+  </>;
+}
+
+export function MonthPage({destination,month,locale}:{destination:PublicDestination;month:number;locale:Locale}) {
+  const data=destination.months[month-1]; const c=copy[locale]; const previous=month===1?12:month-1; const next=month===12?1:month+1;
+  return <>
+    <FixtureNotice locale={locale}/>
+    <section className="month-hero"><div><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{locale === "de" ? `${destination.name} im ${monthName(month,locale)} erwandern` : `Hiking ${destination.name} in ${monthName(month,locale)}`}</h1><p>{c.method}</p></div><ScoreRing score={data.overallScore}/></section>
+    <section className="stats-strip"><div><span>{c.confidence}</span><strong>{data.confidenceScore}%</strong></div><div><span>{locale === "de" ? "Ø Temperatur" : "Mean temperature"}</span><strong>{data.metrics.temperatureHikingMeanC}°C</strong></div><div><span>{locale === "de" ? "Regentage" : "Wet days"}</span><strong>{Math.round(data.metrics.wetDayProbability*100)}%</strong></div><div><span>{locale === "de" ? "Tageslicht" : "Daylight"}</span><strong>{data.metrics.daylightHoursMean}h</strong></div></section>
+    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.why}</span><h2>{locale === "de" ? "Sechs Komponenten, ein transparenter Wert" : "Six components, one transparent score"}</h2></div></div><ComponentGrid components={data.components} locale={locale}/></section>
+    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.elevation}</span><h2>{locale === "de" ? "Vom Tal bis ins Gebirge" : "From low ground to the mountains"}</h2></div></div><div className="band-table">{data.bands.map((band)=><div key={band.bandId}><div><strong>{band.bandId.replaceAll("-"," ")}</strong><span>{band.targetElevationM} m</span></div><ScoreRing score={band.overallScore} size="small"/><div><span>{band.temperatureHikingMeanC}°C</span><small>{Math.round(band.snowDayProbability*100)}% {locale === "de" ? "Schneetage" : "snow days"}</small></div></div>)}</div></section>
+    <nav className="month-nav" aria-label={locale === "de" ? "Benachbarte Monate" : "Adjacent months"}><Link href={destinationPath(locale,destination.slug,previous)}>← {monthName(previous,locale)}</Link><Link href={destinationPath(locale,destination.slug)}>{destination.name}</Link><Link href={destinationPath(locale,destination.slug,next)}>{monthName(next,locale)} →</Link></nav>
+    <MethodNote locale={locale}/>
+  </>;
+}
+
+export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
+  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {ranking.theme}</span><h1>{title ?? `${copy[locale].ranking} ${locale === "de" ? "im" : "in"} ${monthName(ranking.month,locale)}`}</h1><p>{locale === "de" ? "Vorsortiert nach Wanderwert, dann Datenvertrauen. Affiliate-Provisionen spielen keine Rolle." : "Pre-ranked by hiking suitability, then confidence. Affiliate economics never influence the order."}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {entry.tempC}°C · {Math.round(entry.wet*100)}% {locale === "de" ? "Regentage" : "wet days"}</p></div><ScoreRing score={entry.score} size="small"/></Link>)}</section><MethodNote locale={locale}/></>;
+}
+
+export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {
+  const first=getDestination(comparison.destinations[0])!; const second=getDestination(comparison.destinations[1])!;
+  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{copy[locale].compare}</span><h1>{first.name} vs {second.name}</h1><p>{locale === "de" ? "Vergleiche den saisonalen Verlauf – nicht nur einen Jahresdurchschnitt." : "Compare the seasonal rhythm, not just an annual average."}</p></section><section className="comparison-grid"><div className="comparison-head"><strong>{first.name}</strong><span>{locale === "de" ? "Monat" : "Month"}</span><strong>{second.name}</strong></div>{comparison.months.map((item)=><div key={item.month}><span className={item.winner===first.slug?"winner":""}>{item.firstScore}</span><Link href={rankingPath(locale,item.month)}>{monthName(item.month,locale).slice(0,3)}</Link><span className={item.winner===second.slug?"winner":""}>{item.secondScore}</span></div>)}</section><div className="centered-links"><Link className="button secondary" href={destinationPath(locale,first.slug)}>{first.name}</Link><Link className="button secondary" href={destinationPath(locale,second.slug)}>{second.name}</Link></div><MethodNote locale={locale}/></>;
+}
+
+export function MethodNote({locale}:{locale:Locale}) { return <aside className="method-note"><span>ⓘ</span><div><strong>{locale === "de" ? "Vor dem Aufbruch prüfen" : "Check before you go"}</strong><p>{locale === "de" ? "BestTimeToHike beschreibt typische historische Bedingungen. Prüfe immer aktuelle Wetter-, Weg- und Sicherheitsinformationen." : "BestTimeToHike describes typical historical conditions. Always check current weather, trail, and safety information."}</p></div></aside>; }

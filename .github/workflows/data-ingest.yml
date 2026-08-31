@@ -1,0 +1,45 @@
+name: Guarded source ingest
+on:
+  workflow_dispatch:
+    inputs:
+      destinations: { description: "Comma-separated destination slugs", required: true, type: string }
+      refresh_dem: { description: "Refresh DEM", required: true, default: false, type: boolean }
+      refresh_climate: { description: "Refresh ERA5-Land", required: true, default: false, type: boolean }
+      refresh_images: { description: "Refresh approved images", required: true, default: false, type: boolean }
+      refresh_osm: { description: "Optional OSM analysis", required: true, default: false, type: boolean }
+permissions:
+  contents: write
+jobs:
+  ingest:
+    runs-on: ubuntu-latest
+    environment: data-ingest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.22.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - if: inputs.refresh_dem
+        run: pnpm data:dem && pnpm data:sampling
+      - if: inputs.refresh_climate
+        run: pnpm data:era5
+      - if: inputs.refresh_images
+        run: pnpm data:images
+      - if: inputs.refresh_osm
+        run: pnpm data:osm
+      - run: pnpm data:rebuild && pnpm test && pnpm typecheck && pnpm build
+      - name: Commit only after every gate passes
+        run: |
+          git config user.name "best-time-to-hike-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-snapshots public/data/hiking public/images/destinations
+          git diff --cached --quiet || git commit -m "data: guarded source ingest"
+          git push
+    env:
+      BTH_EXECUTION_MODE: ingest-staging
+      BTH_DESTINATIONS: ${{ inputs.destinations }}
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+      CDSE_S3_ACCESS_KEY: ${{ secrets.CDSE_S3_ACCESS_KEY }}
+      CDSE_S3_SECRET_KEY: ${{ secrets.CDSE_S3_SECRET_KEY }}
+      CDSE_S3_ENDPOINT: https://eodata.dataspace.copernicus.eu/

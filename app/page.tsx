@@ -1,0 +1,2 @@
+import Link from "next/link";
+export default function LanguagePage(){return <main className="language-page"><div className="topo-lines"/><span className="brand-mark">▲</span><h1>BestTimeToHike</h1><p>Historical climate, translated into clearer hiking seasons.</p><div><Link className="button" href="/en">Continue in English</Link><Link className="button secondary" href="/de">Weiter auf Deutsch</Link></div></main>}
