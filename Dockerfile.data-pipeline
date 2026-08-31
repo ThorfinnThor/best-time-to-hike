@@ -1,4 +1,4 @@
-FROM node:22-bookworm-slim
+FROM node:24-bookworm-slim
 
 ENV DEBIAN_FRONTEND=noninteractive \
     PYTHONDONTWRITEBYTECODE=1 \
@@ -13,8 +13,16 @@ RUN apt-get update \
 
 WORKDIR /app
 COPY package.json pnpm-lock.yaml requirements-data.txt ./
-RUN pnpm install --frozen-lockfile \
-    && python3 -m venv /opt/bth-data-venv \
+RUN install_status=0; \
+    pnpm install --frozen-lockfile || install_status=$?; \
+    if [ "$install_status" -ne 0 ]; then \
+      if ! { test "$install_status" -eq 134 \
+        && test -x node_modules/.bin/tsx \
+        && test -f node_modules/geotiff/package.json; }; then \
+        exit "$install_status"; \
+      fi; \
+    fi; \
+    python3 -m venv /opt/bth-data-venv \
     && /opt/bth-data-venv/bin/python3 -m pip install --no-cache-dir -r requirements-data.txt
 
 COPY --chown=node:node . .
