@@ -173,7 +173,7 @@ export class RealDataIngestWorkflow extends WorkflowEntrypoint<Env, IngestReques
           await container.startAndWaitForPorts({
             startOptions: {
               enableInternet: true,
-              envVars: { CDSAPI_KEY: this.env.CDSAPI_KEY },
+              envVars: { CDSAPI_KEY: this.env.CDSAPI_KEY.trim() },
             },
           });
           const response = await container.fetch("http://container/run", {

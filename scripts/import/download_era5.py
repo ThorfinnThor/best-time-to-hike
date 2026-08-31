@@ -207,7 +207,7 @@ def write_observations(path: Path, times: list[datetime], arrays: dict[str, np.n
 
 def main() -> None:
     args = parse_args()
-    token = os.environ.get("CDSAPI_KEY")
+    token = (os.environ.get("CDSAPI_KEY") or "").strip()
     if not token:
         raise RuntimeError("BLOCKED_OPERATOR_SECRET: CDSAPI_KEY is not set")
     request = {

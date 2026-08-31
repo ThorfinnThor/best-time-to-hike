@@ -123,7 +123,7 @@ def run_pipeline(payload: dict[str, Any]) -> tuple[int, str]:
         raise ValueError("invalid destination slug")
     publish = payload.get("publish") is True
     refresh = payload.get("refresh") is not False
-    token = os.environ.get("CDSAPI_KEY")
+    token = (os.environ.get("CDSAPI_KEY") or "").strip()
     if not token:
         raise RuntimeError("BLOCKED_OPERATOR_SECRET: CDSAPI_KEY is not configured in Cloudflare")
 
