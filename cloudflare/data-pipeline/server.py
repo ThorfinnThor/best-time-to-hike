@@ -135,18 +135,25 @@ def run_pipeline(payload: dict[str, Any]) -> tuple[int, str]:
     }
     publish_args = ["--publish"] if publish else []
     climate_args = [*publish_args, *(["--refresh"] if refresh else [])]
+    def npm_script(name: str, arguments: list[str] | None = None) -> list[str]:
+        values = arguments or []
+        return ["npm", "run", name, *(["--", *values] if values else [])]
+
     commands = [
-        ["pnpm", "data:dem", "--", *publish_args],
-        ["pnpm", "data:sampling", "--", *publish_args],
-        ["pnpm", "data:era5", "--", *climate_args],
+        npm_script("data:dem", publish_args),
+        npm_script("data:sampling", publish_args),
+        npm_script("data:era5", climate_args),
     ]
     if publish:
         commands.extend(
             [
-                ["pnpm", "data:rebuild"],
-                ["pnpm", "test"],
-                ["pnpm", "typecheck"],
-                ["pnpm", "build"],
+                npm_script("data:normalize"),
+                npm_script("data:score"),
+                npm_script("data:export"),
+                npm_script("data:validate"),
+                npm_script("test"),
+                npm_script("typecheck"),
+                npm_script("build"),
             ]
         )
 
