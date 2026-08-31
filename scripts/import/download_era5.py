@@ -80,6 +80,12 @@ def find_logical_name(variable_name: str) -> str | None:
     return None
 
 
+def canonicalize_values(logical_name: str, unit: str, values: np.ndarray) -> tuple[np.ndarray, str]:
+    if logical_name == "snowCover" and unit == "%":
+        return values / 100, "PERCENT_TO_FRACTION"
+    return values, "IDENTITY"
+
+
 def time_values(dataset: netCDF4.Dataset) -> list[datetime]:
     name = "valid_time" if "valid_time" in dataset.variables else "time"
     if name not in dataset.variables:
@@ -154,6 +160,7 @@ def read_netcdf_files(paths: list[Path]) -> tuple[list[datetime], dict[str, np.n
                 values = np.asarray(values, dtype=np.float64).squeeze()
                 if values.ndim != 1 or values.shape[0] != len(current_times):
                     raise RuntimeError(f"ERA5_FORMAT001 {logical_name} is not a one-dimensional hourly series")
+                values, normalization = canonicalize_values(logical_name, unit, values)
                 if reference_times is None:
                     reference_times = current_times
                 elif current_times != reference_times:
@@ -162,6 +169,8 @@ def read_netcdf_files(paths: list[Path]) -> tuple[list[datetime], dict[str, np.n
                 metadata[logical_name] = {
                     "netcdfVariable": variable_name,
                     "unit": str(getattr(variable, "units", "")),
+                    "canonicalUnit": "1" if logical_name == "snowCover" else str(getattr(variable, "units", "")),
+                    "normalization": normalization,
                     "longName": str(getattr(variable, "long_name", "")),
                 }
 

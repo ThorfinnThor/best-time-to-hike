@@ -16,6 +16,8 @@ The implemented dataset is [`reanalysis-era5-land-timeseries`](https://cds.clima
 
 The CDS NetCDF conversion can encode physically zero precipitation or snow depth as a tiny negative number. Following [ECMWF's guidance on negative accumulation artifacts](https://confluence.ecmwf.int/display/UDOC/Why+are+there+sometimes+small+negative+precipitation+accumulations+-+ecCodes+GRIB+FAQ), the importer clamps negative values no lower than `-0.000001 m` (`-0.001 mm`) to zero, rejects anything below that bound, and records the clamped counts plus the original minima in every raw-download metadata file.
 
+ERA5-Land time-series snow cover is delivered in percent. The importer records that source unit and an explicit `PERCENT_TO_FRACTION` normalization before enforcing the canonical `FRACTION_0_TO_1` contract used by the climate aggregation.
+
 Required variables are 2 m temperature/dewpoint, 10 m u/v wind, total precipitation, snow cover and snow depth. The converter rejects unexpected units, discontinuous timestamps, material negative precipitation, non-fractional snow cover, missing variables, and any record count other than the expected 262,992 hours per point.
 
 CDS requires a personal account, one-time acceptance of the dataset terms, and a personal access token. The token is stored only as the encrypted `CDSAPI_KEY` secret on the Cloudflare data Worker and is passed to the short-lived ingestion Container at startup. It is never written to a request plan, snapshot, raw file, R2 artifact, GitHub secret, or public build.
