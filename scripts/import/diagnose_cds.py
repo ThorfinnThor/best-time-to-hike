@@ -14,6 +14,10 @@ import tempfile
 from pathlib import Path
 
 import cdsapi
+import netCDF4
+import numpy as np
+
+from download_era5 import extract_download
 
 
 DATASETS = {
@@ -26,16 +30,26 @@ DATASETS = {
             "data_format": "csv",
         },
     },
-    "era5_land_timeseries": {
+}
+
+for latitude, longitude in (
+    (32.7, -17.1),
+    (32.8, -16.9),
+    (32.8, -17.0),
+    (32.7, -17.0),
+    (32.8, -17.1),
+    (32.7, -16.9),
+):
+    name = f"madeira_{str(latitude).replace('.', 'p')}_{str(longitude).replace('-', 'm').replace('.', 'p')}"
+    DATASETS[name] = {
         "dataset": "reanalysis-era5-land-timeseries",
         "request": {
             "variable": ["2m_temperature"],
-            "location": {"longitude": -16.5, "latitude": 28.3},
+            "location": {"longitude": longitude, "latitude": latitude},
             "date": ["2020-01-01/2020-01-01"],
             "data_format": "netcdf",
         },
-    },
-}
+    }
 
 
 def safe_error(error: Exception, token: str) -> str:
@@ -71,6 +85,36 @@ def main() -> None:
                     "dataset": specification["dataset"],
                     "downloadBytes": output.stat().st_size,
                 }
+                if name.startswith("madeira_"):
+                    files = extract_download(output, root / f"{name}_netcdf")
+                    non_missing = 0
+                    resolved = {"latitude": None, "longitude": None}
+                    variable_name = None
+                    unit = None
+                    for path in files:
+                        with netCDF4.Dataset(path) as dataset:
+                            for coordinate in resolved:
+                                if coordinate in dataset.variables:
+                                    values = np.asarray(dataset.variables[coordinate][:]).reshape(-1)
+                                    if values.size:
+                                        resolved[coordinate] = float(values[0])
+                            for candidate in ("t2m", "2m_temperature"):
+                                if candidate in dataset.variables:
+                                    variable = dataset.variables[candidate]
+                                    variable_name = candidate
+                                    unit = str(getattr(variable, "units", ""))
+                                    values = np.asarray(np.ma.filled(variable[:], np.nan), dtype=np.float64)
+                                    non_missing += int(np.isfinite(values).sum())
+                    results[name] = {
+                        "ok": True,
+                        "dataset": specification["dataset"],
+                        "resolvedLocation": resolved,
+                        "temperature": {
+                            "variable": variable_name,
+                            "unit": unit,
+                            "nonMissingCount": non_missing,
+                        },
+                    }
             except Exception as error:  # noqa: BLE001 - diagnostic boundary
                 results[name] = {
                     "ok": False,

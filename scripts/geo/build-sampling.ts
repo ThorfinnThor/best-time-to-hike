@@ -91,7 +91,11 @@ async function main() {
     const dem = readJson<any>(demPath);
     if (dem.fixture || dem.source !== "copernicus-dem-glo-30") throw new Error(`SAMPLING001 ${destination.id} does not reference a real Copernicus DEM snapshot`);
     console.log(`Evaluating ERA5 0.1° candidates for ${destination.name}...`);
-    const candidates = await candidatesForGeometry(feature.geometry, samplingConfig, demIngestion);
+    const allCandidates = await candidatesForGeometry(feature.geometry, samplingConfig, demIngestion);
+    const maskExclusions = overrides.filter((value:any) => value.destinationId === destination.id && value.type === "era5-land-mask-exclusion");
+    const candidates = allCandidates.filter((candidate) => !maskExclusions.some(
+      (exclusion:any) => exclusion.lat === candidate.lat && exclusion.lon === candidate.lon
+    ));
     if (!candidates.length) throw new Error(`SAMPLING001 no valid ERA5 grid candidates for ${destination.id}`);
     const bands = Object.fromEntries(destination.elevationBands.map((band) => {
       const targetElevationM = dem.bands[band.id]?.medianM;
@@ -126,6 +130,8 @@ async function main() {
       source: "era5-land-0.1-degree-grid-with-copernicus-dem-glo-30-elevation-matching",
       demSnapshotHash: sha256(readFileSync(demPath, "utf8")),
       candidateCount: candidates.length,
+      excludedCandidateCount: allCandidates.length - candidates.length,
+      era5LandMaskExclusions: maskExclusions,
       generatedAt: new Date().toISOString(),
       bands
     };

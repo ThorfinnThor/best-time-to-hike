@@ -8,6 +8,8 @@ The production climate normal is ERA5-Land 1991–2020. Elevation comes from Cop
 
 The default command writes ignored audit artifacts under `generated/intermediate/real-dem/`. `--publish` writes `data-snapshots/dem/` only after the DEM source and geometry/elevation gates contain an approver and timestamp.
 
+Sampling candidates are also checked against versioned ERA5-Land mask evidence. A coastal grid cell that has valid GLO-30 terrain in the configured DEM window but returns fully masked ERA5-Land variables is excluded through `data-config/geography/destination-overrides.json`; the exclusion records its probe date and Workflow evidence instead of silently treating missing climate values as zero.
+
 ## ERA5-Land hourly time-series
 
 The implemented dataset is [`reanalysis-era5-land-timeseries`](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries), DOI `10.24381/ee82e357`, queried for 1991-01-01 through 2020-12-31. Its current official product guide states that total precipitation is already de-accumulated to hourly values. The importer therefore uses `INCREMENTAL_PER_TIMESTEP_M` and never de-accumulates those values a second time.

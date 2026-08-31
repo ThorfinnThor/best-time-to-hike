@@ -10,6 +10,7 @@ type IngestRequest = {
   publish: boolean;
   refresh: boolean;
   diagnostic?: "cds";
+  reuseContainer?: boolean;
 };
 
 type ArtifactResult = {
@@ -161,7 +162,7 @@ export class RealDataIngestWorkflow extends WorkflowEntrypoint<Env, IngestReques
     if (event.payload.diagnostic === "cds") {
       return step.do<CdsDiagnosticResult>("compare CDS dataset authorization", { timeout: "10 minutes" }, async () => {
         const container = this.env.DATA_PIPELINE.getByName("real-data-ingest");
-        await container.destroy();
+        if (!event.payload.reuseContainer) await container.destroy();
         await container.startAndWaitForPorts({
           startOptions: {
             enableInternet: true,
@@ -193,9 +194,7 @@ export class RealDataIngestWorkflow extends WorkflowEntrypoint<Env, IngestReques
         },
         async () => {
           const container = this.env.DATA_PIPELINE.getByName("real-data-ingest");
-          // Start every ingestion from the currently deployed image instead of
-          // reusing a warm instance that may still run an older release.
-          await container.destroy();
+          if (!event.payload.reuseContainer) await container.destroy();
           await container.startAndWaitForPorts({
             startOptions: {
               enableInternet: true,
