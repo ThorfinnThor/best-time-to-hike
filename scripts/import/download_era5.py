@@ -205,6 +205,19 @@ def validate_series(
     finite_snow = snow_cover[np.isfinite(snow_cover)]
     if finite_snow.size and (float(np.min(finite_snow)) < 0 or float(np.max(finite_snow)) > 1.000001):
         raise RuntimeError("ERA5_SNOW001 snow cover is not represented as a 0..1 fraction")
+    snow_depth = arrays["snowDepthM"]
+    negative_snow_depth_indexes = np.flatnonzero(np.isfinite(snow_depth) & (snow_depth < 0))
+    if negative_snow_depth_indexes.size:
+        sample_indexes = negative_snow_depth_indexes[:3]
+        samples = ", ".join(
+            f"{times[int(index)].isoformat()}={snow_depth[int(index)]:.12g}m"
+            for index in sample_indexes
+        )
+        raise RuntimeError(
+            "ERA5_SNOW001 snow depth contains negative values: "
+            f"minimum={float(np.nanmin(snow_depth)):.12g}m, "
+            f"count={negative_snow_depth_indexes.size}, samples=[{samples}]"
+        )
     return {
         "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
         "artifactFloorM": PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M,
