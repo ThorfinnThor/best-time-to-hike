@@ -25,7 +25,7 @@ RUN install_status=0; \
     && /opt/bth-data-venv/bin/python3 -m pip install --no-cache-dir -r requirements-data.txt
 
 COPY --chown=node:node . .
-RUN chown -R node:node /app
+RUN chown node:node /app
 USER node
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 \
