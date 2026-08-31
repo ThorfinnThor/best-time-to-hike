@@ -42,7 +42,9 @@ ALIASES = {
     "windVMs": {"v10", "10m_v_component_of_wind"},
     "precipitationM": {"tp", "total_precipitation"},
     "snowCover": {"snowc", "snow_cover"},
-    "snowDepthM": {"sd", "snow_depth"},
+    # ERA5-Land's physical snow height is the ECMWF `sde` parameter (metres).
+    # `sd` is a different parameter expressed as metres of water equivalent.
+    "snowDepthM": {"sde", "snow_depth"},
 }
 EXPECTED_UNITS = {
     "temperatureK": {"k", "kelvin"},
