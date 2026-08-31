@@ -167,6 +167,9 @@ export class RealDataIngestWorkflow extends WorkflowEntrypoint<Env, IngestReques
         },
         async () => {
           const container = this.env.DATA_PIPELINE.getByName("real-data-ingest");
+          // Start every ingestion from the currently deployed image instead of
+          // reusing a warm instance that may still run an older release.
+          await container.destroy();
           await container.startAndWaitForPorts({
             startOptions: {
               enableInternet: true,
