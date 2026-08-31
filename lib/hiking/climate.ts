@@ -62,6 +62,7 @@ export interface MonthlyPointClimate {
   temperatureHikingP10C: number | null;
   temperatureHikingP90C: number | null;
   temperatureUtilitySamplesC: number[];
+  temperatureUtilityScore?: number;
   wetDayProbability: number | null;
   heavyRainDayProbability: number | null;
   precipitationMonthlyMeanMm: number | null;
@@ -272,7 +273,7 @@ export function aggregateMonthlyClimate(daily: DailyPointClimate[], month: numbe
     heavyRainDayProbability: ratio(heavyDays, precipDays.length),
     precipitationMonthlyMeanMm: mean(yearlyTotals),
     snowDayProbability: ratio(actualSnowDays, snowDays.length),
-    snowDepthMeanOnSnowDaysM: mean(snowDepths),
+    snowDepthMeanOnSnowDaysM: actualSnowDays === 0 && snowDays.length ? 0 : mean(snowDepths),
     windHikingMeanKmh: mean(winds),
     highWindHourProbability: ratio(winds.filter((value) => value >= aggregationConfig.highWindThresholdKmh).length, winds.length),
     severeWindHourProbability: ratio(winds.filter((value) => value >= aggregationConfig.severeWindThresholdKmh).length, winds.length),

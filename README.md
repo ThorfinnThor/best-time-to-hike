@@ -2,7 +2,7 @@
 
 A bilingual, static hiking-season decision engine. It turns versioned climate/elevation snapshots into transparent monthly scores, rankings, comparisons, and a client-side preference finder.
 
-This repository currently ships a five-destination **fixture dataset**. The UI is deliberately `noindex`, labels the data as synthetic, and must not be used for travel or safety decisions. Real ERA5-Land and Copernicus DEM ingestion remains blocked until source semantics, credentials, geometries, licensing, and Golden calibration are operator-approved.
+The public build currently ships a five-destination **fixture dataset** and therefore remains deliberately `noindex`. The repository now includes working real-data adapters: polygon-clipped Copernicus DEM GLO-30 ingestion from the unsigned public COG distribution, DEM-derived ERA5 grid sampling, and credential-driven ERA5-Land 1991–2020 hourly ingestion. Production publication remains gated until the source/geometry approvals are recorded and the ERA5 download has actually completed.
 
 ## Stack
 
@@ -30,6 +30,25 @@ pnpm verify
 ```
 
 `pnpm verify` rebuilds the committed snapshots, validates all public schemas and cross-file invariants, rejects runtime network/database drift, reproduces the export byte-for-byte, runs the scientific regression suite, creates the static site, type-checks it, and writes a local production-readiness report to `generated/reports/release-report.json`.
+
+## Real-data ingest
+
+Stage the real terrain and sampling audit without altering committed/public data:
+
+```bash
+pnpm data:dem
+pnpm data:sampling
+pnpm data:era5 -- --plan
+```
+
+The ERA5 plan currently contains 35 unique point requests. To execute it, accept the dataset licence in the CDS portal, create a personal access token, then run:
+
+```bash
+pnpm data:setup-python
+CDSAPI_KEY='your-personal-access-token' pnpm data:era5
+```
+
+This writes only ignored staging artifacts. `--publish` is required to replace committed snapshots and remains blocked until the operator approval registry is complete. See `docs/data-sources.md`.
 
 ## Deployment
 

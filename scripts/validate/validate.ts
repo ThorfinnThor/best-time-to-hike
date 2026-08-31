@@ -27,6 +27,7 @@ const scoringWeights=readJson<any>("data-config/scoring/weights.json");
 const confidence=readJson<any>("data-config/methodology/confidence-v1.json");
 const curves=readJson<any>("data-config/scoring/curves.json");
 const climateAggregation=readJson<any>("data-config/methodology/climate-aggregation-v1.json");
+const demIngestion=readJson<any>("data-config/methodology/dem-ingestion-v1.json");
 const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
 assert(Math.abs(Object.values(scoringWeights.overall).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Overall score weights do not sum to 1");
@@ -38,6 +39,8 @@ for(const [name,curve] of Object.entries(curves))if(Array.isArray(curve)){
 }
 assert(climateAggregation.normal.startYear===1991&&climateAggregation.normal.endYear===2020,"Scientific config climate normal mismatch");
 assert(climateAggregation.requiredHourlyVariables.length===7&&new Set(climateAggregation.requiredHourlyVariables).size===7,"Required hourly variable registry mismatch");
+assert(demIngestion.sourceProduct==="COP-DEM_GLO-30-DGED"&&demIngestion.verticalUnit==="m"&&demIngestion.horizontalCrs==="EPSG:4326","DEM ingestion source contract mismatch");
+assert(demIngestion.landSurfaceMinimumExclusiveM===0,"DEM land/ocean rule changed without a validation update");
 for(const [name,approval] of Object.entries(releaseApprovals.approvals) as Array<[string,any]>)if(approval.approved)assert(Boolean(approval.approvedBy)&&Number.isFinite(new Date(approval.approvedAt).getTime()),`${name}: approved release gate lacks approver/timestamp`);
 const slugs = new Set<string>();
 const ids = new Set<string>();

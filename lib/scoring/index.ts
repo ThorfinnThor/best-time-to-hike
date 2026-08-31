@@ -27,7 +27,10 @@ export function scoreComponents(metrics: BandClimateMonth): ComponentScores {
   if(!metrics.temperatureUtilitySamplesC.length||!metrics.temperatureUtilitySamplesC.every(Number.isFinite)||!required.every(Number.isFinite))throw new Error("SCORE001 missing or invalid required component metric");
   const probabilities=[metrics.wetDayProbability,metrics.heavyRainDayProbability,metrics.snowDayProbability,metrics.hotDayProbability,metrics.severeHotDayProbability,metrics.highWindHourProbability];
   if(!probabilities.every((value)=>value>=0&&value<=1)||metrics.snowDepthMeanOnSnowDaysM<0||metrics.windHikingMeanKmh<0||metrics.daylightHoursMean<0||metrics.daylightHoursMean>24)throw new Error("SCORE001 required component metric outside physical bounds");
-  const temperature = metrics.temperatureUtilitySamplesC.reduce((sum, value) => sum + interpolate(value, curves.temperature as Curve), 0) / metrics.temperatureUtilitySamplesC.length;
+  const temperature = Number.isFinite(metrics.temperatureUtilityScore)
+    ? metrics.temperatureUtilityScore!
+    : metrics.temperatureUtilitySamplesC.reduce((sum, value) => sum + interpolate(value, curves.temperature as Curve), 0) / metrics.temperatureUtilitySamplesC.length;
+  if (temperature < 0 || temperature > 100) throw new Error("SCORE001 temperature utility score outside 0..100");
   const precipitation = 0.75 * interpolate(metrics.wetDayProbability, curves.wetDay as Curve) + 0.25 * interpolate(metrics.heavyRainDayProbability, curves.heavyRain as Curve);
   const snowBase = interpolate(metrics.snowDayProbability, curves.snowDay as Curve);
   const snow = Math.max(0, snowBase - (metrics.snowDepthMeanOnSnowDaysM >= curves.snowDepthPenalty.thresholdM ? curves.snowDepthPenalty.points : 0));

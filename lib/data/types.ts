@@ -31,6 +31,8 @@ export interface ClimateMetrics {
   temperatureHikingP10C: number;
   temperatureHikingP90C: number;
   temperatureUtilitySamplesC: number[];
+  /** Exact mean utility score from all valid hiking-window hours when available. */
+  temperatureUtilityScore?: number;
   wetDayProbability: number;
   heavyRainDayProbability: number;
   precipitationMonthlyMeanMm: number;

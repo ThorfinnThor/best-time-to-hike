@@ -19,11 +19,13 @@ jobs:
         with: { version: 11.22.0 }
       - uses: actions/setup-node@v4
         with: { node-version: 22, cache: pnpm }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
       - run: pnpm install --frozen-lockfile
       - if: inputs.refresh_dem
-        run: pnpm data:dem && pnpm data:sampling
+        run: pnpm data:dem -- --publish && pnpm data:sampling -- --publish
       - if: inputs.refresh_climate
-        run: pnpm data:era5
+        run: pnpm data:setup-python && pnpm data:era5 -- --publish
       - if: inputs.refresh_images
         run: pnpm data:images
       - if: inputs.refresh_osm
@@ -40,6 +42,3 @@ jobs:
       BTH_EXECUTION_MODE: ingest-staging
       BTH_DESTINATIONS: ${{ inputs.destinations }}
       CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
-      CDSE_S3_ACCESS_KEY: ${{ secrets.CDSE_S3_ACCESS_KEY }}
-      CDSE_S3_SECRET_KEY: ${{ secrets.CDSE_S3_SECRET_KEY }}
-      CDSE_S3_ENDPOINT: https://eodata.dataspace.copernicus.eu/

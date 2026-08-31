@@ -1,11 +1,27 @@
 # Data sources and approval gates
 
-The planned production climate normal is ERA5-Land 1991–2020. Elevation is planned from Copernicus DEM GLO-30, with daylight calculated astronomically. Current source assumptions live in `data-config/methodology/source-semantics.json` and remain `approved: false`.
+The production climate normal is ERA5-Land 1991–2020. Elevation comes from Copernicus DEM GLO-30, and daylight is calculated astronomically. Source assumptions and the official evidence reviewed on 2026-08-31 are recorded in `data-config/methodology/source-semantics.json`; operator approval remains deliberately false.
 
-Before real ingest, an operator must verify current upstream variable metadata, units, precipitation accumulation/reset semantics, access terms, and attribution. The code supports only explicit incremental-per-timestep precipitation or accumulated values with explicit reset metadata. Unknown semantics block ingestion.
+## Copernicus DEM GLO-30
 
-Approval requires a named approver and valid approval timestamp in addition to `approved: true`. ERA5-Land ingest also verifies Kelvin temperature, metres of precipitation and snow depth, metres per second wind, and explicitly approved fractional snow cover. An accumulated series with no prior value or a missing predecessor remains missing; a negative derived increment without reset metadata is a hard failure.
+`pnpm data:dem` reads the 2021 COP-DEM_GLO-30-DGED Cloud-Optimized GeoTIFF distribution from the [AWS Registry of Open Data](https://registry.opendata.aws/copernicus-dem/). It requires no cloud credentials. Pixels are clipped to each versioned destination polygon; NoData is honored; source URLs, ETags, timestamps and byte sizes are recorded. For the current destination set, values at or below 0 m are excluded by the versioned land-surface rule because the distribution represents ocean cells as zero and none of the configured hiking areas contain valid below-sea-level terrain.
 
-The deployed fixture data is synthetic and only exercises contracts, scoring, rendering, and operational gates.
+The default command writes ignored audit artifacts under `generated/intermediate/real-dem/`. `--publish` writes `data-snapshots/dem/` only after the DEM source and geometry/elevation gates contain an approver and timestamp.
 
-Run `pnpm preflight:sources` before any real download. It is expected to fail with `BLOCKED_SOURCE_SEMANTICS` in this fixture repository; a passing exit is meaningful only after the operator has completed and recorded the metadata review.
+## ERA5-Land hourly time-series
+
+The implemented dataset is [`reanalysis-era5-land-timeseries`](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries), DOI `10.24381/ee82e357`, queried for 1991-01-01 through 2020-12-31. Its current official product guide states that total precipitation is already de-accumulated to hourly values. The importer therefore uses `INCREMENTAL_PER_TIMESTEP_M` and never de-accumulates those values a second time.
+
+Required variables are 2 m temperature/dewpoint, 10 m u/v wind, total precipitation, snow cover and snow depth. The converter rejects unexpected units, discontinuous timestamps, material negative precipitation, non-fractional snow cover, missing variables, and any record count other than the expected 262,992 hours per point.
+
+CDS requires a personal account, one-time acceptance of the dataset terms, and a personal access token. The token is passed only as `CDSAPI_KEY`; it is never written to a request plan, snapshot, raw file, or public build.
+
+```bash
+pnpm data:setup-python
+pnpm data:era5 -- --plan
+CDSAPI_KEY='…' pnpm data:era5
+```
+
+The default real ingest writes ignored audit artifacts. Publishing committed snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. Run `pnpm preflight:sources` to verify that gate.
+
+The live site remains a synthetic fixture until all five real climate snapshots are generated, reviewed, committed, rebuilt and redeployed. Removing the fixture label without completing that chain is prohibited.

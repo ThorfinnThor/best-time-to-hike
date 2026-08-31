@@ -1,3 +1,333 @@
+import { createReadStream, existsSync, readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { createGunzip } from "node:zlib";
+import { createInterface } from "node:readline";
+import type { BandClimateMonth, DestinationConfig } from "../../lib/data/types";
+import { aggregateBandPointMetrics } from "../../lib/hiking/band-climate";
+import { aggregateMonthlyClimate, aggregatePointClimate, type DailyPointClimate, type HourlyClimateObservation, type MonthlyPointClimate } from "../../lib/hiking/climate";
+import { greatCircleDistanceKm } from "../../lib/hiking/sampling";
+import { interpolate, overallScore, scoreComponents, type Curve } from "../../lib/scoring";
+import curves from "../../data-config/scoring/curves.json";
 import { requireApprovedSource } from "./source-preflight";
-requireApprovedSource("era5Land");
-throw new Error("BLOCKED_OPERATOR_SECRET: production ERA5 ingest requires approved CDS credentials and source metadata review.");
+import { readJson, round, sha256, writeJson } from "../lib/io";
+
+interface SamplingPoint {
+  id: string;
+  lat: number;
+  lon: number;
+  gridElevationM: number;
+  targetElevationM: number;
+  elevationMismatchM: number;
+  sampleWeight: number;
+}
+
+interface PointResult {
+  point: SamplingPoint;
+  daily: DailyPointClimate[];
+  monthly: MonthlyPointClimate[];
+}
+
+interface RequestPlanEntry {
+  key: string;
+  lat: number;
+  lon: number;
+  consumers: Array<{destinationId:string;bandId:string;samplePointId:string}>;
+  request: Record<string, unknown>;
+}
+
+const VARIABLES = [
+  "2m_temperature",
+  "2m_dewpoint_temperature",
+  "10m_u_component_of_wind",
+  "10m_v_component_of_wind",
+  "total_precipitation",
+  "snow_cover",
+  "snow_depth"
+];
+
+function coordinateKey(lat: number, lon: number) {
+  const format = (value:number) => value.toFixed(1).replace("-", "m").replace(".", "p");
+  return `${format(lat)}_${format(lon)}`;
+}
+
+function pythonExecutable() {
+  if (process.env.BTH_DATA_PYTHON) return process.env.BTH_DATA_PYTHON;
+  const local = "generated/intermediate/data-venv/bin/python3";
+  return existsSync(local) ? local : "python3";
+}
+
+function runPython(args: string[]) {
+  return new Promise<void>((resolve, reject) => {
+    const child = spawn(pythonExecutable(), ["scripts/import/download_era5.py", ...args], { stdio: "inherit", env: process.env });
+    child.once("error", reject);
+    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`ERA5_DOWNLOAD001 Python importer exited with ${code}`)));
+  });
+}
+
+async function readHourlyObservations(path: string) {
+  const observations: HourlyClimateObservation[] = [];
+  const lines = createInterface({ input: createReadStream(path).pipe(createGunzip()), crlfDelay: Infinity });
+  for await (const line of lines) {
+    if (line.trim()) observations.push(JSON.parse(line) as HourlyClimateObservation);
+  }
+  return observations;
+}
+
+function addTemperatureUtilityScore(metrics: MonthlyPointClimate) {
+  if (!metrics.temperatureUtilitySamplesC.length) throw new Error("ERA5_AGG001 no valid hiking-window temperatures");
+  metrics.temperatureUtilityScore = metrics.temperatureUtilitySamplesC.reduce(
+    (sum, value) => sum + interpolate(value, curves.temperature as Curve), 0
+  ) / metrics.temperatureUtilitySamplesC.length;
+  return metrics;
+}
+
+function completeYearPointMetrics(metrics: MonthlyPointClimate) {
+  const required = [
+    metrics.temperatureHikingMeanC, metrics.temperatureHikingP10C, metrics.temperatureHikingP90C,
+    metrics.wetDayProbability, metrics.heavyRainDayProbability, metrics.precipitationMonthlyMeanMm,
+    metrics.snowDayProbability, metrics.snowDepthMeanOnSnowDaysM, metrics.windHikingMeanKmh,
+    metrics.highWindHourProbability, metrics.severeWindHourProbability, metrics.hotDayProbability,
+    metrics.severeHotDayProbability, metrics.relativeHumidityHikingMeanPct
+  ];
+  return metrics.temperatureUtilitySamplesC.length > 0 && required.every((value) => value !== null && Number.isFinite(value));
+}
+
+function maximumSeparation(points: Array<{lat:number;lon:number}>) {
+  return Math.max(0, ...points.flatMap((point, index) => points.slice(index + 1).map((other) => greatCircleDistanceKm(
+    {...point,gridElevationM:0}, {...other,gridElevationM:0}
+  ))));
+}
+
+function polygonDiameterKm(geometry: any) {
+  const values = (geometry.type === "Polygon" ? geometry.coordinates.flat(1) : geometry.coordinates.flat(2)) as Array<[number,number]>;
+  return maximumSeparation(values.map(([lon, lat]) => ({ lat, lon })));
+}
+
+function populationStandardDeviation(values: number[]) {
+  if (!values.length) return 0;
+  const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
+  return Math.sqrt(values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length);
+}
+
+function roundClimateMetrics(metrics: ReturnType<typeof aggregateBandPointMetrics>) {
+  const probabilityKeys = new Set([
+    "wetDayProbability","heavyRainDayProbability","snowDayProbability","highWindHourProbability",
+    "severeWindHourProbability","hotDayProbability","severeHotDayProbability","dataCompleteness"
+  ]);
+  return Object.fromEntries(Object.entries(metrics).map(([key, value]) => {
+    if (key === "temperatureUtilitySamplesC") return [key, (value as number[]).map((item) => round(item, 1))];
+    if (typeof value !== "number") return [key, value];
+    return [key, round(value, probabilityKeys.has(key) || key === "temperatureUtilityScore" ? 4 : 1)];
+  })) as unknown as ReturnType<typeof aggregateBandPointMetrics>;
+}
+
+function buildPlan(destinations: DestinationConfig[], staging: boolean): RequestPlanEntry[] {
+  const entries = new Map<string, RequestPlanEntry>();
+  for (const destination of destinations) {
+    const samplingPath = staging
+      ? `generated/intermediate/real-sampling/${destination.slug}.json`
+      : `data-snapshots/sampling/${destination.slug}.json`;
+    const sampling = readJson<any>(samplingPath);
+    if (sampling.fixture) throw new Error(`ERA5_REQUEST001 ${destination.id} still uses fixture sampling`);
+    for (const [bandId, band] of Object.entries(sampling.bands) as Array<[string,any]>) {
+      for (const point of band.points as SamplingPoint[]) {
+        const key = coordinateKey(point.lat, point.lon);
+        const existing = entries.get(key) ?? {
+          key, lat: point.lat, lon: point.lon, consumers: [],
+          request: {
+            dataset: "reanalysis-era5-land-timeseries",
+            variable: VARIABLES,
+            location: {longitude:point.lon,latitude:point.lat},
+            date: ["1991-01-01/2020-12-31"],
+            data_format: "netcdf"
+          }
+        };
+        existing.consumers.push({destinationId:destination.id,bandId,samplePointId:point.id});
+        entries.set(key, existing);
+      }
+    }
+  }
+  return [...entries.values()].sort((first, second) => first.key.localeCompare(second.key));
+}
+
+async function main() {
+  const argumentsSet = new Set(process.argv.slice(2));
+  const planOnly = argumentsSet.has("--plan");
+  const publish = argumentsSet.has("--publish");
+  const refresh = argumentsSet.has("--refresh");
+  const destinationArgument = [...argumentsSet].find((value) => value.startsWith("--destination="));
+  const selectedSlug = destinationArgument?.slice("--destination=".length);
+  const requestedSlugs = new Set((selectedSlug ? [selectedSlug] : (process.env.BTH_DESTINATIONS ?? "").split(","))
+    .map((value) => value.trim()).filter(Boolean));
+  if (publish) requireApprovedSource("era5Land");
+  const destinations = readJson<DestinationConfig[]>("data-config/sources/destinations.json")
+    .filter((destination) => destination.active && (!requestedSlugs.size || requestedSlugs.has(destination.slug)));
+  if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
+  const plan = buildPlan(destinations, !publish);
+  writeJson("generated/intermediate/era5-request-plan.json", {
+    schemaVersion: 1,
+    source: "reanalysis-era5-land-timeseries",
+    climateNormal: {startYear:1991,endYear:2020},
+    uniquePointCount: plan.length,
+    entries: plan
+  });
+  if (planOnly) {
+    console.log(`Planned ${plan.length} unique ERA5-Land point requests → generated/intermediate/era5-request-plan.json`);
+    return;
+  }
+  if (!process.env.CDSAPI_KEY) {
+    throw new Error("BLOCKED_OPERATOR_SECRET: set CDSAPI_KEY after accepting the ERA5-Land time-series dataset terms in the CDS portal");
+  }
+
+  const geometry = readJson<any>("data-config/geography/destination-areas.geojson");
+  for (const destination of destinations) {
+    const samplingPath = publish
+      ? `data-snapshots/sampling/${destination.slug}.json`
+      : `generated/intermediate/real-sampling/${destination.slug}.json`;
+    const demPath = publish
+      ? `data-snapshots/dem/${destination.slug}.json`
+      : `generated/intermediate/real-dem/${destination.slug}.json`;
+    const sampling = readJson<any>(samplingPath);
+    const dem = readJson<any>(demPath);
+    const pointResults = new Map<string, PointResult>();
+    const pointMetadata: any[] = [];
+    const consumersByCoordinate = new Map<string, SamplingPoint[]>();
+    for (const band of Object.values(sampling.bands) as any[]) for (const point of band.points as SamplingPoint[]) {
+      const key = coordinateKey(point.lat, point.lon);
+      consumersByCoordinate.set(key, [...(consumersByCoordinate.get(key) ?? []), point]);
+    }
+    for (const [key, consumers] of consumersByCoordinate) {
+      const point = consumers[0];
+      const rawPath = `generated/intermediate/era5-raw/${key}.ndjson.gz`;
+      const metadataPath = `generated/intermediate/era5-raw/${key}.meta.json`;
+      if (refresh || !existsSync(rawPath) || !existsSync(metadataPath)) {
+        console.log(`Downloading ERA5-Land 1991–2020 for ${destination.name} at ${point.lat.toFixed(1)}, ${point.lon.toFixed(1)}...`);
+        await runPython([
+          "--lat", String(point.lat), "--lon", String(point.lon),
+          "--start-date", "1991-01-01", "--end-date", "2020-12-31",
+          "--output", rawPath, "--metadata", metadataPath
+        ]);
+      }
+      const metadata = readJson<any>(metadataPath);
+      const expectedRequest = {
+        variable: VARIABLES,
+        location: {longitude:point.lon,latitude:point.lat},
+        date: ["1991-01-01/2020-12-31"],
+        data_format: "netcdf"
+      };
+      if (metadata.observationCount !== 262_992
+        || metadata.precipitationSemantics !== "INCREMENTAL_PER_TIMESTEP_M"
+        || metadata.snowCoverSemantics !== "FRACTION_0_TO_1"
+        || JSON.stringify(metadata.request) !== JSON.stringify(expectedRequest)) {
+        throw new Error(`ERA5_REQUEST001 invalid source response metadata for ${key}`);
+      }
+      pointMetadata.push(metadata);
+      const observations = await readHourlyObservations(rawPath);
+      if (observations.length !== metadata.observationCount) throw new Error(`ERA5_REQUEST001 raw observation count mismatch for ${key}`);
+      for (const consumer of consumers) {
+        const result = aggregatePointClimate(observations, {
+          timezone: destination.timezone,
+          lat: consumer.lat,
+          lon: consumer.lon,
+          gridElevationM: consumer.gridElevationM,
+          targetElevationM: consumer.targetElevationM,
+          precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
+          startYear: 1991,
+          endYear: 2020
+        });
+        result.monthly.forEach(addTemperatureUtilityScore);
+        pointResults.set(consumer.id, { point: consumer, daily: result.daily, monthly: result.monthly });
+      }
+    }
+
+    const destinationGeometry = geometry.features.find((feature:any) => feature.properties.destinationId === destination.id)?.geometry;
+    if (!destinationGeometry) throw new Error(`ERA5_AGG001 missing destination geometry for ${destination.id}`);
+    const diameterKm = polygonDiameterKm(destinationGeometry);
+    const bands = Object.fromEntries(destination.elevationBands.map((bandConfig) => {
+      const samplingBand = sampling.bands[bandConfig.id];
+      const results = (samplingBand.points as SamplingPoint[]).map((point) => pointResults.get(point.id)!);
+      const months: BandClimateMonth[] = Array.from({length:12}, (_, monthIndex) => {
+        const weightedPoints = results.map((result) => ({sampleWeight:result.point.sampleWeight,metrics:result.monthly[monthIndex]}));
+        const metrics = roundClimateMetrics(aggregateBandPointMetrics(weightedPoints));
+        const yearlyScores: number[] = [];
+        for (let year = 1991; year <= 2020; year += 1) {
+          const yearlyPointMetrics = results.map((result) => aggregateMonthlyClimate(result.daily, monthIndex + 1, {
+            timezone: destination.timezone,
+            lat: result.point.lat,
+            lon: result.point.lon,
+            startYear: year,
+            endYear: year
+          }));
+          if (yearlyPointMetrics.some((metrics) => !completeYearPointMetrics(metrics))) continue;
+          const yearlyPoints = results.map((result, pointIndex) => ({
+              sampleWeight: result.point.sampleWeight,
+              metrics: addTemperatureUtilityScore(yearlyPointMetrics[pointIndex])
+          }));
+          const yearlyMetrics = aggregateBandPointMetrics(yearlyPoints);
+          yearlyScores.push(overallScore(scoreComponents({
+            ...yearlyMetrics,
+            month: monthIndex + 1,
+            bandId: bandConfig.id,
+            targetElevationM: samplingBand.targetElevationM,
+            meanElevationMismatchM: 0,
+            samplePointCount: results.length,
+            samplePointMaxSeparationKm: 0,
+            polygonEquivalentDiameterKm: diameterKm,
+            terrainReliefM: 0,
+            interannualScoreSd: 0,
+            validInterannualYearCount: 1
+          })));
+        }
+        if (!yearlyScores.length) throw new Error(`ERA5_AGG001 no valid interannual scores for ${destination.id}/${bandConfig.id}/${monthIndex + 1}`);
+        const points = results.map((result) => result.point);
+        const demBand = dem.bands[bandConfig.id];
+        return {
+          ...metrics,
+          month: monthIndex + 1,
+          bandId: bandConfig.id,
+          targetElevationM: samplingBand.targetElevationM,
+          meanElevationMismatchM: round(points.reduce((sum, point) => sum + point.elevationMismatchM * point.sampleWeight, 0), 1),
+          samplePointCount: points.length,
+          samplePointMaxSeparationKm: round(maximumSeparation(points), 1),
+          polygonEquivalentDiameterKm: round(diameterKm, 1),
+          terrainReliefM: round(demBand.maxM - demBand.minM, 1),
+          interannualScoreSd: round(populationStandardDeviation(yearlyScores), 1),
+          validInterannualYearCount: yearlyScores.length
+        };
+      });
+      return [bandConfig.id, {months}];
+    }));
+    const retrievedAt = pointMetadata.map((metadata) => metadata.retrievedAt).sort().at(-1);
+    const snapshot = {
+      schemaVersion: 1,
+      datasetStatus: "production",
+      destinationId: destination.id,
+      fixture: false,
+      source: "era5-land-timeseries",
+      sourceDataset: "reanalysis-era5-land-timeseries",
+      sourceDoi: "10.24381/ee82e357",
+      climateNormal: {startYear:1991,endYear:2020},
+      retrievedAt,
+      precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
+      samplingSnapshotHash: sha256(readFileSync(samplingPath, "utf8")),
+      sourceDownloads: pointMetadata.map((metadata) => ({
+        request: metadata.request,
+        resolvedLocation: metadata.resolvedLocation,
+        observationCount: metadata.observationCount,
+        downloadSha256: metadata.downloadSha256,
+        retrievedAt: metadata.retrievedAt
+      })),
+      bands
+    };
+    const output = publish
+      ? `data-snapshots/climate/${destination.slug}.json`
+      : `generated/intermediate/real-climate/${destination.slug}.json`;
+    writeJson(output, snapshot);
+    console.log(`${publish ? "Published" : "Staged"} real ERA5-Land climate → ${output}`);
+  }
+}
+
+main().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exit(1);
+});
