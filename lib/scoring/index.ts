@@ -1,6 +1,7 @@
 import curves from "@/data-config/scoring/curves.json";
 import weights from "@/data-config/scoring/weights.json";
 import confidenceConfig from "@/data-config/methodology/confidence-v1.json";
+import climateAggregation from "@/data-config/methodology/climate-aggregation-v1.json";
 import type { BandClimateMonth, ComponentScores, ConfidenceLevel, ScoreLevel } from "@/lib/data/types";
 
 export type Curve = Array<[number, number]>;
@@ -22,6 +23,10 @@ export function roundHalfAwayFromZero(value: number): number {
 }
 
 export function scoreComponents(metrics: BandClimateMonth): ComponentScores {
+  const required = [metrics.wetDayProbability,metrics.heavyRainDayProbability,metrics.snowDayProbability,metrics.snowDepthMeanOnSnowDaysM,metrics.hotDayProbability,metrics.severeHotDayProbability,metrics.windHikingMeanKmh,metrics.highWindHourProbability,metrics.daylightHoursMean];
+  if(!metrics.temperatureUtilitySamplesC.length||!metrics.temperatureUtilitySamplesC.every(Number.isFinite)||!required.every(Number.isFinite))throw new Error("SCORE001 missing or invalid required component metric");
+  const probabilities=[metrics.wetDayProbability,metrics.heavyRainDayProbability,metrics.snowDayProbability,metrics.hotDayProbability,metrics.severeHotDayProbability,metrics.highWindHourProbability];
+  if(!probabilities.every((value)=>value>=0&&value<=1)||metrics.snowDepthMeanOnSnowDaysM<0||metrics.windHikingMeanKmh<0||metrics.daylightHoursMean<0||metrics.daylightHoursMean>24)throw new Error("SCORE001 required component metric outside physical bounds");
   const temperature = metrics.temperatureUtilitySamplesC.reduce((sum, value) => sum + interpolate(value, curves.temperature as Curve), 0) / metrics.temperatureUtilitySamplesC.length;
   const precipitation = 0.75 * interpolate(metrics.wetDayProbability, curves.wetDay as Curve) + 0.25 * interpolate(metrics.heavyRainDayProbability, curves.heavyRain as Curve);
   const snowBase = interpolate(metrics.snowDayProbability, curves.snowDay as Curve);
@@ -33,22 +38,32 @@ export function scoreComponents(metrics: BandClimateMonth): ComponentScores {
 }
 
 export function overallScore(components: ComponentScores): number {
+  const values=Object.keys(weights.overall).map((key)=>components[key as keyof ComponentScores]);
+  if(values.length!==6||!values.every(Number.isFinite))throw new Error("SCORE001 missing or invalid required component");
+  const weightTotal=Object.values(weights.overall).reduce((sum,value)=>sum+value,0);
+  if(Math.abs(weightTotal-1)>1e-9)throw new Error("SCORE002 weights do not sum to one");
   return Object.entries(weights.overall).reduce((sum, [key, weight]) => sum + components[key as keyof ComponentScores] * weight, 0);
 }
 
 export function confidenceScore(metrics: BandClimateMonth): number {
-  const completeness = interpolate(metrics.dataCompleteness, [[0.7,0],[0.8,35],[0.9,65],[0.95,85],[0.98,95],[0.995,100]]);
-  const elevation = interpolate(metrics.meanElevationMismatchM, [[150,100],[300,90],[600,65],[800,35],[801,0]]);
-  const spatial = metrics.samplePointCount >= 3 ? 100 : metrics.samplePointCount === 2 ? 80 : 55;
-  const interannual = interpolate(metrics.interannualScoreSd, [[5,100],[10,85],[15,65],[20,40],[30,10]]);
-  let terrainWind = interpolate(metrics.terrainReliefM, [[200,100],[500,90],[1000,75],[1500,60],[2000,45]]);
-  if (metrics.highWindHourProbability > 0.2 && metrics.terrainReliefM > 1000) terrainWind = Math.max(0, terrainWind - 10);
+  const required=[metrics.dataCompleteness,metrics.meanElevationMismatchM,metrics.samplePointCount,metrics.samplePointMaxSeparationKm,metrics.polygonEquivalentDiameterKm,metrics.interannualScoreSd,metrics.validInterannualYearCount,metrics.terrainReliefM,metrics.highWindHourProbability];
+  if(!required.every(Number.isFinite))throw new Error("DATA001 missing or invalid confidence metric");
+  if(metrics.dataCompleteness<0||metrics.dataCompleteness>1||metrics.meanElevationMismatchM<0||!Number.isInteger(metrics.samplePointCount)||metrics.samplePointCount<1||metrics.samplePointMaxSeparationKm<0||metrics.polygonEquivalentDiameterKm<0||metrics.interannualScoreSd<0||!Number.isInteger(metrics.validInterannualYearCount)||metrics.validInterannualYearCount<0||metrics.terrainReliefM<0||metrics.highWindHourProbability<0||metrics.highWindHourProbability>1)throw new Error("DATA001 confidence metric outside valid bounds");
+  const completeness = interpolate(metrics.dataCompleteness, confidenceConfig.curves.completeness as Curve);
+  const elevation = interpolate(metrics.meanElevationMismatchM, confidenceConfig.curves.elevationMismatchM as Curve);
+  const spatialConfig=confidenceConfig.spatial;
+  let spatial = metrics.samplePointCount >= 3 ? spatialConfig.threeOrMorePoints : metrics.samplePointCount === 2 ? spatialConfig.twoPoints : spatialConfig.onePoint;
+  if(metrics.samplePointCount>=2&&metrics.samplePointMaxSeparationKm<spatialConfig.clusteredMaxSeparationKm&&metrics.polygonEquivalentDiameterKm>spatialConfig.largeAreaMinimumDiameterKm)spatial=Math.max(0,spatial-spatialConfig.clusteredPenalty);
+  let interannual = interpolate(metrics.interannualScoreSd, confidenceConfig.curves.interannualScoreSd as Curve);
+  if(metrics.validInterannualYearCount<confidenceConfig.interannual.minimumValidYears)interannual=Math.min(interannual,confidenceConfig.interannual.lowYearCountComponentCap);
+  let terrainWind = interpolate(metrics.terrainReliefM, confidenceConfig.curves.terrainReliefM as Curve);
+  if (metrics.highWindHourProbability > confidenceConfig.terrainWind.highWindProbabilityThreshold && metrics.terrainReliefM > confidenceConfig.terrainWind.highReliefThresholdM) terrainWind = Math.max(0, terrainWind - confidenceConfig.terrainWind.penalty);
   const c = confidenceConfig.weights;
   return c.completeness * completeness + c.elevation * elevation + c.spatial * spatial + c.interannual * interannual + c.terrainWind * terrainWind;
 }
 
 export function confidenceLevel(score: number): ConfidenceLevel {
-  return score >= 85 ? "high" : score >= 65 ? "moderate" : "low";
+  return score >= confidenceConfig.levels.highMinimum ? "high" : score >= confidenceConfig.levels.moderateMinimum ? "moderate" : "low";
 }
 
 export function scoreLevel(score: number): ScoreLevel {
@@ -56,8 +71,9 @@ export function scoreLevel(score: number): ScoreLevel {
 }
 
 export function adjustTemperature(rawC: number, gridElevationM: number, targetElevationM: number) {
-  const rawCorrection = ((targetElevationM - gridElevationM) / 1000) * -6.5;
-  const correctionC = Math.max(-5, Math.min(5, rawCorrection));
+  const rawCorrection = ((targetElevationM - gridElevationM) / 1000) * climateAggregation.temperatureLapseRateCPer1000M;
+  const cap = climateAggregation.maxAutomaticTemperatureCorrectionC;
+  const correctionC = Math.max(-cap, Math.min(cap, rawCorrection));
   return { valueC: rawC + correctionC, correctionC, capped: correctionC !== rawCorrection };
 }
 

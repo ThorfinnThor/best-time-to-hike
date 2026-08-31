@@ -1,4 +1,19 @@
 {
-  "$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","required":["schemaVersion","algorithmVersion","datasetVersion","datasetStatus","generatedAt","climateNormal","sourceVersions","destinationCount","rankingIds","fileChecksums","totalBytes"],
-  "properties":{"schemaVersion":{"const":1},"algorithmVersion":{"type":"string"},"datasetVersion":{"type":"string"},"datasetStatus":{"enum":["fixture","production"]},"generatedAt":{"type":"string"},"climateNormal":{"type":"object","required":["startYear","endYear"],"properties":{"startYear":{"const":1991},"endYear":{"const":2020}}},"destinationCount":{"type":"integer","minimum":1},"rankingIds":{"type":"array"},"fileChecksums":{"type":"object"},"totalBytes":{"type":"integer","minimum":0}}
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object",
+  "required":["schemaVersion","algorithmVersion","datasetVersion","datasetStatus","generatedAt","climateNormal","sourceVersions","destinationCount","rankingIds","fileChecksums","totalBytes"],
+  "properties":{
+    "schemaVersion":{"const":1},
+    "algorithmVersion":{"type":"string","pattern":"^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "datasetVersion":{"type":"string","minLength":1},
+    "datasetStatus":{"enum":["fixture","production"]},
+    "generatedAt":{"type":"string","pattern":"^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{3})?Z$"},
+    "climateNormal":{"type":"object","required":["startYear","endYear"],"properties":{"startYear":{"const":1991},"endYear":{"const":2020}},"additionalProperties":false},
+    "sourceVersions":{"type":"object","minProperties":1,"additionalProperties":{"type":"string","minLength":1}},
+    "destinationCount":{"type":"integer","minimum":1},
+    "rankingIds":{"type":"array","uniqueItems":true,"items":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"}},
+    "fileChecksums":{"type":"object","minProperties":1,"propertyNames":{"pattern":"^(?!/)(?!.*\\.\\.)[^\\s]+\\.json$"},"additionalProperties":{"type":"string","pattern":"^[a-f0-9]{64}$"}},
+    "totalBytes":{"type":"integer","minimum":0}
+  },
+  "additionalProperties":false
 }

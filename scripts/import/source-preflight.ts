@@ -4,5 +4,10 @@ export function requireApprovedSource(source: "era5Land" | "copernicusDem") {
   const semantics = readJson<any>("data-config/methodology/source-semantics.json");
   const value = semantics[source];
   if (!value.approved) throw new Error(`BLOCKED_SOURCE_SEMANTICS: ${source} is not operator-approved.`);
-  if (source === "era5Land" && !["INCREMENTAL_PER_TIMESTEP_M","ACCUMULATED_WITH_EXPLICIT_RESET_METADATA"].includes(value.precipitationSemantics)) throw new Error("BLOCKED_SOURCE_SEMANTICS: unsupported precipitation semantics.");
+  if (!value.approvedAt || !value.approvedBy || !Number.isFinite(new Date(value.approvedAt).getTime())) throw new Error(`BLOCKED_SOURCE_SEMANTICS: ${source} approval metadata is incomplete.`);
+  if (source === "era5Land") {
+    if (!value.supportedPrecipitationSemantics.includes(value.precipitationSemantics)) throw new Error("BLOCKED_SOURCE_SEMANTICS: unsupported precipitation semantics.");
+    if (value.temperatureUnitExpected!=="K"||value.windUnitExpected!=="m s-1"||value.precipitationUnitExpected!=="m"||value.snowDepthUnitExpected!=="m"||value.snowCoverSemantics!=="FRACTION_0_TO_1") throw new Error("BLOCKED_SOURCE_SEMANTICS: ERA5-Land units or snow semantics are not fully approved.");
+  }
+  if (source === "copernicusDem" && value.verticalUnitExpected !== "m") throw new Error("BLOCKED_SOURCE_SEMANTICS: DEM vertical units must be metres.");
 }

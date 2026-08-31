@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "tsx scripts/export/fix-static-languages.ts",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
@@ -19,13 +20,19 @@
     "data:images": "tsx scripts/import/fetch-images.ts",
     "data:osm": "tsx scripts/import/fetch-osm.ts",
     "data:normalize": "tsx scripts/normalize/normalize.ts",
+    "data:aggregate-hourly": "tsx scripts/normalize/aggregate-hourly.ts",
     "data:score": "tsx scripts/score/score.ts",
     "data:export": "tsx scripts/export/export.ts",
     "data:validate": "tsx scripts/validate/validate.ts",
+    "guard:architecture": "tsx scripts/validate/architecture.ts",
+    "guard:determinism": "tsx scripts/validate/determinism.ts",
+    "data:quality": "tsx scripts/validate/data-quality.ts",
+    "release:report": "pnpm data:quality && tsx scripts/validate/release-report.ts",
+    "preflight:sources": "tsx scripts/import/source-preflight-cli.ts",
     "data:pipeline": "pnpm data:seed && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:rebuild": "pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:ingest": "pnpm data:dem && pnpm data:sampling && pnpm data:era5 && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
-    "verify": "pnpm data:rebuild && pnpm test && pnpm build && pnpm typecheck",
+    "verify": "pnpm data:rebuild && pnpm guard:architecture && pnpm guard:determinism && pnpm test && pnpm build && pnpm typecheck && pnpm release:report",
     "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main"
   },
   "dependencies": {

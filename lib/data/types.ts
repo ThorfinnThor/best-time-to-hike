@@ -53,8 +53,11 @@ export interface BandClimateMonth extends ClimateMetrics {
   targetElevationM: number;
   meanElevationMismatchM: number;
   samplePointCount: number;
+  samplePointMaxSeparationKm: number;
+  polygonEquivalentDiameterKm: number;
   terrainReliefM: number;
   interannualScoreSd: number;
+  validInterannualYearCount: number;
 }
 
 export interface ComponentScores {

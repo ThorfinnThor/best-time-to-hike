@@ -14,6 +14,10 @@ function weightedComponents(bands: PublicBandMonth[], destination: DestinationCo
   return result;
 }
 
+function roundedComponents(components: ComponentScores): ComponentScores {
+  return Object.fromEntries(Object.entries(components).map(([key,value])=>[key,roundHalfAwayFromZero(value)])) as unknown as ComponentScores;
+}
+
 function reasonCodes(month: PublicMonth) {
   const reasons: string[] = [];
   if (month.components.temperature >= 85) reasons.push("comfortable-temperatures");
@@ -33,18 +37,22 @@ const scored = normalized.map(({destination, dem, climate}) => {
       const confidence = confidenceScore(metrics);
       return {...metrics, components, overallScore: roundHalfAwayFromZero(score), confidenceScore: roundHalfAwayFromZero(confidence), confidenceLevel: confidenceLevel(confidence)};
     });
-    const components = weightedComponents(bands, destination);
-    const score = overallScore(components);
+    const internalComponents = weightedComponents(bands, destination);
+    const score = overallScore(internalComponents);
     const confidence = destination.elevationBands.reduce((sum, config) => sum + bands.find((band) => band.bandId === config.id)!.confidenceScore * config.weight, 0);
     const metrics = destination.elevationBands.reduce((acc, config) => {
       const band = bands.find((item) => item.bandId === config.id)!;
-      const keys = ["temperatureHikingMeanC","temperatureHikingP10C","temperatureHikingP90C","wetDayProbability","heavyRainDayProbability","precipitationMonthlyMeanMm","snowDayProbability","snowDepthMeanOnSnowDaysM","windHikingMeanKmh","highWindHourProbability","severeWindHourProbability","hotDayProbability","severeHotDayProbability","daylightHoursMean","relativeHumidityHikingMeanPct","sampleYearCount","dataCompleteness"] as const;
+      const keys = ["temperatureHikingMeanC","temperatureHikingP10C","temperatureHikingP90C","wetDayProbability","heavyRainDayProbability","precipitationMonthlyMeanMm","snowDayProbability","snowDepthMeanOnSnowDaysM","windHikingMeanKmh","highWindHourProbability","severeWindHourProbability","hotDayProbability","severeHotDayProbability","daylightHoursMean","relativeHumidityHikingMeanPct","dataCompleteness"] as const;
       keys.forEach((key) => { (acc as any)[key] = ((acc as any)[key] ?? 0) + (band as any)[key] * config.weight; });
-      acc.temperatureUtilitySamplesC = band.temperatureUtilitySamplesC;
       return acc;
     }, {} as any);
+    const utilitySampleCount=Math.min(...bands.map((band)=>band.temperatureUtilitySamplesC.length));
+    metrics.temperatureUtilitySamplesC=Array.from({length:utilitySampleCount},(_,index)=>destination.elevationBands.reduce((sum,config)=>sum+bands.find((band)=>band.bandId===config.id)!.temperatureUtilitySamplesC[index]*config.weight,0));
+    metrics.sampleYearCount=Math.min(...bands.map((band)=>band.sampleYearCount));
     Object.keys(metrics).forEach((key) => { if (typeof metrics[key] === "number") metrics[key] = round(metrics[key], key.includes("Probability") || key === "dataCompleteness" ? 4 : 1); });
-    const output: PublicMonth = {month: monthIndex+1, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence), confidenceLevel: confidenceLevel(confidence), components, metrics, bands, reasons: [], caveats: ["historical-climatology-not-a-forecast"]};
+    metrics.temperatureUtilitySamplesC=metrics.temperatureUtilitySamplesC.map((value:number)=>round(value,1));
+    const publicBands=bands.map((band)=>({...band,components:roundedComponents(band.components)}));
+    const output: PublicMonth = {month: monthIndex+1, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence), confidenceLevel: confidenceLevel(confidence), components:roundedComponents(internalComponents), metrics, bands:publicBands, reasons: [], caveats: ["historical-climatology-not-a-forecast"]};
     output.reasons = reasonCodes(output);
     return output;
   });

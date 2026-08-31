@@ -1,3 +1,9 @@
 {
-  "$schema":"https://json-schema.org/draft/2020-12/schema","type":"array","items":{"type":"object","required":["id","slug","name","countryCode","continent","region","tags","monthly"],"properties":{"monthly":{"type":"array","minItems":12,"maxItems":12}}}
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"array",
+  "items":{"type":"object","required":["id","slug","name","countryCode","continent","region","tags","monthly"],"properties":{
+    "id":{"$ref":"#/$defs/slug"},"slug":{"$ref":"#/$defs/slug"},"name":{"type":"string","minLength":1},"countryCode":{"type":"string","pattern":"^[A-Z]{2}$"},"continent":{"$ref":"#/$defs/slug"},"region":{"$ref":"#/$defs/slug"},"tags":{"type":"array","uniqueItems":true,"items":{"$ref":"#/$defs/slug"}},
+    "monthly":{"type":"array","minItems":12,"maxItems":12,"items":{"type":"object","required":["m","score","temp","wet","snow","hot","wind","daylight","confidence"],"properties":{"m":{"type":"integer","minimum":1,"maximum":12},"score":{"$ref":"#/$defs/score"},"temp":{"type":"number","minimum":-100,"maximum":70},"wet":{"$ref":"#/$defs/probability"},"snow":{"$ref":"#/$defs/probability"},"hot":{"$ref":"#/$defs/probability"},"wind":{"type":"number","minimum":0},"daylight":{"type":"number","minimum":0,"maximum":24},"confidence":{"$ref":"#/$defs/score"}},"additionalProperties":false}}
+  },"additionalProperties":false},
+  "$defs":{"slug":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},"score":{"type":"number","minimum":0,"maximum":100},"probability":{"type":"number","minimum":0,"maximum":1}}
 }

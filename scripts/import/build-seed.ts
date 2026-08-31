@@ -1,6 +1,9 @@
 import type { BandClimateMonth, DestinationConfig } from "../../lib/data/types";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 
+const distanceKm=(a:{lat:number;lon:number},b:{lat:number;lon:number})=>{const radius=6371;const dLat=(b.lat-a.lat)*Math.PI/180;const dLon=(b.lon-a.lon)*Math.PI/180;const value=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;return 2*radius*Math.asin(Math.sqrt(value));};
+const maximumSeparation=(points:Array<{lat:number;lon:number}>)=>Math.max(0,...points.flatMap((point,index)=>points.slice(index+1).map((other)=>distanceKm(point,other))));
+
 type Profile = { temp: number[]; wet: number[]; snow: number[]; wind: number[]; daylight: number[]; rainMm: number[] };
 const profiles: Record<string, Profile> = {
   madeira: { temp:[14,14,15,16,18,20,22,23,22,20,17,15], wet:[.36,.34,.29,.24,.18,.12,.08,.10,.16,.27,.34,.38], snow:[.04,.03,.02,.01,0,0,0,0,0,.01,.02,.04], wind:[19,18,17,16,15,14,13,13,14,16,18,19], daylight:[10.3,11.0,12.0,13.0,13.8,14.2,14.0,13.3,12.3,11.3,10.5,10.0], rainMm:[95,80,65,45,30,18,8,12,35,70,90,105] },
@@ -11,6 +14,7 @@ const profiles: Record<string, Profile> = {
 };
 
 const destinations = readJson<DestinationConfig[]>("data-config/sources/destinations.json");
+const geometry = readJson<any>("data-config/geography/destination-areas.geojson");
 const generatedAt = "2026-08-31T00:00:00.000Z";
 
 for (const destination of destinations) {
@@ -48,8 +52,13 @@ for (const destination of destinations) {
   writeJson(`data-snapshots/sampling/${destination.slug}.json`, sampling);
 
   const bands: Record<string, { months: BandClimateMonth[] }> = {};
+  const destinationGeometry=geometry.features.find((feature:any)=>feature.properties.destinationId===destination.id).geometry;
+  const polygonPositions=(destinationGeometry.type==="Polygon"?destinationGeometry.coordinates.flat(1):destinationGeometry.coordinates.flat(2)) as Array<[number,number]>;
+  const polygonCoordinates=polygonPositions.map(([lon,lat])=>({lat,lon}));
+  const polygonEquivalentDiameterKm=maximumSeparation(polygonCoordinates);
   destination.elevationBands.forEach((band, bandIndex) => {
     const targetElevationM = bandMedians[band.id];
+    const bandSamplingPoints=samplingBands[band.id].points;
     const months = Array.from({ length: 12 }, (_, i): BandClimateMonth => {
       const elevationCooling = bandIndex * (destination.region === "alps" ? 2.8 : 1.8);
       const mean = profile.temp[i] - elevationCooling;
@@ -60,10 +69,13 @@ for (const destination of destinations) {
         month: i + 1,
         bandId: band.id,
         targetElevationM,
-        meanElevationMismatchM: 88 + bandIndex * 20,
+        meanElevationMismatchM: round(bandSamplingPoints.reduce((sum:number,point:any)=>sum+point.elevationMismatchM*point.sampleWeight,0),1),
         samplePointCount: 3,
+        samplePointMaxSeparationKm: round(maximumSeparation(bandSamplingPoints),1),
+        polygonEquivalentDiameterKm: round(polygonEquivalentDiameterKm,1),
         terrainReliefM: Math.min(1900, band.maxM - band.minM + bandIndex * 150),
         interannualScoreSd: 7 + bandIndex * 1.5,
+        validInterannualYearCount: 30,
         temperatureHikingMeanC: round(mean, 1), temperatureHikingP10C: round(mean - 4.5, 1), temperatureHikingP90C: round(mean + 5, 1),
         temperatureUtilitySamplesC: [mean - 4.5, mean - 2, mean, mean + 2, mean + 5].map((v) => round(v, 1)),
         wetDayProbability: round(wet), heavyRainDayProbability: round(Math.max(0.005, wet * .17)), precipitationMonthlyMeanMm: round(profile.rainMm[i] * (1 + bandIndex*.08), 1),
