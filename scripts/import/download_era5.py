@@ -26,7 +26,7 @@ import numpy as np
 
 
 DATASET = "reanalysis-era5-land-timeseries"
-PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M = -1e-6
+NETCDF_NEGATIVE_ARTIFACT_FLOOR_M = -1e-6
 VARIABLES = [
     "2m_temperature",
     "2m_dewpoint_temperature",
@@ -189,7 +189,7 @@ def validate_series(
     finite_precipitation = precipitation[np.isfinite(precipitation)]
     minimum_precipitation = float(np.min(finite_precipitation)) if finite_precipitation.size else None
     negative_indexes = np.flatnonzero(np.isfinite(precipitation) & (precipitation < 0))
-    if minimum_precipitation is not None and minimum_precipitation < PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M:
+    if minimum_precipitation is not None and minimum_precipitation < NETCDF_NEGATIVE_ARTIFACT_FLOOR_M:
         sample_indexes = negative_indexes[:3]
         samples = ", ".join(
             f"{times[int(index)].isoformat()}={precipitation[int(index)]:.12g}m"
@@ -206,8 +206,10 @@ def validate_series(
     if finite_snow.size and (float(np.min(finite_snow)) < 0 or float(np.max(finite_snow)) > 1.000001):
         raise RuntimeError("ERA5_SNOW001 snow cover is not represented as a 0..1 fraction")
     snow_depth = arrays["snowDepthM"]
+    finite_snow_depth = snow_depth[np.isfinite(snow_depth)]
+    minimum_snow_depth = float(np.min(finite_snow_depth)) if finite_snow_depth.size else None
     negative_snow_depth_indexes = np.flatnonzero(np.isfinite(snow_depth) & (snow_depth < 0))
-    if negative_snow_depth_indexes.size:
+    if minimum_snow_depth is not None and minimum_snow_depth < NETCDF_NEGATIVE_ARTIFACT_FLOOR_M:
         sample_indexes = negative_snow_depth_indexes[:3]
         samples = ", ".join(
             f"{times[int(index)].isoformat()}={snow_depth[int(index)]:.12g}m"
@@ -215,14 +217,23 @@ def validate_series(
         )
         raise RuntimeError(
             "ERA5_SNOW001 snow depth contains negative values: "
-            f"minimum={float(np.nanmin(snow_depth)):.12g}m, "
+            f"minimum={minimum_snow_depth:.12g}m, "
             f"count={negative_snow_depth_indexes.size}, samples=[{samples}]"
         )
+    snow_depth[negative_snow_depth_indexes] = 0
     return {
-        "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
-        "artifactFloorM": PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M,
-        "clampedValueCount": int(negative_indexes.size),
-        "minimumOriginalValueM": minimum_precipitation,
+        "precipitation": {
+            "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
+            "artifactFloorM": NETCDF_NEGATIVE_ARTIFACT_FLOOR_M,
+            "clampedValueCount": int(negative_indexes.size),
+            "minimumOriginalValueM": minimum_precipitation,
+        },
+        "snowDepth": {
+            "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
+            "artifactFloorM": NETCDF_NEGATIVE_ARTIFACT_FLOOR_M,
+            "clampedValueCount": int(negative_snow_depth_indexes.size),
+            "minimumOriginalValueM": minimum_snow_depth,
+        },
     }
 
 
@@ -259,7 +270,7 @@ def main() -> None:
         archive_hash = sha256_file(download)
         files = extract_download(download, directory / "netcdf")
         times, arrays, variable_metadata, resolved = read_netcdf_files(files)
-        precipitation_quality = validate_series(times, arrays, args.start_date, args.end_date)
+        quality = validate_series(times, arrays, args.start_date, args.end_date)
         write_observations(args.output, times, arrays)
 
     args.metadata.parent.mkdir(parents=True, exist_ok=True)
@@ -269,8 +280,9 @@ def main() -> None:
         "datasetDoi": "10.24381/ee82e357",
         "request": request,
         "precipitationSemantics": "INCREMENTAL_PER_TIMESTEP_M",
-        "precipitationQuality": precipitation_quality,
+        "precipitationQuality": quality["precipitation"],
         "snowCoverSemantics": "FRACTION_0_TO_1",
+        "snowDepthQuality": quality["snowDepth"],
         "observationCount": len(times),
         "firstUtcInstant": times[0].strftime("%Y-%m-%dT%H:00:00.000Z"),
         "lastUtcInstant": times[-1].strftime("%Y-%m-%dT%H:00:00.000Z"),
