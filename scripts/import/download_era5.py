@@ -26,6 +26,7 @@ import numpy as np
 
 
 DATASET = "reanalysis-era5-land-timeseries"
+PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M = -1e-6
 VARIABLES = [
     "2m_temperature",
     "2m_dewpoint_temperature",
@@ -172,7 +173,9 @@ def read_netcdf_files(paths: list[Path]) -> tuple[list[datetime], dict[str, np.n
     return reference_times, arrays, metadata, resolved
 
 
-def validate_series(times: list[datetime], arrays: dict[str, np.ndarray], start_date: str, end_date: str) -> None:
+def validate_series(
+    times: list[datetime], arrays: dict[str, np.ndarray], start_date: str, end_date: str
+) -> dict[str, Any]:
     expected_start = datetime.fromisoformat(start_date).replace(tzinfo=UTC)
     expected_end = datetime.fromisoformat(end_date).replace(tzinfo=UTC, hour=23)
     if times[0] != expected_start or times[-1] != expected_end:
@@ -184,8 +187,9 @@ def validate_series(times: list[datetime], arrays: dict[str, np.ndarray], start_
             raise RuntimeError(f"ERA5_TIME001 non-contiguous timestamp at index {index}")
     precipitation = arrays["precipitationM"]
     finite_precipitation = precipitation[np.isfinite(precipitation)]
-    if finite_precipitation.size and float(np.min(finite_precipitation)) < -1e-10:
-        negative_indexes = np.flatnonzero(np.isfinite(precipitation) & (precipitation < -1e-10))
+    minimum_precipitation = float(np.min(finite_precipitation)) if finite_precipitation.size else None
+    negative_indexes = np.flatnonzero(np.isfinite(precipitation) & (precipitation < 0))
+    if minimum_precipitation is not None and minimum_precipitation < PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M:
         sample_indexes = negative_indexes[:3]
         samples = ", ".join(
             f"{times[int(index)].isoformat()}={precipitation[int(index)]:.12g}m"
@@ -193,14 +197,20 @@ def validate_series(times: list[datetime], arrays: dict[str, np.ndarray], start_
         )
         raise RuntimeError(
             "ERA5_PREC001 de-accumulated precipitation contains material negative values: "
-            f"minimum={float(np.min(finite_precipitation)):.12g}m, "
+            f"minimum={minimum_precipitation:.12g}m, "
             f"count={negative_indexes.size}, samples=[{samples}]"
         )
-    precipitation[(precipitation < 0) & (precipitation >= -1e-10)] = 0
+    precipitation[negative_indexes] = 0
     snow_cover = arrays["snowCover"]
     finite_snow = snow_cover[np.isfinite(snow_cover)]
     if finite_snow.size and (float(np.min(finite_snow)) < 0 or float(np.max(finite_snow)) > 1.000001):
         raise RuntimeError("ERA5_SNOW001 snow cover is not represented as a 0..1 fraction")
+    return {
+        "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
+        "artifactFloorM": PRECIPITATION_NEGATIVE_ARTIFACT_FLOOR_M,
+        "clampedValueCount": int(negative_indexes.size),
+        "minimumOriginalValueM": minimum_precipitation,
+    }
 
 
 def write_observations(path: Path, times: list[datetime], arrays: dict[str, np.ndarray]) -> None:
@@ -236,7 +246,7 @@ def main() -> None:
         archive_hash = sha256_file(download)
         files = extract_download(download, directory / "netcdf")
         times, arrays, variable_metadata, resolved = read_netcdf_files(files)
-        validate_series(times, arrays, args.start_date, args.end_date)
+        precipitation_quality = validate_series(times, arrays, args.start_date, args.end_date)
         write_observations(args.output, times, arrays)
 
     args.metadata.parent.mkdir(parents=True, exist_ok=True)
@@ -246,6 +256,7 @@ def main() -> None:
         "datasetDoi": "10.24381/ee82e357",
         "request": request,
         "precipitationSemantics": "INCREMENTAL_PER_TIMESTEP_M",
+        "precipitationQuality": precipitation_quality,
         "snowCoverSemantics": "FRACTION_0_TO_1",
         "observationCount": len(times),
         "firstUtcInstant": times[0].strftime("%Y-%m-%dT%H:00:00.000Z"),
