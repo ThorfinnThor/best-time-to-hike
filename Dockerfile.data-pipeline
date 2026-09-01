@@ -11,7 +11,7 @@ RUN apt-get update \
     && npm install --global pnpm@11.22.0
 
 WORKDIR /app
-COPY --chown=node:node package.json pnpm-lock.yaml requirements-data.txt ./
+COPY --chown=node:node package.json pnpm-lock.yaml pnpm-workspace.yaml requirements-data.txt ./
 RUN install_status=0; \
     pnpm install --frozen-lockfile || install_status=$?; \
     if [ "$install_status" -ne 0 ]; then \
