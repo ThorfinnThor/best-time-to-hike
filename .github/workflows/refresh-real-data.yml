@@ -1,0 +1,91 @@
+name: Refresh real static data
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: "Commit approved snapshots and deploy the static site"
+        required: true
+        type: boolean
+        default: false
+      destinations:
+        description: "Optional comma-separated destination slugs"
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-real-static-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      BTH_DESTINATIONS: ${{ inputs.destinations }}
+      BTH_EXECUTION_MODE: ingest-staging
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+      NEXT_PUBLIC_DATA_STATUS: fixture
+      NEXT_PUBLIC_APP_URL: https://best-time-to-hike.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm data:setup-python
+
+      - name: Stage real DEM, sampling, and ERA5-Land data
+        if: ${{ inputs.publish == false }}
+        run: |
+          pnpm data:dem
+          pnpm data:sampling
+          pnpm data:era5 -- --refresh
+
+      - name: Build approved committed snapshots
+        if: ${{ inputs.publish == true }}
+        run: |
+          pnpm data:dem -- --publish
+          pnpm data:sampling -- --publish
+          pnpm data:era5 -- --publish --refresh
+          pnpm verify
+
+      - name: Upload staging evidence
+        if: ${{ inputs.publish == false && always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-data-staging-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            generated/intermediate/real-dem
+            generated/intermediate/real-sampling
+            generated/intermediate/real-climate
+            generated/intermediate/era5-invariants
+            generated/intermediate/era5-request-plan.json
+
+      - name: Commit approved static data
+        if: ${{ inputs.publish == true }}
+        run: |
+          git config user.name "best-time-to-hike-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-snapshots public/data/hiking
+          git diff --cached --quiet || git commit -m "data: refresh approved static climate dataset"
+          git push
+
+      - name: Deploy static export to Cloudflare Pages
+        if: ${{ inputs.publish == true }}
+        run: pnpm exec wrangler pages deploy out --project-name=best-time-to-hike --branch=main
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

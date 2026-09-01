@@ -1,10 +1,12 @@
 # Architecture
 
-BestTimeToHike is a precomputed decision engine: approved public sources are ingested by a Cloudflare Workflow and Container, compact snapshots are reviewed and committed, TypeScript normalizes/scores/exports them, validation gates the result, and Next.js renders a static site. Cloudflare Pages serves only the contents of `out/`; private ingest artifacts live in R2.
+BestTimeToHike is a precomputed decision engine. A manually triggered GitHub Action ingests approved public sources, stores staging evidence as a short-lived private Actions artifact, and commits only approved compact snapshots. TypeScript normalizes, scores, exports, and validates those JSON files before Next.js renders a static site. Cloudflare Pages serves only the contents of `out/`.
+
+This deliberately matches Climate Decision Engine's architecture: source processing happens in CI, the published dataset is versioned static JSON, and the CDN has no scientific data pipeline attached to it.
 
 There is no runtime database, ranking API, weather API, DEM call, or climate-source call. The finder is a client-side computation over the compact static search index and never changes the published hiking suitability score.
 
-The current repository is in fixture mode. Production source adapters intentionally stop with explicit `BLOCKED_*` codes until operator approvals exist.
+The current repository is in fixture mode. Production source adapters intentionally stop with explicit `BLOCKED_*` codes until operator approvals exist. A staging refresh can still run without changing the repository or live site.
 
 ## Scientific processing boundary
 

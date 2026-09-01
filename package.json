@@ -11,7 +11,7 @@
     "build": "next build",
     "postbuild": "tsx scripts/export/fix-static-languages.ts",
     "start": "next start",
-    "typecheck": "tsc --noEmit && pnpm cloudflare:data:typecheck",
+    "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "data:seed": "tsx scripts/import/build-seed.ts",
     "data:setup-python": "python3 -m venv generated/intermediate/data-venv && generated/intermediate/data-venv/bin/python3 -m pip install -r requirements-data.txt",
@@ -34,11 +34,7 @@
     "data:rebuild": "pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:ingest": "pnpm data:dem && pnpm data:sampling && pnpm data:era5 && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "verify": "pnpm data:rebuild && pnpm guard:architecture && pnpm guard:determinism && pnpm test && pnpm build && pnpm typecheck && pnpm release:report",
-    "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main",
-    "cloudflare:data:types": "wrangler types cloudflare/data-pipeline/worker-configuration.d.ts --config cloudflare/data-pipeline/wrangler.jsonc",
-    "cloudflare:data:typecheck": "tsc -p cloudflare/data-pipeline/tsconfig.json --noEmit",
-    "cloudflare:data:check": "pnpm cloudflare:data:types && pnpm cloudflare:data:typecheck && wrangler deploy --dry-run --containers-rollout=none --config cloudflare/data-pipeline/wrangler.jsonc --outdir ../../generated/intermediate/cloudflare-data-worker",
-    "cloudflare:data:deploy": "wrangler deploy --config cloudflare/data-pipeline/wrangler.jsonc"
+    "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main"
   },
   "dependencies": {
     "ajv": "^8.17.1",
@@ -47,7 +43,6 @@
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
-    "@cloudflare/containers": "^0.3.7",
     "@types/node": "^22.15.0",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
