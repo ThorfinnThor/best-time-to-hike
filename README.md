@@ -41,13 +41,15 @@ Run the action with `publish: false` to produce a private, 14-day staging artifa
 
 ## Deployment
 
-The static export deploys to Cloudflare Pages:
+Cloudflare Pages is connected directly to the GitHub repository. Every push to `main` runs `pnpm build` and publishes `out/`; no Worker, deploy API token, or server runtime is involved.
+
+For an operator-initiated recovery deployment, the same static directory can still be uploaded with an authenticated Wrangler session:
 
 ```bash
 pnpm deploy:cloudflare
 ```
 
-GitHub Actions expects `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets only for the static Pages deployment. See `docs/going-live.md` before enabling production indexing.
+See `docs/going-live.md` before enabling production indexing.
 
 ## Data boundary
 

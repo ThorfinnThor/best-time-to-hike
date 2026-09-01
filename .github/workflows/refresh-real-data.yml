@@ -84,10 +84,3 @@ jobs:
           git add data-snapshots public/data/hiking
           git diff --cached --quiet || git commit -m "data: refresh approved static climate dataset"
           git push
-
-      - name: Deploy static export to Cloudflare Pages
-        if: ${{ inputs.publish == true }}
-        run: pnpm exec wrangler pages deploy out --project-name=best-time-to-hike --branch=main
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
