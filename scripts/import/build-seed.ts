@@ -39,7 +39,7 @@ for (const destination of destinations) {
       id: `${destination.id}-${band.id}-${pointIndex + 1}`,
       lat: round(destination.coordinates.lat + offset * .05, 2),
       lon: round(destination.coordinates.lon + (pointIndex - 1) * .05, 2),
-      gridElevationM: target + [-90,35,120][pointIndex] + bandIndex * 10,
+      terrainElevationM: target + [-90,35,120][pointIndex] + bandIndex * 10,
       targetElevationM: target,
       elevationMismatchM: Math.abs([-90,35,120][pointIndex] + bandIndex * 10),
       sampleWeight: 1/3,
@@ -48,7 +48,7 @@ for (const destination of destinations) {
     }));
     return [band.id, { targetElevationM: target, points }];
   }));
-  const sampling = { destinationId: destination.id, fixture: true, samplingVersion: 1, bands: samplingBands };
+  const sampling = { destinationId: destination.id, fixture: true, samplingVersion: 2, bands: samplingBands };
   writeJson(`data-snapshots/sampling/${destination.slug}.json`, sampling);
 
   const bands: Record<string, { months: BandClimateMonth[] }> = {};

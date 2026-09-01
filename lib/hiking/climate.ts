@@ -20,7 +20,7 @@ export interface ClimateAggregationOptions {
   timezone: string;
   lat: number;
   lon: number;
-  gridElevationM: number;
+  era5LandGridElevationM: number;
   targetElevationM: number;
   precipitationSemantics: PrecipitationSemantics;
   dailyCompletenessMinimum?: number;
@@ -163,7 +163,7 @@ export function aggregateDailyClimate(records: HourlyClimateObservation[], optio
     const covers: number[] = [];
     const depths: number[] = [];
     let rawPresentCellCount = 0;
-    const temperatureAdjustment=adjustTemperature(0,options.gridElevationM,options.targetElevationM);
+    const temperatureAdjustment=adjustTemperature(0,options.era5LandGridElevationM,options.targetElevationM);
 
     for (const record of dayRecords) {
       rawPresentCellCount += [record.temperatureK, record.dewpointK, record.windUMs, record.windVMs, record.precipitationM, record.snowCover, record.snowDepthM].filter((value) => value !== null).length;

@@ -8,11 +8,11 @@ The current repository is in fixture mode. Production source adapters intentiona
 
 ## Scientific processing boundary
 
-`lib/hiking/climate.ts` is the checked-in hourly-to-daily-to-monthly engine. UTC instants remain the observation identity; IANA timezone conversion supplies local grouping labels, including 23- and 25-hour DST days. The engine applies the configured temperature lapse correction, NOAA-style daylight window, Magnus relative humidity, explicit precipitation conversion, snow/heat/wind thresholds, nearest-rank percentiles, and normal-period completeness denominators.
+`lib/hiking/climate.ts` is the checked-in hourly-to-daily-to-monthly engine. UTC instants remain the observation identity; IANA timezone conversion supplies local grouping labels, including 23- and 25-hour DST days. The engine applies the configured temperature lapse correction from the official ERA5-Land invariant model height (`era5LandGridElevationM`) to the target terrain elevation. The separate GLO-30 `terrainElevationM` is used only for sampling. The engine also applies the NOAA-style daylight window, Magnus relative humidity, explicit precipitation conversion, snow/heat/wind thresholds, nearest-rank percentiles, and normal-period completeness denominators.
 
 Fixture snapshots start at already aggregated synthetic monthly values and are never presented as output from real ERA5-Land observations. The scientific engine is covered by independent numeric fixtures so a future approved adapter can use it without changing the static runtime architecture.
 
-An approved adapter hands off one point snapshot through the strict `hourly-climate.schema.json` contract. `pnpm data:aggregate-hourly -- <input> <output>` only accepts inputs under `data-snapshots/hourly/`, only writes intermediate output, and rechecks production source semantics before aggregation.
+An approved adapter hands off one point snapshot through the strict version-2 `hourly-climate.schema.json` contract, which requires `era5LandGridElevationM`. `pnpm data:aggregate-hourly -- <input> <output>` only accepts inputs under `data-snapshots/hourly/`, only writes intermediate output, and rechecks production source semantics before aggregation.
 
 ## Build guards
 

@@ -73,8 +73,8 @@ export function scoreLevel(score: number): ScoreLevel {
   return score >= 90 ? "excellent" : score >= 80 ? "very-good" : score >= 65 ? "good" : score >= 50 ? "fair" : "poor";
 }
 
-export function adjustTemperature(rawC: number, gridElevationM: number, targetElevationM: number) {
-  const rawCorrection = ((targetElevationM - gridElevationM) / 1000) * climateAggregation.temperatureLapseRateCPer1000M;
+export function adjustTemperature(rawC: number, era5LandGridElevationM: number, targetElevationM: number) {
+  const rawCorrection = ((targetElevationM - era5LandGridElevationM) / 1000) * climateAggregation.temperatureLapseRateCPer1000M;
   const cap = climateAggregation.maxAutomaticTemperatureCorrectionC;
   const correctionC = Math.max(-cap, Math.min(cap, rawCorrection));
   return { valueC: rawC + correctionC, correctionC, capped: correctionC !== rawCorrection };

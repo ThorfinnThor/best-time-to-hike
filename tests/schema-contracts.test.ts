@@ -6,14 +6,14 @@ import { readFileSync } from "node:fs";
 const schema = JSON.parse(readFileSync("schemas/hourly-climate.schema.json", "utf8"));
 const validate = new Ajv2020({ allErrors: true, strict: false }).compile(schema);
 const snapshot = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   datasetStatus: "fixture",
   source: "era5Land",
   destinationId: "test-place",
   samplePointId: "test-place-mid-1",
   timezone: "UTC",
   coordinates: {lat:0,lon:0},
-  gridElevationM: 100,
+  era5LandGridElevationM: 100,
   targetElevationM: 100,
   precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
   climateNormal: {startYear:1991,endYear:2020},

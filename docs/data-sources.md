@@ -1,6 +1,6 @@
 # Data sources and approval gates
 
-The production climate normal is ERA5-Land 1991–2020. Elevation comes from Copernicus DEM GLO-30, and daylight is calculated astronomically. Source assumptions and the official evidence reviewed on 2026-08-31 are recorded in `data-config/methodology/source-semantics.json`; operator approval remains deliberately false.
+The production climate normal is ERA5-Land 1991–2020. Copernicus DEM GLO-30 supplies terrain matching and destination elevation summaries; the official ERA5-Land invariant geopotential supplies model-grid height for temperature correction; daylight is calculated astronomically. Source assumptions and the official evidence reviewed on 2026-08-31 are recorded in `data-config/methodology/source-semantics.json`; operator approval remains deliberately false.
 
 ## Copernicus DEM GLO-30
 
@@ -10,7 +10,15 @@ The default command writes ignored audit artifacts under `generated/intermediate
 
 Sampling candidates are also checked against versioned ERA5-Land mask evidence. A coastal grid cell that has valid GLO-30 terrain in the configured DEM window but returns fully masked ERA5-Land variables is excluded through `data-config/geography/destination-overrides.json`; the exclusion records its probe date and Workflow evidence instead of silently treating missing climate values as zero.
 
-The current sampler uses a 1 km-window GLO-30 median at each candidate as its `gridElevationM`. This is useful for terrain matching but is not the official ERA5-Land model-grid orography. ECMWF publishes the land-sea mask and geopotential used for ERA5-Land on the 0.1° grid. The science pre-audit therefore requires that invariant geopotential (converted to elevation) to be ingested or the post-hoc lapse correction to be removed and revalidated before production approval.
+The sampler records a 1 km-window GLO-30 median as `terrainElevationM` and uses it only to match candidate cells to a destination elevation band. It is never used as ERA5-Land model-grid height. The lapse correction instead receives `era5LandGridElevationM`, extracted independently from ECMWF's official ERA5-Land invariant geopotential. This naming and data-flow separation is enforced by tests.
+
+## ERA5-Land invariant geopotential
+
+ECMWF publishes the invariant geopotential used for ERA5-Land, already interpolated to its regular 0.1° latitude/longitude grid. The pipeline pins the official NetCDF attachment URL and SHA-256 in `data-config/methodology/era5-land-orography-v1.json`. Before use, the 51,898,362-byte download must match SHA-256 `6fe9d064e7eae98bfe20348430bc4290bc94daa838b560c355999cd85cb1a559`.
+
+`scripts/import/download_era5_land_orography.py` selects the nearest invariant grid coordinate for every unique point in the ERA5 request plan, requires parameter `z` in `m**2 s**-2`, and converts geopotential to model elevation using `elevation_m = z / 9.80665`. It records requested and resolved coordinates, raw geopotential, converted height, pinned source metadata and retrieval time in `generated/intermediate/era5-invariants/era5-land-orography.json`. The climate importer also verifies that the invariant and time-series downloads resolve to the same grid coordinate before aggregation.
+
+The pinned NetCDF is cached only on the ephemeral Container filesystem and is excluded from the R2 result archive. The compact checksummed extraction metadata is included. A diagnostic extraction over the previous 34 staged points found absolute GLO-30-window versus ERA5-Land model-height differences from 0.705 m to 877.413 m (mean 360.492 m), confirming that the two values must not be conflated. These diagnostics do not constitute production approval; staging must be rebuilt with the corrected method.
 
 ## ERA5-Land hourly time-series
 
@@ -31,6 +39,6 @@ pnpm cloudflare:data:deploy
 
 The planning command is credential-free. Actual downloads run through the Cloudflare Workflow documented in `docs/cloudflare-data-pipeline.md`.
 
-The default real ingest writes ignored audit artifacts. Publishing committed snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. Run `pnpm preflight:sources` to verify that gate.
+The default real ingest writes ignored audit artifacts. Publishing committed snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. Run `pnpm preflight:sources` to verify that gate. A pre-change artifact that used a GLO-30 proxy for lapse correction is not eligible for production publication.
 
 The live site remains a synthetic fixture until all five real climate snapshots are generated, reviewed, committed, rebuilt and redeployed. Removing the fixture label without completing that chain is prohibited.

@@ -6,6 +6,7 @@ Real source ingestion runs on Cloudflare, independently of the static Pages buil
 authenticated request
 → Cloudflare Workflow
 → Cloudflare Container (Python + NetCDF + TypeScript ETL)
+→ pinned official ERA5-Land invariant-orography verification
 → SHA-256 verification
 → private R2 artifact
 ```
@@ -54,5 +55,6 @@ Runs stage real outputs by default. `publish: true` invokes the repository's exi
 - CDS, DEM, validation, test, or build failures fail the Workflow and preserve the previous public dataset.
 - Workflow steps retry transient failures twice with exponential backoff.
 - Raw hourly data stays on ephemeral Container disk and is excluded from the R2 artifact.
+- The 51.9 MB pinned ERA5-Land invariant NetCDF is verified by SHA-256, cached only on ephemeral Container disk, and excluded from the R2 artifact; its compact per-point extraction metadata is included.
 - The CDS token is passed only as a Container environment variable and is excluded from responses, manifests, logs, and artifacts.
 - R2 artifacts include per-file hashes and a deterministic outer archive hash.

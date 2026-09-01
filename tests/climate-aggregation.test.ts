@@ -53,7 +53,7 @@ test("explicit precipitation modes preserve missingness and reset semantics", ()
 });
 
 test("capped lapse adjustment remains explicit in aggregation output",()=>{
-  const [day]=aggregateDailyClimate(utcDay("2020-06-01"),{timezone:"UTC",lat:0,lon:0,gridElevationM:0,targetElevationM:1500,precipitationSemantics:"INCREMENTAL_PER_TIMESTEP_M"});
+  const [day]=aggregateDailyClimate(utcDay("2020-06-01"),{timezone:"UTC",lat:0,lon:0,era5LandGridElevationM:0,targetElevationM:1500,precipitationSemantics:"INCREMENTAL_PER_TIMESTEP_M"});
   assert.equal(day.temperatureCorrectionC,-5);
   assert.equal(day.temperatureCorrectionCapped,true);
 });
@@ -81,7 +81,7 @@ test("daily metrics use all-day precipitation and hiking-window weather", () => 
     timezone: "UTC",
     lat: 0,
     lon: 0,
-    gridElevationM: 500,
+    era5LandGridElevationM: 500,
     targetElevationM: 1000,
     precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M"
   });
@@ -102,7 +102,7 @@ test("incomplete precipitation is missing rather than silently becoming zero", (
     timezone: "UTC",
     lat: 0,
     lon: 0,
-    gridElevationM: 0,
+    era5LandGridElevationM: 0,
     targetElevationM: 0,
     precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M"
   });
@@ -117,7 +117,7 @@ test("daily classification uses the exact rain, snow, heat, and wind thresholds"
     windUMs:hour===12?40/3.6:hour===13?60/3.6:0,
     windVMs:0
   }));
-  const [day]=aggregateDailyClimate(records,{timezone:"UTC",lat:0,lon:0,gridElevationM:0,targetElevationM:0,precipitationSemantics:"INCREMENTAL_PER_TIMESTEP_M"});
+  const [day]=aggregateDailyClimate(records,{timezone:"UTC",lat:0,lon:0,era5LandGridElevationM:0,targetElevationM:0,precipitationSemantics:"INCREMENTAL_PER_TIMESTEP_M"});
   assert.equal(day.precipitationDailyMm,1);
   assert.equal(day.snowDay,true);
   assert.equal(day.hotDay,true);
@@ -132,7 +132,7 @@ test("monthly climatology uses valid-day denominators and yearly totals", () => 
     timezone: "UTC",
     lat: 0,
     lon: 0,
-    gridElevationM: 0,
+    era5LandGridElevationM: 0,
     targetElevationM: 0,
     precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M"
   });

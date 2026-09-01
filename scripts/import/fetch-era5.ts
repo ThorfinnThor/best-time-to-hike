@@ -8,6 +8,7 @@ import { aggregateMonthlyClimate, aggregatePointClimate, type DailyPointClimate,
 import { greatCircleDistanceKm } from "../../lib/hiking/sampling";
 import { interpolate, overallScore, scoreComponents, type Curve } from "../../lib/scoring";
 import curves from "../../data-config/scoring/curves.json";
+import climateAggregation from "../../data-config/methodology/climate-aggregation-v1.json";
 import { requireApprovedSource } from "./source-preflight";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 
@@ -15,10 +16,32 @@ interface SamplingPoint {
   id: string;
   lat: number;
   lon: number;
-  gridElevationM: number;
   targetElevationM: number;
   elevationMismatchM: number;
   sampleWeight: number;
+}
+
+interface OrographyPoint {
+  key: string;
+  requestedLocation: {latitude:number;longitude:number};
+  resolvedLocation: {latitude:number;longitude:number};
+  geopotentialM2S2: number;
+  era5LandGridElevationM: number;
+}
+
+interface OrographySnapshot {
+  schemaVersion: number;
+  sourceProduct: string;
+  sourceDocumentUrl: string;
+  downloadUrl: string;
+  downloadBytes: number;
+  downloadSha256: string;
+  retrievedAt: string;
+  parameter: {name:string;shortName:string;paramId:number;unit:string};
+  grid: {latitudeDegrees:number;longitudeDegrees:number;selection:string};
+  conversion: {formula:string;standardGravityMS2:number};
+  pointCount: number;
+  points: OrographyPoint[];
 }
 
 interface PointResult {
@@ -56,12 +79,25 @@ function pythonExecutable() {
   return existsSync(local) ? local : "python3";
 }
 
-function runPython(args: string[]) {
+function runPython(script: string, args: string[], errorCode: string) {
   return new Promise<void>((resolve, reject) => {
-    const child = spawn(pythonExecutable(), ["scripts/import/download_era5.py", ...args], { stdio: "inherit", env: process.env });
+    const child = spawn(pythonExecutable(), [script, ...args], { stdio: "inherit", env: process.env });
     child.once("error", reject);
-    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`ERA5_DOWNLOAD001 Python importer exited with ${code}`)));
+    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`${errorCode} Python importer exited with ${code}`)));
   });
+}
+
+function circularLongitudeDifference(first: number, second: number) {
+  return Math.abs(((first - second + 540) % 360) - 180);
+}
+
+function sameGridLocation(first: {latitude:number;longitude:number}, second: {latitude:number;longitude:number}) {
+  return Number.isFinite(first?.latitude)
+    && Number.isFinite(first?.longitude)
+    && Number.isFinite(second?.latitude)
+    && Number.isFinite(second?.longitude)
+    && Math.abs(first.latitude - second.latitude) <= 1e-4
+    && circularLongitudeDifference(first.longitude, second.longitude) <= 1e-4;
 }
 
 async function readHourlyObservations(path: string) {
@@ -93,9 +129,7 @@ function completeYearPointMetrics(metrics: MonthlyPointClimate) {
 }
 
 function maximumSeparation(points: Array<{lat:number;lon:number}>) {
-  return Math.max(0, ...points.flatMap((point, index) => points.slice(index + 1).map((other) => greatCircleDistanceKm(
-    {...point,gridElevationM:0}, {...other,gridElevationM:0}
-  ))));
+  return Math.max(0, ...points.flatMap((point, index) => points.slice(index + 1).map((other) => greatCircleDistanceKm(point, other))));
 }
 
 function polygonDiameterKm(geometry: any) {
@@ -164,9 +198,16 @@ async function main() {
     .filter((destination) => destination.active && (!requestedSlugs.size || requestedSlugs.has(destination.slug)));
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
   const plan = buildPlan(destinations, !publish);
+  const orographyConfig = readJson<any>("data-config/methodology/era5-land-orography-v1.json");
   writeJson("generated/intermediate/era5-request-plan.json", {
-    schemaVersion: 1,
+    schemaVersion: 2,
     source: "reanalysis-era5-land-timeseries",
+    orographySource: {
+      sourceProduct: orographyConfig.sourceProduct,
+      downloadUrl: orographyConfig.downloadUrl,
+      downloadBytes: orographyConfig.downloadBytes,
+      downloadSha256: orographyConfig.downloadSha256
+    },
     climateNormal: {startYear:1991,endYear:2020},
     uniquePointCount: plan.length,
     entries: plan
@@ -177,6 +218,28 @@ async function main() {
   }
   if (!process.env.CDSAPI_KEY) {
     throw new Error("BLOCKED_OPERATOR_SECRET: set CDSAPI_KEY after accepting the ERA5-Land time-series dataset terms in the CDS portal");
+  }
+
+  const orographyPath = "generated/intermediate/era5-invariants/era5-land-orography.json";
+  await runPython("scripts/import/download_era5_land_orography.py", [
+    "--plan", "generated/intermediate/era5-request-plan.json",
+    "--output", orographyPath
+  ], "ERA5_OROGRAPHY001");
+  const orography = readJson<OrographySnapshot>(orographyPath);
+  if (orography.schemaVersion !== 1
+    || orography.downloadUrl !== orographyConfig.downloadUrl
+    || orography.downloadBytes !== orographyConfig.downloadBytes
+    || orography.downloadSha256 !== orographyConfig.downloadSha256
+    || orography.parameter?.shortName !== "z"
+    || orography.parameter?.unit !== "m**2 s**-2"
+    || orography.conversion?.standardGravityMS2 !== 9.80665
+    || orography.pointCount !== plan.length
+    || orography.points.length !== plan.length) {
+    throw new Error("ERA5_OROGRAPHY001 invalid invariant-orography metadata");
+  }
+  const orographyByKey = new Map(orography.points.map((point) => [point.key, point]));
+  if (orographyByKey.size !== plan.length || plan.some((entry) => !orographyByKey.has(entry.key))) {
+    throw new Error("ERA5_OROGRAPHY001 invariant-orography point set differs from the request plan");
   }
 
   const geometry = readJson<any>("data-config/geography/destination-areas.geojson");
@@ -198,15 +261,17 @@ async function main() {
     }
     for (const [key, consumers] of consumersByCoordinate) {
       const point = consumers[0];
+      const pointOrography = orographyByKey.get(key);
+      if (!pointOrography) throw new Error(`ERA5_OROGRAPHY001 missing invariant orography for ${key}`);
       const rawPath = `generated/intermediate/era5-raw/${key}.ndjson.gz`;
       const metadataPath = `generated/intermediate/era5-raw/${key}.meta.json`;
       if (refresh || !existsSync(rawPath) || !existsSync(metadataPath)) {
         console.log(`Downloading ERA5-Land 1991–2020 for ${destination.name} at ${point.lat.toFixed(1)}, ${point.lon.toFixed(1)}...`);
-        await runPython([
+        await runPython("scripts/import/download_era5.py", [
           "--lat", String(point.lat), "--lon", String(point.lon),
           "--start-date", "1991-01-01", "--end-date", "2020-12-31",
           "--output", rawPath, "--metadata", metadataPath
-        ]);
+        ], "ERA5_DOWNLOAD001");
       }
       const metadata = readJson<any>(metadataPath);
       const expectedRequest = {
@@ -221,7 +286,10 @@ async function main() {
         || JSON.stringify(metadata.request) !== JSON.stringify(expectedRequest)) {
         throw new Error(`ERA5_REQUEST001 invalid source response metadata for ${key}`);
       }
-      pointMetadata.push(metadata);
+      if (!sameGridLocation(metadata.resolvedLocation, pointOrography.resolvedLocation)) {
+        throw new Error(`ERA5_OROGRAPHY001 climate and invariant grid locations differ for ${key}`);
+      }
+      pointMetadata.push({ key, climate: metadata, orography: pointOrography });
       const observations = await readHourlyObservations(rawPath);
       if (observations.length !== metadata.observationCount) throw new Error(`ERA5_REQUEST001 raw observation count mismatch for ${key}`);
       for (const consumer of consumers) {
@@ -229,7 +297,7 @@ async function main() {
           timezone: destination.timezone,
           lat: consumer.lat,
           lon: consumer.lon,
-          gridElevationM: consumer.gridElevationM,
+          era5LandGridElevationM: pointOrography.era5LandGridElevationM,
           targetElevationM: consumer.targetElevationM,
           precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
           startYear: 1991,
@@ -297,9 +365,9 @@ async function main() {
       });
       return [bandConfig.id, {months}];
     }));
-    const retrievedAt = pointMetadata.map((metadata) => metadata.retrievedAt).sort().at(-1);
+    const retrievedAt = pointMetadata.map((metadata) => metadata.climate.retrievedAt).sort().at(-1);
     const snapshot = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       datasetStatus: "production",
       destinationId: destination.id,
       fixture: false,
@@ -309,13 +377,32 @@ async function main() {
       climateNormal: {startYear:1991,endYear:2020},
       retrievedAt,
       precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
+      temperatureElevationCorrection: {
+        reference: "ERA5_LAND_INVARIANT_GEOPOTENTIAL",
+        lapseRateCPer1000M: climateAggregation.temperatureLapseRateCPer1000M,
+        maximumAbsoluteCorrectionC: climateAggregation.maxAutomaticTemperatureCorrectionC,
+        orography: {
+          sourceProduct: orography.sourceProduct,
+          sourceDocumentUrl: orography.sourceDocumentUrl,
+          downloadUrl: orography.downloadUrl,
+          downloadBytes: orography.downloadBytes,
+          downloadSha256: orography.downloadSha256,
+          retrievedAt: orography.retrievedAt,
+          parameter: orography.parameter,
+          grid: orography.grid,
+          conversion: orography.conversion
+        }
+      },
       samplingSnapshotHash: sha256(readFileSync(samplingPath, "utf8")),
       sourceDownloads: pointMetadata.map((metadata) => ({
-        request: metadata.request,
-        resolvedLocation: metadata.resolvedLocation,
-        observationCount: metadata.observationCount,
-        downloadSha256: metadata.downloadSha256,
-        retrievedAt: metadata.retrievedAt
+        key: metadata.key,
+        request: metadata.climate.request,
+        resolvedLocation: metadata.climate.resolvedLocation,
+        observationCount: metadata.climate.observationCount,
+        downloadSha256: metadata.climate.downloadSha256,
+        retrievedAt: metadata.climate.retrievedAt,
+        geopotentialM2S2: metadata.orography.geopotentialM2S2,
+        era5LandGridElevationM: metadata.orography.era5LandGridElevationM
       })),
       bands
     };

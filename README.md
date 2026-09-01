@@ -2,7 +2,7 @@
 
 A bilingual, static hiking-season decision engine. It turns versioned climate/elevation snapshots into transparent monthly scores, rankings, comparisons, and a client-side preference finder.
 
-The public build currently ships a five-destination **fixture dataset** and therefore remains deliberately `noindex`. The repository now includes working real-data adapters: polygon-clipped Copernicus DEM GLO-30 ingestion from the unsigned public COG distribution, DEM-derived ERA5 grid sampling, and credential-driven ERA5-Land 1991–2020 hourly ingestion. Production publication remains gated until the source/geometry approvals are recorded and the ERA5 download has actually completed.
+The public build currently ships a five-destination **fixture dataset** and therefore remains deliberately `noindex`. The repository now includes working real-data adapters: polygon-clipped Copernicus DEM GLO-30 terrain ingestion, DEM-derived ERA5 grid sampling, official ERA5-Land invariant-geopotential model heights, and credential-driven ERA5-Land 1991–2020 hourly ingestion. Production publication remains gated until the source/geometry approvals are recorded and corrected real-data staging has completed.
 
 ## Stack
 
@@ -42,7 +42,7 @@ pnpm cloudflare:data:check
 pnpm cloudflare:data:deploy
 ```
 
-`CDSAPI_KEY` and `INGEST_ADMIN_TOKEN` are encrypted Cloudflare Worker secrets. They are not repository, Pages-build, or local environment variables. The ERA5 plan currently contains 35 unique point requests. A run stages real DEM, sampling, and climate outputs by default; `publish: true` remains blocked until the source and release approval registries are complete. See `docs/cloudflare-data-pipeline.md`.
+`CDSAPI_KEY` and `INGEST_ADMIN_TOKEN` are encrypted Cloudflare Worker secrets. They are not repository, Pages-build, or local environment variables. The ERA5 plan currently contains 34 unique point requests. A run stages real DEM, sampling, invariant orography, and climate outputs by default; `publish: true` remains blocked until the source and release approval registries are complete. See `docs/cloudflare-data-pipeline.md`.
 
 ## Deployment
 

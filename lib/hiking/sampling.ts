@@ -1,9 +1,10 @@
 import samplingConfig from "@/data-config/methodology/sampling-v1.json";
 
-export interface Candidate { lat:number; lon:number; gridElevationM:number }
+export interface Coordinate { lat:number; lon:number }
+export interface Candidate extends Coordinate { terrainElevationM:number }
 export interface SelectedCandidate extends Candidate { elevationMismatchM:number; sampleWeight:number; selectionRank:number }
 
-export const greatCircleDistanceKm = (a: Candidate, b: Candidate) => {
+export const greatCircleDistanceKm = (a: Coordinate, b: Coordinate) => {
   const r = 6371;
   const dLat = (b.lat-a.lat)*Math.PI/180;
   const dLon = (b.lon-a.lon)*Math.PI/180;
@@ -12,7 +13,7 @@ export const greatCircleDistanceKm = (a: Candidate, b: Candidate) => {
 };
 
 export function selectSamplingPoints(candidates: Candidate[], targetElevationM: number, maxPoints = samplingConfig.maxPointsPerBand, slackM = samplingConfig.dispersionMismatchSlackM): SelectedCandidate[] {
-  const ranked = candidates.map((candidate)=>({...candidate,elevationMismatchM:Math.abs(candidate.gridElevationM-targetElevationM)})).sort((a,b)=>a.elevationMismatchM-b.elevationMismatchM || a.lat-b.lat || a.lon-b.lon);
+  const ranked = candidates.map((candidate)=>({...candidate,elevationMismatchM:Math.abs(candidate.terrainElevationM-targetElevationM)})).sort((a,b)=>a.elevationMismatchM-b.elevationMismatchM || a.lat-b.lat || a.lon-b.lon);
   if (!ranked.length) return [];
   const selected = [ranked[0]];
   while (selected.length < Math.min(maxPoints, ranked.length)) {

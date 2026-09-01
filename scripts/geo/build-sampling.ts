@@ -13,7 +13,7 @@ interface GeometryFeature {
 interface SamplingCandidate {
   lat: number;
   lon: number;
-  gridElevationM: number;
+  terrainElevationM: number;
   usedBufferM: number;
   validPixelCount: number;
 }
@@ -53,7 +53,7 @@ async function candidatesForGeometry(geometry: DemGeometry, config: any, demInge
     if (elevation.medianM === null || elevation.pixelCount < config.minValidPixels) continue;
     candidates.push({
       ...coordinate,
-      gridElevationM: round(elevation.medianM, 1),
+      terrainElevationM: round(elevation.medianM, 1),
       validPixelCount: elevation.pixelCount
     });
   }
@@ -109,7 +109,7 @@ async function main() {
           id: `${destination.slug}-${band.id}-${point.selectionRank}`,
           lat: point.lat,
           lon: point.lon,
-          gridElevationM: point.gridElevationM,
+          terrainElevationM: point.terrainElevationM,
           targetElevationM,
           elevationMismatchM: round(point.elevationMismatchM, 1),
           sampleWeight: point.sampleWeight,
@@ -122,12 +122,17 @@ async function main() {
       return [band.id, { targetElevationM, points: selected }];
     }));
     const snapshot = {
-      schemaVersion: 1,
+      schemaVersion: 2,
       datasetStatus: "production",
       destinationId: destination.id,
       fixture: false,
       samplingVersion: samplingConfig.samplingVersion,
-      source: "era5-land-0.1-degree-grid-with-copernicus-dem-glo-30-elevation-matching",
+      source: "era5-land-0.1-degree-grid-with-separate-copernicus-dem-glo-30-terrain-matching",
+      terrainElevationSource: {
+        product: "COP-DEM_GLO-30-DGED",
+        statistic: "median",
+        windowRadiusM: samplingConfig.demCandidateWindowRadiusM
+      },
       demSnapshotHash: sha256(readFileSync(demPath, "utf8")),
       candidateCount: candidates.length,
       excludedCandidateCount: allCandidates.length - candidates.length,

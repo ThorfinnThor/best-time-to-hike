@@ -4,6 +4,8 @@ Status: **staging evidence collected; production release blocked**
 Prepared: 2026-09-01  
 Scope: the five currently configured destinations only. This packet is evidence for review; it does not set an approval flag, modify public snapshots, or publish a dataset.
 
+> Superseded-method warning (2026-09-01): this artifact predates the official ERA5-Land invariant-orography implementation and used a GLO-30 window median as the lapse-correction reference. It remains useful as historical pipeline evidence but is not eligible for science approval or publication. A new `publish:false` staging run is required.
+
 ## What was produced
 
 The Cloudflare Workflow `best-time-to-hike-real-data` completed a `publish:false` run for all active destinations after an automatic platform retry. The resulting artifact is stored privately in R2 and was downloaded independently for checksum and content validation.
@@ -31,7 +33,7 @@ The archive contains real ERA5-Land time-series-derived climate outputs and Cope
 - The importer clamps only tiny NetCDF negative accumulation noise (floor `-1e-6 m`) and rejects material negative values.
 - ERA5-Land `snow_cover` percent values are normalized to the canonical 0–1 fraction.
 - Versioned ocean/invalid-cell exclusions are recorded for Madeira and Mallorca in `data-config/geography/destination-overrides.json`.
-- Repository checks: `pnpm test` (32/32), TypeScript checks, Python compilation and `git diff --check` pass.
+- Historical repository checks for this superseded packet: `pnpm test` (32/32), TypeScript checks, Python compilation and `git diff --check` passed at capture time.
 
 ## Current release report
 

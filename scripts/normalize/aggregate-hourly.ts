@@ -5,14 +5,14 @@ import { requireApprovedSource } from "../import/source-preflight";
 import { readJson, writeJson } from "../lib/io";
 
 interface HourlySnapshot {
-  schemaVersion: 1;
+  schemaVersion: 2;
   datasetStatus: "fixture" | "production";
   source: "era5Land";
   destinationId: string;
   samplePointId: string;
   timezone: string;
   coordinates: {lat:number;lon:number};
-  gridElevationM: number;
+  era5LandGridElevationM: number;
   targetElevationM: number;
   precipitationSemantics: PrecipitationSemantics;
   climateNormal: {startYear:number;endYear:number};
@@ -35,7 +35,7 @@ const result = aggregatePointClimate(snapshot.observations, {
   timezone: snapshot.timezone,
   lat: snapshot.coordinates.lat,
   lon: snapshot.coordinates.lon,
-  gridElevationM: snapshot.gridElevationM,
+  era5LandGridElevationM: snapshot.era5LandGridElevationM,
   targetElevationM: snapshot.targetElevationM,
   precipitationSemantics: snapshot.precipitationSemantics,
   startYear: snapshot.climateNormal.startYear,

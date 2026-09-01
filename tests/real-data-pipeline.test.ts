@@ -3,6 +3,8 @@ import { test } from "node:test";
 import { aggregateBandPointMetrics } from "../lib/hiking/band-climate";
 import type { MonthlyPointClimate } from "../lib/hiking/climate";
 import { ElevationHistogram, geometryContains, geometryDistanceKm, tileIdForCoordinate, type DemGeometry } from "../scripts/import/copernicus-dem";
+import { readFileSync } from "node:fs";
+import orography from "../data-config/methodology/era5-land-orography-v1.json";
 
 const pointMonth = (temperature: number, wet: number): MonthlyPointClimate => ({
   month: 7,
@@ -62,4 +64,16 @@ test("band metrics use point weights and preserve exact utility score", () => {
 
 test("band aggregation rejects incomplete point weights", () => {
   assert.throws(() => aggregateBandPointMetrics([{sampleWeight:.9,metrics:pointMonth(10,.2)}]), /sum to one/);
+});
+
+test("lapse correction is wired to pinned ERA5-Land orography, not GLO-30 terrain", () => {
+  assert.equal(orography.parameter.shortName, "z");
+  assert.equal(orography.parameter.unit, "m**2 s**-2");
+  assert.equal(orography.conversion.standardGravityMS2, 9.80665);
+  assert.match(orography.downloadSha256, /^[a-f0-9]{64}$/);
+  const climateImporter = readFileSync("scripts/import/fetch-era5.ts", "utf8");
+  const sampler = readFileSync("scripts/geo/build-sampling.ts", "utf8");
+  assert.match(climateImporter, /era5LandGridElevationM: pointOrography\.era5LandGridElevationM/);
+  assert.doesNotMatch(climateImporter, /gridElevationM: consumer\.gridElevationM/);
+  assert.match(sampler, /terrainElevationM: point\.terrainElevationM/);
 });

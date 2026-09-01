@@ -55,6 +55,7 @@ def artifact_inputs(publish: bool) -> list[Path]:
         ROOT / "generated/intermediate/real-dem",
         ROOT / "generated/intermediate/real-sampling",
         ROOT / "generated/intermediate/real-climate",
+        ROOT / "generated/intermediate/era5-invariants/era5-land-orography.json",
         ROOT / "generated/intermediate/era5-request-plan.json",
         ROOT / "generated/intermediate/cloudflare-run-manifest.json",
     ]
@@ -167,7 +168,7 @@ def run_pipeline(payload: dict[str, Any]) -> tuple[int, str]:
     manifest = {
         "schemaVersion": 1,
         "runtime": "cloudflare-container",
-        "dataset": "ERA5-Land 1991-2020 + Copernicus DEM GLO-30",
+        "dataset": "ERA5-Land 1991-2020 + official ERA5-Land invariant geopotential + Copernicus DEM GLO-30",
         "destinations": sorted(set(destinations)),
         "published": publish,
         "completedAt": datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),

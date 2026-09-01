@@ -13,7 +13,9 @@ The implemented ERA5-Land variable semantics are substantially correct:
 - physical snow height is `snow_depth` / ECMWF short name `sde`, in metres. ECMWF `sd` is snow water equivalent and is correctly not accepted as the physical-height alias.
 - material negative precipitation, non-fractional snow cover, material negative snow height, missing variables, unexpected units and non-contiguous time coordinates fail closed.
 
-Two unresolved methodology issues block a science/data approval. First, `gridElevationM` is a 1 km Copernicus GLO-30 median, not the official ERA5-Land grid orography. It is then used as the reference for a post-hoc temperature lapse correction. Second, the destination polygons, elevation bands and band weights do not carry reviewable geographic/trail-source provenance. The current approval gates correctly remain false.
+At the time of this pre-audit, two methodology issues blocked a science/data approval. First, `gridElevationM` was a 1 km Copernicus GLO-30 median, not the official ERA5-Land grid orography, yet it was used as the reference for a post-hoc temperature lapse correction. Second, the destination polygons, elevation bands and band weights did not carry reviewable geographic/trail-source provenance. The current approval gates correctly remain false.
+
+Implementation update, 2026-09-01: H1 has been corrected in code. The sampler now labels the GLO-30 window median `terrainElevationM` and uses it only for terrain matching. A hash-pinned importer extracts `z` from ECMWF's official 0.1° ERA5-Land invariant NetCDF, converts it with `z / 9.80665`, verifies that the time-series and invariant products resolve to the same grid coordinate, and passes only `era5LandGridElevationM` to the lapse correction. The previous 34-point staging artifact is superseded and must be rebuilt; H2 and the remaining findings still block science/data approval.
 
 ## Authoritative sources reviewed
 
@@ -32,6 +34,8 @@ Accessed 2026-09-01:
 ### High — release blockers
 
 #### H1. The lapse correction does not use ERA5-Land grid orography
+
+Resolution status (2026-09-01): **implemented in code; corrected staging evidence still required.** The historical finding below describes the superseded implementation.
 
 `scripts/geo/build-sampling.ts` sets `gridElevationM` to the median GLO-30 DSM height within 1 km of the nominal 0.1° coordinate. `lib/hiking/climate.ts` and `lib/scoring/index.ts` then apply a fixed `-6.5 °C/km` correction from that value to the elevation-band median.
 
@@ -124,7 +128,7 @@ Controls that passed review:
 
 Controls still needed:
 
-- official ERA5-Land invariant geopotential and land-sea-mask ingestion;
+- official ERA5-Land invariant land-sea-mask ingestion (geopotential ingestion is implemented; corrected staging remains to be rebuilt);
 - source/output transformation hashes and a portable artifact evidence bundle;
 - committed Python importer unit tests;
 - versioned destination geometry/band provenance;
@@ -134,12 +138,13 @@ Controls still needed:
 
 Do not change approvals until the operator decides all of the following:
 
-1. Whether to ingest ERA5-Land geopotential and retain the fixed lapse rate, or remove the post-hoc correction and recalibrate with Golden cases.
-2. Which authoritative geometry/trail sources and catalogue granularity define a “destination”.
-3. Whether WBM plus selected DEM quality layers are mandatory before adding lake/glacier/forest-heavy destinations.
-4. Whether the ARCO time-series operational risk is accepted or a parent-product fallback is required before production.
-5. Whether the current four mask exclusions must be re-probed with immutable multi-variable evidence.
-6. Whether the local tiny-negative thresholds are accepted after boundary tests and a larger empirical sample.
+The operator selected the first remediation path: ingest official ERA5-Land geopotential and retain the fixed, capped lapse correction. That decision is implemented but still requires corrected staging and Golden-case review. The remaining decisions are:
+
+1. Which authoritative geometry/trail sources and catalogue granularity define a “destination”.
+2. Whether WBM plus selected DEM quality layers are mandatory before adding lake/glacier/forest-heavy destinations.
+3. Whether the ARCO time-series operational risk is accepted or a parent-product fallback is required before production.
+4. Whether the current four mask exclusions must be re-probed with immutable multi-variable evidence.
+5. Whether the local tiny-negative thresholds are accepted after boundary tests and a larger empirical sample.
 
 Only after those decisions, rebuilt real-data staging, at least 30 reviewed Golden cases and the existing release gates pass should the science/data approval be considered.
 

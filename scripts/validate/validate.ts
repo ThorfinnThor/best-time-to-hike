@@ -28,6 +28,7 @@ const confidence=readJson<any>("data-config/methodology/confidence-v1.json");
 const curves=readJson<any>("data-config/scoring/curves.json");
 const climateAggregation=readJson<any>("data-config/methodology/climate-aggregation-v1.json");
 const demIngestion=readJson<any>("data-config/methodology/dem-ingestion-v1.json");
+const era5LandOrography=readJson<any>("data-config/methodology/era5-land-orography-v1.json");
 const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
 assert(Math.abs(Object.values(scoringWeights.overall).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Overall score weights do not sum to 1");
@@ -38,9 +39,13 @@ for(const [name,curve] of Object.entries(curves))if(Array.isArray(curve)){
   assert(curve.every((point:any,index:number)=>Array.isArray(point)&&point.length===2&&Number.isFinite(point[0])&&Number.isFinite(point[1])&&point[1]>=0&&point[1]<=100&&(index===0||point[0]>curve[index-1][0])),`${name}: scoring curve points must have increasing x and scores in 0..100`);
 }
 assert(climateAggregation.normal.startYear===1991&&climateAggregation.normal.endYear===2020,"Scientific config climate normal mismatch");
+assert(climateAggregation.climateAggregationVersion===2&&climateAggregation.temperatureElevationReference==="ERA5_LAND_INVARIANT_GEOPOTENTIAL","Scientific config temperature-elevation reference mismatch");
 assert(climateAggregation.requiredHourlyVariables.length===7&&new Set(climateAggregation.requiredHourlyVariables).size===7,"Required hourly variable registry mismatch");
 assert(demIngestion.sourceProduct==="COP-DEM_GLO-30-DGED"&&demIngestion.verticalUnit==="m"&&demIngestion.horizontalCrs==="EPSG:4326","DEM ingestion source contract mismatch");
 assert(demIngestion.landSurfaceMinimumExclusiveM===0,"DEM land/ocean rule changed without a validation update");
+assert(era5LandOrography.parameter.shortName==="z"&&era5LandOrography.parameter.paramId===129&&era5LandOrography.parameter.unit==="m**2 s**-2","ERA5-Land orography parameter contract mismatch");
+assert(era5LandOrography.grid.latitudeDegrees===.1&&era5LandOrography.grid.longitudeDegrees===.1&&era5LandOrography.grid.selection==="NEAREST_GRID_COORDINATE","ERA5-Land orography grid contract mismatch");
+assert(era5LandOrography.conversion.standardGravityMS2===9.80665&&era5LandOrography.downloadBytes===51898362&&/^[a-f0-9]{64}$/.test(era5LandOrography.downloadSha256),"ERA5-Land orography conversion/source-pin contract mismatch");
 for(const [name,approval] of Object.entries(releaseApprovals.approvals) as Array<[string,any]>)if(approval.approved)assert(Boolean(approval.approvedBy)&&Number.isFinite(new Date(approval.approvedAt).getTime()),`${name}: approved release gate lacks approver/timestamp`);
 const slugs = new Set<string>();
 const ids = new Set<string>();
@@ -79,9 +84,12 @@ for(const config of configs.filter((item)=>item.active)){
     assert(Math.abs(band.points.reduce((sum:number,point:any)=>sum+point.sampleWeight,0)-1)<1e-9,`${config.slug}/${bandConfig.id}: sample weights do not sum to 1`);
     assert(band.points.every((point:any,index:number)=>point.selectionRank===index+1),`${config.slug}/${bandConfig.id}: selection ranks are not contiguous`);
     for(const point of band.points){
+      const terrainElevationM = point.terrainElevationM ?? (sampling.fixture ? point.gridElevationM : undefined);
       assert(!samplingPointIds.has(point.id),`Duplicate sampling point ID: ${point.id}`); samplingPointIds.add(point.id);
       assert(point.targetElevationM===band.targetElevationM,`${point.id}: target elevation mismatch`);
-      assert(Math.abs(Math.abs(point.gridElevationM-point.targetElevationM)-point.elevationMismatchM)<1e-9,`${point.id}: elevation mismatch is not reproducible`);
+      assert(Number.isFinite(terrainElevationM),`${point.id}: terrain elevation is missing`);
+      assert(Math.abs(Math.abs(terrainElevationM-point.targetElevationM)-point.elevationMismatchM)<1e-9,`${point.id}: elevation mismatch is not reproducible`);
+      if(!sampling.fixture)assert(point.gridElevationM===undefined,`${point.id}: real sampling must not label GLO-30 terrain as ERA5 grid elevation`);
       assert(point.elevationMismatchM<=800,`${point.id}: blocked elevation mismatch requires an explicit approved override`);
     }
   }
