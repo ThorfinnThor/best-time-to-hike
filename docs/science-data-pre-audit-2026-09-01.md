@@ -77,7 +77,7 @@ The release packet supplies a private R2 key and archive SHA-256 but no committe
 
 Required resolution: hash the canonical NDJSON, persist importer/version checksums and the essential unit/normalisation/clamp metadata into the climate provenance, commit or attach a non-sensitive per-file artifact manifest, and add deterministic Python tests with synthetic NetCDF fixtures.
 
-Implementation update (2026-09-02): the importer now writes deterministic gzip-NDJSON, records and verifies its SHA-256 and the importer source hash, and carries variable, normalisation and clamp metadata into `sourceDownloads`. Committed Python tests cover conversion and deterministic output. A fresh real-data staging artifact is still required before this new provenance can be reviewed in evidence; a non-sensitive per-file artifact manifest remains open.
+Implementation update (2026-09-02): the importer now writes deterministic gzip-NDJSON, records and verifies its SHA-256 and the importer source hash, and carries variable, normalisation and clamp metadata into `sourceDownloads`. Committed Python tests cover conversion and deterministic output. Staging uploads now include a non-sensitive manifest with per-file byte counts and SHA-256 values bound to the Actions run and Git commit. A fresh real-data staging artifact is still required before this new provenance can be reviewed in evidence.
 
 #### M4. The `-1e-6 m` negative-value floor is a local policy, not an ECMWF threshold
 

@@ -62,6 +62,10 @@ jobs:
           pnpm data:era5 -- --publish --refresh
           pnpm verify
 
+      - name: Build staging evidence manifest
+        if: ${{ inputs.publish == false }}
+        run: pnpm evidence:manifest
+
       - name: Upload staging evidence
         if: ${{ inputs.publish == false && always() }}
         uses: actions/upload-artifact@v4
@@ -75,6 +79,7 @@ jobs:
             generated/intermediate/real-climate
             generated/intermediate/era5-invariants
             generated/intermediate/era5-request-plan.json
+            generated/intermediate/staging-evidence-manifest.json
 
       - name: Commit approved static data
         if: ${{ inputs.publish == true }}
