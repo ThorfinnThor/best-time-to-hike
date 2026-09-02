@@ -42,6 +42,19 @@ test("geometry containment respects holes and distance is zero inside", () => {
   assert.ok(geometryDistanceKm(geometry, [3,1]) > 100);
 });
 
+test("active geometry carries explicit pending provenance and scope", () => {
+  const collection = JSON.parse(readFileSync("data-config/geography/destination-areas.geojson", "utf8")) as {features:Array<{properties:any}>};
+  assert.equal(collection.features.length, 5);
+  for (const feature of collection.features) {
+    assert.equal(feature.properties.provenance.status, "pending-review");
+    assert.equal(feature.properties.provenance.sourceType, "project-curated-draft");
+    assert.ok(feature.properties.provenance.sourceLabel.length > 0);
+    assert.ok(feature.properties.provenance.excludedClasses.includes("open-water"));
+    assert.ok(feature.properties.provenance.bandRationale.includes("pending"));
+    assert.ok(feature.properties.provenance.weightRationale.includes("pending"));
+  }
+});
+
 test("DEM histogram produces deterministic nearest-rank statistics", () => {
   const histogram = new ElevationHistogram();
   [0.04, 100.04, 200.04, 300.04].forEach((value) => histogram.add(value));

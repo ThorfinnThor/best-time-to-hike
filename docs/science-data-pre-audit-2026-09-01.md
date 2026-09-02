@@ -49,9 +49,11 @@ Required resolution: ingest the official ERA5-Land geopotential at every selecte
 
 #### H2. Destination geometry, band definitions and weights lack auditable provenance
 
-The five polygons are coarse, manually encoded polygons with only `destinationId` properties. The configured elevation band cut-offs and weights have no cited trail network, park/massif boundary, hiking-use distribution or named reviewer. GLO-30 band coverage is internally coherent (Madeira and Mallorca 100%, Tenerife 99.99%, Chamonix 96.65%, Dolomites 95.05%), but coverage alone does not establish that the polygon or weighting represents where users hike.
+The five polygons are coarse, manually encoded project-curated drafts. Their properties now explicitly record `pending-review` status, intended scope, excluded classes and draft band/weight rationales, but they still lack a cited trail network, park/massif boundary, hiking-use distribution and named reviewer. GLO-30 band coverage is internally coherent (Madeira and Mallorca 100%, Tenerife 99.99%, Chamonix 96.65%, Dolomites 95.05%), but coverage alone does not establish that the polygon or weighting represents where users hike.
 
 Required resolution: for each destination, record the boundary/trail source, licence, version/date, intended hiking scope, excluded water/urban/glacier areas, band rationale, weight rationale and reviewer. Visual review and representative trail/POI checks are required before setting `destinationGeometryAndElevation.approved`.
+
+Implementation update (2026-09-02): the geometry schema now requires explicit provenance and scope metadata, and the five active drafts are marked `pending-review`. This closes the intake-structure gap but not the underlying source/reviewer decision.
 
 ### Medium — material evidence or robustness gaps
 

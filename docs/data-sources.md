@@ -8,7 +8,7 @@ The production climate normal is ERA5-Land 1991–2020. Copernicus DEM GLO-30 su
 
 The default command writes ignored audit artifacts under `generated/intermediate/real-dem/`. `--publish` writes `data-snapshots/dem/` only after the DEM source and geometry/elevation gates contain an approver and timestamp.
 
-Sampling candidates are also checked against versioned ERA5-Land mask evidence. A coastal grid cell that has valid GLO-30 terrain in the configured DEM window but returns fully masked ERA5-Land variables is excluded through `data-config/geography/destination-overrides.json`; the exclusion records its probe date and Workflow evidence instead of silently treating missing climate values as zero.
+Sampling candidates are also checked against versioned ERA5-Land mask evidence. A coastal grid cell that has valid GLO-30 terrain in the configured DEM window but returns fully masked ERA5-Land variables is excluded through `data-config/geography/destination-overrides.json`; the exclusion records its probe date and Workflow evidence instead of silently treating missing climate values as zero. Every active geometry also carries an explicit pending/reviewed provenance status, intended scope, excluded classes and draft band/weight rationale; `pending-review` is not a release approval.
 
 The sampler records a 1 km-window GLO-30 median as `terrainElevationM` and uses it only to match candidate cells to a destination elevation band. It is never used as ERA5-Land model-grid height. The lapse correction instead receives `era5LandGridElevationM`, extracted independently from ECMWF's official ERA5-Land invariant geopotential. This naming and data-flow separation is enforced by tests.
 
