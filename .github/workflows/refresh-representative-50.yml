@@ -40,6 +40,9 @@ jobs:
       - name: Prepare exactly 50 representative model-grid destinations
         run: pnpm data:representative-prepare
 
+      - name: Verify the generated 50-destination structure before climate computation
+        run: pnpm exec tsx --test tests/destination-candidates.test.ts
+
       - name: Cache canonical ERA5-Land point series between fail-closed retries
         id: era5-cache
         uses: actions/cache/restore@v4
