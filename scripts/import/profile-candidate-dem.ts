@@ -21,6 +21,11 @@ interface GeometryStaging {
   boundaries: Record<string, CandidateGeometry>;
 }
 
+interface ScienceDecision {
+  id: string;
+  bands: Array<{ id: string; minM: number; maxM: number; weight: number }>;
+}
+
 const batchNumber = Number(process.env.BTH_GEOMETRY_BATCH ?? "1");
 if (!Number.isInteger(batchNumber) || batchNumber < 1) {
   throw new Error("DEM_PROFILE001 BTH_GEOMETRY_BATCH must be a positive integer");
@@ -36,6 +41,7 @@ const requestedIds = new Set([
 async function main() {
   const staging = readJson<GeometryStaging>(`generated/intermediate/geometry-osm-batch-${batchNumber}.json`);
   const ingestion = readJson<any>("data-config/methodology/dem-ingestion-v1.json");
+  const science = readJson<{ decisions: ScienceDecision[] }>(`data-config/sources/destination-science-decisions-batch-${batchNumber}.json`);
   const entries = Object.entries(staging.boundaries)
     .filter(([id]) => !requestedIds.size || requestedIds.has(id));
 
@@ -63,6 +69,23 @@ async function main() {
     ];
     const quantilesM = Object.fromEntries(percentiles
       .map(([name, percentile]) => [name, round(histogram.quantile(percentile)!, 1)]));
+    const decision = science.decisions.find((candidate) => candidate.id === id);
+    if (!decision) throw new Error(`DEM_PROFILE001 missing science decision for ${id}`);
+    const bands = decision.bands.map((band, index) => {
+      const maximumInclusive = index === decision.bands.length - 1;
+      const pixelCount = histogram.countBetween(band.minM, band.maxM, maximumInclusive);
+      const medianM = histogram.quantile(0.5, band.minM, band.maxM, maximumInclusive);
+      if (!pixelCount || medianM === null) throw new Error(`DEM_PROFILE002 ${id}/${band.id} contains no DEM pixels`);
+      return {
+        ...band,
+        pixelCount,
+        fractionOfLandPixels: round(pixelCount / histogram.count, 6),
+        observedMinM: round(histogram.quantile(Number.EPSILON, band.minM, band.maxM, maximumInclusive)!, 1),
+        observedMedianM: round(medianM, 1),
+        observedMaxM: round(histogram.quantile(1, band.minM, band.maxM, maximumInclusive)!, 1)
+      };
+    });
+    const representedPixelCount = bands.reduce((sum, band) => sum + band.pixelCount, 0);
 
     const output = `generated/intermediate/dem-profiles-batch-${batchNumber}/${id}.json`;
     writeJson(output, {
@@ -88,6 +111,9 @@ async function main() {
       retrievedAt: new Date().toISOString(),
       pixelCount: histogram.count,
       quantilesM,
+      representedPixelCount,
+      representedFractionOfLandPixels: round(representedPixelCount / histogram.count, 6),
+      bands,
       sourceObjects: sources,
       unavailableTileIds
     });
