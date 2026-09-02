@@ -23,6 +23,13 @@ interface OrographyPoint {
   era5LandGridElevationM: number;
 }
 
+interface RepresentativeOverride {
+  lat: number;
+  lon: number;
+  label: string;
+  reason: string;
+}
+
 const checkOnly = process.argv.includes("--check");
 const planPath = "generated/intermediate/representative-50/request-plan.json";
 const orographyPath = "generated/intermediate/representative-50/era5-land-orography.json";
@@ -47,6 +54,7 @@ function coordinateKey(id: string) {
 
 async function main() {
   const candidateFile = readJson<{candidates:Candidate[]}>("data-config/sources/destination-candidates.json");
+  const overrides = readJson<{overrides:Record<string,RepresentativeOverride>}>("data-config/sources/representative-cell-overrides.json").overrides;
   const candidateIds = new Set(candidateFile.candidates.map((candidate) => candidate.id));
   const current = readJson<DestinationConfig[]>("data-config/sources/destinations.json");
   const core = current.filter((destination) => !candidateIds.has(destination.id));
@@ -59,23 +67,32 @@ async function main() {
       id:destination.id, name:destination.name, countryCode:destination.countryCode,
       countryName:destination.countryName, continent:destination.continent, region:destination.region,
       timezone:destination.timezone, coordinates:destination.coordinates, tags:destination.tags,
-      affiliateQuery:destination.affiliateQuery, priority:destination.priority
+      affiliateQuery:destination.affiliateQuery, priority:destination.priority,
+      representativeCoordinates:overrides[destination.id] ?? destination.coordinates
     })),
     ...candidateFile.candidates.map((candidate, index) => ({
       id:candidate.id, name:candidate.name, countryCode:candidate.countryCode,
       countryName:candidate.countryName, continent:candidate.continent, region:candidate.region,
       timezone:candidate.timezone, coordinates:candidate.candidateCentroid, tags:candidate.tags,
-      affiliateQuery:candidate.affiliateQuery, priority:95-index
+      affiliateQuery:candidate.affiliateQuery, priority:95-index,
+      representativeCoordinates:overrides[candidate.id] ?? candidate.candidateCentroid
     }))
   ];
   if (new Set(intake.map((destination) => destination.id)).size !== 50) throw new Error("REPRESENTATIVE001 destination IDs are not unique");
+  const intakeIds = new Set(intake.map((destination) => destination.id));
+  for (const [id, override] of Object.entries(overrides)) {
+    if (!intakeIds.has(id)) throw new Error(`REPRESENTATIVE001 override references unknown destination ${id}`);
+    if (!Number.isFinite(override.lat) || !Number.isFinite(override.lon) || override.lat < -90 || override.lat > 90 || override.lon < -180 || override.lon > 180 || !override.label || !override.reason) {
+      throw new Error(`REPRESENTATIVE001 invalid representative-cell override for ${id}`);
+    }
+  }
 
   writeJson(planPath, {
     schemaVersion:1,
     source:"ERA5-Land auxiliary invariant geopotential",
     method:"nearest 0.1-degree model grid coordinate to the curated representative coordinate",
     entries:intake.map((destination) => ({
-      key:coordinateKey(destination.id), lat:destination.coordinates.lat, lon:destination.coordinates.lon,
+      key:coordinateKey(destination.id), lat:destination.representativeCoordinates.lat, lon:destination.representativeCoordinates.lon,
       consumers:[{destinationId:destination.id,bandId:"representative",samplePointId:`${destination.id}-representative-1`}]
     }))
   });
@@ -120,10 +137,10 @@ async function main() {
         provenance:{
           status:"reviewed",
           sourceType:"project-curated-draft",
-          sourceLabel:"ERA5-Land representative 0.1-degree model-grid cell v1",
+          sourceLabel:overrides[destination.id]?.label ?? "ERA5-Land representative 0.1-degree model-grid cell v1",
           intendedScope:"Historical climate at one representative model-grid cell nearest the configured destination coordinate; not a trail-corridor or whole-region average.",
           excludedClasses:["whole-region-average","route-specific-conditions","live-weather"],
-          bandRationale:"One model-elevation band prevents unsupported interpolation of precipitation, snow and wind between terrain levels.",
+          bandRationale:overrides[destination.id]?.reason ?? "One model-elevation band prevents unsupported interpolation of precipitation, snow and wind between terrain levels.",
           weightRationale:"The single representative cell has weight 1 by definition.",
           reviewer:"Automated source-contract and coordinate validation"
         }
