@@ -58,3 +58,7 @@ Luna reran the exact GLO-30 histogram after this decision. Every proposed band c
 | Durmitor | 100% | 43.3% / 46.8% / 9.9% | 15% / 50% / 35% |
 
 The Zermatt and Grindelwald coverage gaps are intentional exclusions of high-elevation glacier/summit tails rather than missing data. Innsbruck, Lake District, Eryri, Cairngorms and Durmitor have material differences between terrain area and route-catalogue priors. Those differences are scientifically plausible because hiking use is not proportional to land area, but they require trail-network and representative-route validation before approval.
+
+## Sampling-grid anomaly decision
+
+The first 0.1° ERA5-Land candidate run found only one in-polygon grid centre for Innsbruck, Ordino and Gavarnie and two for Lofotodden. Reusing one cell for all three elevation regimes produced up to 795.8 m mismatch in Innsbruck, just below the 800 m block threshold. Sol therefore approved a bounded rule already compatible with the recorded sampling model: if an area contains fewer than three candidate centres, supplement it with centres no farther than the configured 5 km polygon buffer until the available set is exhausted. Every point retains its exact `usedBufferM`; the rule does not relax elevation mismatch thresholds or authorize publication.

@@ -41,7 +41,13 @@ async function candidatesForGeometry(geometry: DemGeometry, config: any, demInge
     return values;
   };
   let coordinates = generate(0);
-  if (!coordinates.length) coordinates = generate(config.maxBufferM);
+  if (coordinates.length < config.minCandidatesBeforeBuffer) {
+    const byCoordinate = new Map(coordinates.map((coordinate) => [`${coordinate.lat},${coordinate.lon}`, coordinate]));
+    for (const coordinate of generate(config.maxBufferM)) {
+      byCoordinate.set(`${coordinate.lat},${coordinate.lon}`, coordinate);
+    }
+    coordinates = [...byCoordinate.values()];
+  }
   const candidates: SamplingCandidate[] = [];
   for (const coordinate of coordinates) {
     const elevation = await medianElevationInWindow(
@@ -63,6 +69,11 @@ async function candidatesForGeometry(geometry: DemGeometry, config: any, demInge
 async function main() {
   const argumentsSet = new Set(process.argv.slice(2));
   const publish = argumentsSet.has("--publish");
+  const candidateBatch = process.env.BTH_CANDIDATE_BATCH ? Number(process.env.BTH_CANDIDATE_BATCH) : null;
+  if (candidateBatch !== null && (!Number.isInteger(candidateBatch) || candidateBatch < 1)) {
+    throw new Error("SAMPLING001 BTH_CANDIDATE_BATCH must be a positive integer");
+  }
+  if (candidateBatch !== null && publish) throw new Error("SAMPLING001 candidate batches cannot be published");
   const destinationArgument = [...argumentsSet].find((value) => value.startsWith("--destination="));
   const selectedSlug = destinationArgument?.slice("--destination=".length);
   const requestedSlugs = new Set((selectedSlug ? [selectedSlug] : (process.env.BTH_DESTINATIONS ?? "").split(","))
@@ -77,17 +88,20 @@ async function main() {
   const samplingConfig = readJson<any>("data-config/methodology/sampling-v1.json");
   const demIngestion = readJson<any>("data-config/methodology/dem-ingestion-v1.json");
   const overrides = readJson<any>("data-config/geography/destination-overrides.json").overrides;
-  const destinations = readJson<DestinationConfig[]>("data-config/sources/destinations.json")
+  const stagingRoot = candidateBatch === null ? "generated/intermediate" : `generated/intermediate/candidate-batch-${candidateBatch}`;
+  const destinationPath = candidateBatch === null ? "data-config/sources/destinations.json" : `${stagingRoot}/destinations.json`;
+  const geometryPath = candidateBatch === null ? "data-config/geography/destination-areas.geojson" : `${stagingRoot}/destination-areas.geojson`;
+  const destinations = readJson<DestinationConfig[]>(destinationPath)
     .filter((destination) => destination.active && (!requestedSlugs.size || requestedSlugs.has(destination.slug)));
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
-  const features = readJson<{features:GeometryFeature[]}>("data-config/geography/destination-areas.geojson").features;
+  const features = readJson<{features:GeometryFeature[]}>(geometryPath).features;
 
   for (const destination of destinations) {
     const feature = features.find((candidate) => candidate.properties.destinationId === destination.id);
     if (!feature) throw new Error(`SAMPLING001 missing geometry for ${destination.id}`);
     const demPath = publish
       ? `data-snapshots/dem/${destination.slug}.json`
-      : `generated/intermediate/real-dem/${destination.slug}.json`;
+      : `${stagingRoot}/real-dem/${destination.slug}.json`;
     const dem = readJson<any>(demPath);
     if (dem.fixture || dem.source !== "copernicus-dem-glo-30") throw new Error(`SAMPLING001 ${destination.id} does not reference a real Copernicus DEM snapshot`);
     console.log(`Evaluating ERA5 0.1° candidates for ${destination.name}...`);
@@ -123,7 +137,7 @@ async function main() {
     }));
     const snapshot = {
       schemaVersion: 2,
-      datasetStatus: "production",
+      datasetStatus: candidateBatch === null ? "production" : "staging",
       destinationId: destination.id,
       fixture: false,
       samplingVersion: samplingConfig.samplingVersion,
@@ -142,7 +156,7 @@ async function main() {
     };
     const output = publish
       ? `data-snapshots/sampling/${destination.slug}.json`
-      : `generated/intermediate/real-sampling/${destination.slug}.json`;
+      : `${stagingRoot}/real-sampling/${destination.slug}.json`;
     writeJson(output, snapshot);
     console.log(`${publish ? "Published" : "Staged"} ${candidates.length} candidates → ${output}`);
   }
