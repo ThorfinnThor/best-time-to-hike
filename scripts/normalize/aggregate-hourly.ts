@@ -6,7 +6,7 @@ import { readJson, writeJson } from "../lib/io";
 
 interface HourlySnapshot {
   schemaVersion: 2;
-  datasetStatus: "fixture" | "production";
+  datasetStatus: "fixture" | "provisional" | "production";
   source: "era5Land";
   destinationId: string;
   samplePointId: string;

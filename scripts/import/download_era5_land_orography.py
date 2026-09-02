@@ -26,7 +26,9 @@ import numpy as np
 
 DEFAULT_CONFIG = Path("data-config/methodology/era5-land-orography-v1.json")
 DEFAULT_CACHE = Path("generated/intermediate/era5-invariants/era5-land-geopotential.nc")
-GRID_TOLERANCE_DEGREES = 0.0500001
+# The pinned NetCDF stores coordinates as float32; a theoretical half-cell
+# offset of 0.05° can therefore decode a few 1e-7 degrees above 0.05.
+GRID_TOLERANCE_DEGREES = 0.050001
 
 
 def parse_args() -> argparse.Namespace:

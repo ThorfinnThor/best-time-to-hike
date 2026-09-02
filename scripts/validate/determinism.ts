@@ -10,7 +10,7 @@ const files = (directory: string): string[] => readdirSync(directory, { withFile
 const snapshot = () => Object.fromEntries(files(dataRoot).sort().map((file) => [relative(dataRoot, file), sha256(readFileSync(file))]));
 
 const before = snapshot();
-execFileSync("pnpm", ["data:export"], { cwd: ROOT, stdio: "inherit" });
+execFileSync(join(ROOT,"node_modules/.bin/tsx"), ["scripts/export/export.ts"], { cwd: ROOT, stdio: "inherit" });
 const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after)) {
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((path) => before[path] !== after[path]);

@@ -1,8 +1,8 @@
-import type { BandClimateMonth, ComponentScores, DestinationConfig, PublicBandMonth, PublicMonth } from "../../lib/data/types";
+import type { BandClimateMonth, ComponentScores, DatasetStatus, DestinationConfig, PublicBandMonth, PublicMonth } from "../../lib/data/types";
 import { confidenceLevel, confidenceScore, overallScore, roundHalfAwayFromZero, scoreComponents, scoreLevel } from "../../lib/scoring";
 import { readJson, round, writeJson } from "../lib/io";
 
-type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { bands: Record<string, {months: BandClimateMonth[]}> } };
+type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; bands: Record<string, {months: BandClimateMonth[]}> } };
 const normalized = readJson<Normalized[]>("generated/intermediate/normalized.json");
 
 function weightedComponents(bands: PublicBandMonth[], destination: DestinationConfig): ComponentScores {
@@ -56,7 +56,14 @@ const scored = normalized.map(({destination, dem, climate}) => {
     output.reasons = reasonCodes(output);
     return output;
   });
-  return {destination, dem, months};
+  return {
+    destination, dem, months,
+    datasetStatus:climate.datasetStatus ?? (climate.fixture ? "fixture" : "provisional"),
+    climateSource:climate.source ?? "era5-land-compatible-synthetic-fixture",
+    climateSourceDataset:climate.sourceDataset,
+    climateSourceDoi:climate.sourceDoi,
+    retrievedAt:climate.retrievedAt ?? dem.retrievedAt ?? "2026-08-31T00:00:00.000Z"
+  };
 });
 writeJson("generated/intermediate/scored.json", scored);
 console.log(`Scored ${scored.length * 12} destination-months.`);

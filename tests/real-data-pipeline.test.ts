@@ -58,16 +58,18 @@ test("raster-row containment matches polygon containment away from boundaries", 
   }
 });
 
-test("active geometry carries explicit pending provenance and scope", () => {
+test("active geometry carries explicit provenance and scope", () => {
   const collection = JSON.parse(readFileSync("data-config/geography/destination-areas.geojson", "utf8")) as {features:Array<{properties:any}>};
-  assert.equal(collection.features.length, 5);
+  const destinations = JSON.parse(readFileSync("data-config/sources/destinations.json", "utf8")) as Array<{active:boolean}>;
+  assert.equal(collection.features.length, destinations.filter((destination) => destination.active).length);
   for (const feature of collection.features) {
-    assert.equal(feature.properties.provenance.status, "pending-review");
+    assert.ok(["pending-review","reviewed"].includes(feature.properties.provenance.status));
     assert.equal(feature.properties.provenance.sourceType, "project-curated-draft");
     assert.ok(feature.properties.provenance.sourceLabel.length > 0);
-    assert.ok(feature.properties.provenance.excludedClasses.includes("open-water"));
-    assert.ok(feature.properties.provenance.bandRationale.includes("pending"));
-    assert.ok(feature.properties.provenance.weightRationale.includes("pending"));
+    assert.ok(feature.properties.provenance.intendedScope.length > 0);
+    assert.ok(feature.properties.provenance.excludedClasses.length > 0);
+    assert.ok(feature.properties.provenance.bandRationale.length > 0);
+    assert.ok(feature.properties.provenance.weightRationale.length > 0);
   }
 });
 

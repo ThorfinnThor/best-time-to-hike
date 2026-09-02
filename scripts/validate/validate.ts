@@ -84,12 +84,14 @@ for(const config of configs.filter((item)=>item.active)){
     assert(Math.abs(band.points.reduce((sum:number,point:any)=>sum+point.sampleWeight,0)-1)<1e-9,`${config.slug}/${bandConfig.id}: sample weights do not sum to 1`);
     assert(band.points.every((point:any,index:number)=>point.selectionRank===index+1),`${config.slug}/${bandConfig.id}: selection ranks are not contiguous`);
     for(const point of band.points){
-      const terrainElevationM = point.terrainElevationM ?? (sampling.fixture ? point.gridElevationM : undefined);
+      const terrainElevationM = point.terrainElevationM
+        ?? (sampling.method === "representative-era5-land-grid-cell-v1" ? point.representativeModelElevationM : undefined)
+        ?? (sampling.fixture ? point.gridElevationM : undefined);
       assert(!samplingPointIds.has(point.id),`Duplicate sampling point ID: ${point.id}`); samplingPointIds.add(point.id);
       assert(point.targetElevationM===band.targetElevationM,`${point.id}: target elevation mismatch`);
       assert(Number.isFinite(terrainElevationM),`${point.id}: terrain elevation is missing`);
       assert(Math.abs(Math.abs(terrainElevationM-point.targetElevationM)-point.elevationMismatchM)<1e-9,`${point.id}: elevation mismatch is not reproducible`);
-      if(!sampling.fixture)assert(point.gridElevationM===undefined,`${point.id}: real sampling must not label GLO-30 terrain as ERA5 grid elevation`);
+      if(!sampling.fixture)assert(point.gridElevationM===undefined,`${point.id}: real sampling must not label terrain as ERA5 grid elevation`);
       assert(point.elevationMismatchM<=800,`${point.id}: blocked elevation mismatch requires an explicit approved override`);
     }
   }
@@ -143,14 +145,14 @@ for (const file of rankingFiles) {
   assert(data.entries.every((entry:any,index:number)=>entry.rank===index+1),`${data.id}: ranking positions must be contiguous`);
   assert(data.entries.every((entry:any)=>destinationBySlug.has(entry.slug)),`${data.id}: unknown destination`);
   assert(data.entries.every((entry:any,index:number,array:any[])=>index===0||array[index-1].score>entry.score||array[index-1].score===entry.score&&array[index-1].confidence>entry.confidence||array[index-1].score===entry.score&&array[index-1].confidence===entry.confidence&&array[index-1].slug.localeCompare(entry.slug)<=0),`${data.id}: entries are not deterministically sorted`);
-  if(manifest.datasetStatus==="fixture") assert(data.indexable===false,`${data.id}: fixture ranking must be noindex`);
+  if(manifest.datasetStatus!=="production") assert(data.indexable===false,`${data.id}: non-production ranking must be noindex`);
 }
 assert(JSON.stringify([...rankingIds].sort())===JSON.stringify([...manifest.rankingIds].sort()),"Manifest ranking IDs mismatch");
 for (const file of files(join(root,"comparisons")).filter((path)=>!path.endsWith("comparison-index.json"))) {
   const data=JSON.parse(readFileSync(file,"utf8"));
   assert(validateComparison(data),`${relative(root,file)} schema: ${ajv.errorsText(validateComparison.errors)}`);
   assert(data.months.every((month:any)=>month.winner==="tie"?month.firstScore===month.secondScore:month.winner===data.destinations[month.firstScore>month.secondScore?0:1]),`${data.slug}: winner is inconsistent with scores`);
-  if(manifest.datasetStatus==="fixture") assert(data.indexable===false,`${data.slug}: fixture comparison must be noindex`);
+  if(manifest.datasetStatus!=="production") assert(data.indexable===false,`${data.slug}: non-production comparison must be noindex`);
 }
 const search=readJson<any[]>("public/data/hiking/search/destination-index.json");
 assert(validateSearch(search),`Search schema: ${ajv.errorsText(validateSearch.errors)}`);

@@ -19,6 +19,7 @@
     "data:sampling": "tsx scripts/geo/build-sampling.ts",
     "data:geometry": "tsx scripts/geo/fetch-osm-destination-boundaries.ts",
     "data:candidate-prepare": "tsx scripts/geo/prepare-candidate-batch.ts",
+    "data:representative-prepare": "tsx scripts/geo/prepare-representative-50.ts",
     "data:dem-profile": "tsx scripts/import/profile-candidate-dem.ts",
     "data:era5": "tsx scripts/import/fetch-era5.ts",
     "data:images": "tsx scripts/import/fetch-images.ts",
@@ -38,6 +39,7 @@
     "data:pipeline": "pnpm data:seed && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:rebuild": "pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:ingest": "pnpm data:dem && pnpm data:sampling && pnpm data:era5 && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
+    "data:ingest-representative-50": "pnpm data:representative-prepare && pnpm data:era5 -- --provisional --refresh && pnpm data:rebuild",
     "verify": "pnpm data:rebuild && pnpm guard:architecture && pnpm guard:determinism && pnpm test && pnpm build && pnpm typecheck && pnpm release:report",
     "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main"
   },

@@ -189,12 +189,14 @@ async function main() {
   const argumentsSet = new Set(process.argv.slice(2));
   const planOnly = argumentsSet.has("--plan");
   const publish = argumentsSet.has("--publish");
+  const provisional = argumentsSet.has("--provisional");
   const refresh = argumentsSet.has("--refresh");
   const candidateBatch = process.env.BTH_CANDIDATE_BATCH ? Number(process.env.BTH_CANDIDATE_BATCH) : null;
   if (candidateBatch !== null && (!Number.isInteger(candidateBatch) || candidateBatch < 1)) {
     throw new Error("ERA5_REQUEST001 BTH_CANDIDATE_BATCH must be a positive integer");
   }
   if (candidateBatch !== null && publish) throw new Error("ERA5_REQUEST001 candidate batches cannot be published");
+  if (publish && provisional) throw new Error("ERA5_REQUEST001 --publish and --provisional are mutually exclusive");
   const destinationArgument = [...argumentsSet].find((value) => value.startsWith("--destination="));
   const selectedSlug = destinationArgument?.slice("--destination=".length);
   const requestedSlugs = new Set((selectedSlug ? [selectedSlug] : (process.env.BTH_DESTINATIONS ?? "").split(","))
@@ -202,7 +204,7 @@ async function main() {
   if (publish) requireApprovedSource("era5Land");
   const stagingRoot = candidateBatch === null ? "generated/intermediate" : `generated/intermediate/candidate-batch-${candidateBatch}`;
   const destinationPath = candidateBatch === null ? "data-config/sources/destinations.json" : `${stagingRoot}/destinations.json`;
-  const samplingRoot = publish ? "data-snapshots/sampling" : `${stagingRoot}/real-sampling`;
+  const samplingRoot = publish || provisional ? "data-snapshots/sampling" : `${stagingRoot}/real-sampling`;
   const destinations = readJson<DestinationConfig[]>(destinationPath)
     .filter((destination) => destination.active && (!requestedSlugs.size || requestedSlugs.has(destination.slug)));
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
@@ -254,12 +256,37 @@ async function main() {
     throw new Error("ERA5_OROGRAPHY001 invariant-orography point set differs from the request plan");
   }
 
+  const pendingDownloads = plan.filter((entry) => {
+    const rawPath = `${stagingRoot}/era5-raw/${entry.key}.ndjson.gz`;
+    const metadataPath = `${stagingRoot}/era5-raw/${entry.key}.meta.json`;
+    return refresh || !existsSync(rawPath) || !existsSync(metadataPath);
+  });
+  const configuredConcurrency = Number(process.env.BTH_CDS_CONCURRENCY ?? 5);
+  if (!Number.isInteger(configuredConcurrency) || configuredConcurrency < 1 || configuredConcurrency > 10) {
+    throw new Error("ERA5_REQUEST001 BTH_CDS_CONCURRENCY must be an integer from 1 to 10");
+  }
+  let nextDownload = 0;
+  await Promise.all(Array.from({length:Math.min(configuredConcurrency,pendingDownloads.length)}, async () => {
+    while (nextDownload < pendingDownloads.length) {
+      const entry = pendingDownloads[nextDownload++];
+      const rawPath = `${stagingRoot}/era5-raw/${entry.key}.ndjson.gz`;
+      const metadataPath = `${stagingRoot}/era5-raw/${entry.key}.meta.json`;
+      console.log(`Downloading ERA5-Land 1991–2020 for ${entry.key} at ${entry.lat.toFixed(1)}, ${entry.lon.toFixed(1)}...`);
+      await runPython("scripts/import/download_era5.py", [
+        "--lat",String(entry.lat),"--lon",String(entry.lon),
+        "--start-date","1991-01-01","--end-date","2020-12-31",
+        "--output",rawPath,"--metadata",metadataPath
+      ], "ERA5_DOWNLOAD001");
+    }
+  }));
+  console.log(`ERA5-Land download pool ready: ${plan.length} point(s), ${pendingDownloads.length} refreshed with concurrency ${configuredConcurrency}.`);
+
   const geometryPath = candidateBatch === null ? "data-config/geography/destination-areas.geojson" : `${stagingRoot}/destination-areas.geojson`;
   const geometry = readJson<any>(geometryPath);
   const expectedImporterHash = sha256(readFileSync("scripts/import/download_era5.py", "utf8"));
   for (const destination of destinations) {
     const samplingPath = `${samplingRoot}/${destination.slug}.json`;
-    const demPath = publish
+    const demPath = publish || provisional
       ? `data-snapshots/dem/${destination.slug}.json`
       : `${stagingRoot}/real-dem/${destination.slug}.json`;
     const sampling = readJson<any>(samplingPath);
@@ -282,14 +309,7 @@ async function main() {
       }
       const rawPath = `${stagingRoot}/era5-raw/${key}.ndjson.gz`;
       const metadataPath = `${stagingRoot}/era5-raw/${key}.meta.json`;
-      if (refresh || !existsSync(rawPath) || !existsSync(metadataPath)) {
-        console.log(`Downloading ERA5-Land 1991–2020 for ${destination.name} at ${point.lat.toFixed(1)}, ${point.lon.toFixed(1)}...`);
-        await runPython("scripts/import/download_era5.py", [
-          "--lat", String(point.lat), "--lon", String(point.lon),
-          "--start-date", "1991-01-01", "--end-date", "2020-12-31",
-          "--output", rawPath, "--metadata", metadataPath
-        ], "ERA5_DOWNLOAD001");
-      }
+      if (!existsSync(rawPath) || !existsSync(metadataPath)) throw new Error(`ERA5_DOWNLOAD001 missing prefetched source response for ${key}`);
       const metadata = readJson<any>(metadataPath);
       const expectedRequest = {
         variable: VARIABLES,
@@ -321,11 +341,11 @@ async function main() {
         || JSON.stringify(metadata.request) !== JSON.stringify(expectedRequest)) {
         throw new Error(`ERA5_REQUEST001 invalid source response metadata for ${key}`);
       }
-      if (candidateBatch !== null
+      if ((candidateBatch !== null || provisional)
         && representativenessConfig.glacier.excludeIndicatorCellWhenDestinationScopeExcludesGlacier
         && (metadata.snowDepthQuality.glacierIndicatorCount > 0
           || metadata.snowDepthQuality.maximumOriginalValueM >= representativenessConfig.glacier.officialSnowDepthIndicatorM)) {
-        throw new Error(`ERA5_REP002 ${key} contains the official glacier-indicator snow-depth signal (>= ${representativenessConfig.glacier.officialSnowDepthIndicatorM} m); candidate staging is blocked until a non-glacier cell is selected`);
+        throw new Error(`ERA5_REP002 ${key} contains the official glacier-indicator snow-depth signal (>= ${representativenessConfig.glacier.officialSnowDepthIndicatorM} m); provisional publication is blocked until a non-glacier representative cell is selected`);
       }
       if (!sameGridLocation(metadata.resolvedLocation, pointOrography.resolvedLocation)) {
         throw new Error(`ERA5_OROGRAPHY001 climate and invariant grid locations differ for ${key}`);
@@ -409,7 +429,7 @@ async function main() {
     const retrievedAt = pointMetadata.map((metadata) => metadata.climate.retrievedAt).sort().at(-1);
     const snapshot = {
       schemaVersion: 2,
-      datasetStatus: candidateBatch === null ? "production" : "staging",
+      datasetStatus: provisional ? "provisional" : candidateBatch === null ? "production" : "staging",
       destinationId: destination.id,
       fixture: false,
       source: "era5-land-timeseries",
@@ -454,7 +474,7 @@ async function main() {
       })),
       bands
     };
-    const output = publish
+    const output = publish || provisional
       ? `data-snapshots/climate/${destination.slug}.json`
       : `${stagingRoot}/real-climate/${destination.slug}.json`;
     writeJson(output, snapshot);

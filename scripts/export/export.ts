@@ -1,16 +1,21 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { Comparison, DestinationConfig, PublicDestination, Ranking, SearchDestination } from "../../lib/data/types";
+import type { Comparison, DatasetStatus, DestinationConfig, PublicDestination, Ranking, SearchDestination } from "../../lib/data/types";
 import pageDefinitions from "../../data-config/seo/page-definitions.json";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
-type Scored = {destination: DestinationConfig; dem: {area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]};
+type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]; datasetStatus:DatasetStatus; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; retrievedAt:string};
 const scored = readJson<Scored[]>("generated/intermediate/scored.json");
-const updatedAt = "2026-08-31T00:00:00.000Z";
-const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months}) => {
+const statuses = new Set(scored.map((item) => item.datasetStatus));
+if (statuses.size !== 1) throw new Error(`EXPORT001 mixed dataset statuses: ${[...statuses].join(", ")}`);
+const datasetStatus = [...statuses][0];
+const updatedAt = scored.map((item) => item.retrievedAt).sort().at(-1) ?? "2026-08-31T00:00:00.000Z";
+const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months, climateSource, climateSourceDataset, climateSourceDoi}) => {
   const bestMonths = [...months].sort((a,b) => b.overallScore-a.overallScore || a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
   const alternatives = scored.filter((item)=>item.destination.slug!==destination.slug).sort((a,b)=>b.months.reduce((s,m)=>s+m.overallScore,0)-a.months.reduce((s,m)=>s+m.overallScore,0)).slice(0,3).map((item)=>item.destination.slug);
-  return {schemaVersion:1,algorithmVersion:"1.0.0",datasetStatus:"fixture",id:destination.id,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,countryName:destination.countryName,continent:destination.continent,region:destination.region,timezone:destination.timezone,tags:destination.tags,coordinates:destination.coordinates,elevationBands:destination.elevationBands,elevation:{minM:dem.area.minM,medianM:dem.area.medianM,maxM:dem.area.maxM},months,bestMonths,alternatives,provenance:{temperature:"synthetic fixture shaped like ERA5-Land",precipitation:"synthetic fixture shaped like ERA5-Land",snow:"synthetic fixture shaped like ERA5-Land",wind:"synthetic fixture shaped like ERA5-Land",elevation:"synthetic fixture shaped like Copernicus DEM GLO-30",daylight:"deterministic seed profile"},updatedAt};
+  const fixture = datasetStatus === "fixture";
+  const sourceLabel = fixture ? "synthetic fixture shaped like ERA5-Land" : `${climateSourceDataset ?? climateSource}${climateSourceDoi ? ` (DOI ${climateSourceDoi})` : ""}`;
+  return {schemaVersion:1,algorithmVersion:"1.0.0",datasetStatus,id:destination.id,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,countryName:destination.countryName,continent:destination.continent,region:destination.region,timezone:destination.timezone,tags:destination.tags,coordinates:destination.coordinates,elevationBands:destination.elevationBands,elevation:{minM:dem.area.minM,medianM:dem.area.medianM,maxM:dem.area.maxM},months,bestMonths,alternatives,provenance:{temperature:sourceLabel,precipitation:sourceLabel,snow:sourceLabel,wind:sourceLabel,elevation:fixture?"synthetic fixture shaped like Copernicus DEM GLO-30":`${dem.sourceProduct ?? dem.source ?? "ERA5-Land invariant model orography"} at the representative grid cell`,daylight:"deterministic astronomical calculation from coordinates and local date"},updatedAt};
 });
 
 for (const destination of publicDestinations) {
@@ -50,5 +55,5 @@ function files(dir: string): string[] { return readdirSync(dir,{withFileTypes:tr
 const dataRoot = join(ROOT,"public/data/hiking");
 const existing = files(dataRoot).filter((path)=>!path.endsWith("manifest.json"));
 const fileChecksums = Object.fromEntries(existing.sort().map((path)=>[relative(dataRoot,path),sha256(readFileSync(path))]));
-writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:"1.0.0",datasetVersion:"fixture-2026-08-31.1",datasetStatus:"fixture",generatedAt:updatedAt,climateNormal:{startYear:1991,endYear:2020},sourceVersions:{climate:"synthetic-era5-compatible-fixture",elevation:"synthetic-dem-compatible-fixture"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
+writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:"1.0.0",datasetVersion:datasetStatus==="fixture"?"fixture-2026-08-31.1":"era5-land-representative-point-1991-2020-v1",datasetStatus,generatedAt:updatedAt,climateNormal:{startYear:1991,endYear:2020},sourceVersions:{climate:datasetStatus==="fixture"?"synthetic-era5-compatible-fixture":"reanalysis-era5-land-timeseries DOI 10.24381/ee82e357",elevation:datasetStatus==="fixture"?"synthetic-dem-compatible-fixture":"ERA5-Land auxiliary invariant geopotential pinned SHA-256"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
 console.log(`Exported ${publicDestinations.length} destinations, ${rankingIds.length} rankings and ${comparisons.length} comparisons.`);

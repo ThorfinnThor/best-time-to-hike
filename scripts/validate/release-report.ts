@@ -34,7 +34,7 @@ const samplingPoints = samplingFiles.flatMap((file) => {
   const snapshot = readJson<any>(`data-snapshots/sampling/${file}`);
   return Object.values(snapshot.bands as Record<string, any>).flatMap((band) => band.points);
 });
-const fixtureIndexabilityLocked = manifest.datasetStatus !== "fixture" || (
+const nonProductionIndexabilityLocked = manifest.datasetStatus === "production" || (
   manifest.rankingIds.every((id:string)=>readJson<any>(`public/data/hiking/rankings/${id}.json`).indexable===false) &&
   readdirSync(join(ROOT,"public/data/hiking/comparisons")).filter((file)=>file!=="comparison-index.json").every((file)=>readJson<any>(`public/data/hiking/comparisons/${file}`).indexable===false) &&
   readFileSync(join(ROOT,"app/robots.ts"),"utf8").includes('disallow:"/"') &&
@@ -42,7 +42,7 @@ const fixtureIndexabilityLocked = manifest.datasetStatus !== "fixture" || (
 );
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
-  fixtureIndexabilityLocked,
+  nonProductionIndexabilityLocked,
   realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
   destinationMinimumMet: manifest.destinationCount >= 50,
   goldenMinimumMet: golden.status === "APPROVED" && golden.cases.length >= 30,

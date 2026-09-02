@@ -1,0 +1,66 @@
+name: Refresh 50 representative static destinations
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-representative-50
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      BTH_EXECUTION_MODE: ingest-staging
+      BTH_CDS_CONCURRENCY: 5
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+      NEXT_PUBLIC_DATA_STATUS: provisional
+      NEXT_PUBLIC_APP_URL: https://best-time-to-hike.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-data.txt
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm data:setup-python
+
+      - name: Prepare exactly 50 representative model-grid destinations
+        run: pnpm data:representative-prepare
+
+      - name: Fetch and aggregate the official 1991–2020 ERA5-Land point series
+        run: pnpm data:era5 -- --provisional --refresh
+
+      - name: Preserve compact source metadata when a gate fails
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: representative-50-source-metadata-${{ github.run_id }}
+          if-no-files-found: warn
+          retention-days: 7
+          path: |
+            generated/intermediate/era5-raw/*.meta.json
+            generated/intermediate/era5-invariants/era5-land-orography.json
+
+      - name: Build and verify the complete static site
+        run: pnpm verify
+
+      - name: Commit only the verified static dataset
+        run: |
+          git config user.name "best-time-to-hike-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-config/sources/destinations.json data-config/geography/destination-areas.geojson data-snapshots public/data/hiking
+          git diff --cached --quiet || git commit -m "data: publish 50 representative ERA5-Land destinations"
+          git push

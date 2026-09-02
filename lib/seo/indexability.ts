@@ -9,12 +9,12 @@ export interface IndexabilityInput {
   internalLinkCount: number;
   createsCannibalization: boolean;
   containsUnsupportedClaims: boolean;
-  datasetStatus: "fixture" | "production";
+  datasetStatus: "fixture" | "provisional" | "production";
 }
 
 export function evaluateIndexability(input: IndexabilityInput) {
   const reasons: string[] = [];
-  if (input.datasetStatus !== "production") reasons.push("fixture-dataset");
+  if (input.datasetStatus !== "production") reasons.push("non-production-dataset");
   if (input.resultCount < 3) reasons.push("too-few-results");
   if (input.dataCompleteness < 0.95) reasons.push("low-completeness");
   if (input.confidence < 65) reasons.push("low-confidence");

@@ -1,6 +1,7 @@
 export type Locale = "en" | "de";
 export type ConfidenceLevel = "high" | "moderate" | "low";
 export type ScoreLevel = "excellent" | "very-good" | "good" | "fair" | "poor";
+export type DatasetStatus = "fixture" | "provisional" | "production";
 
 export interface ElevationBandConfig {
   id: string;
@@ -94,7 +95,7 @@ export interface PublicMonth {
 export interface PublicDestination {
   schemaVersion: 1;
   algorithmVersion: string;
-  datasetStatus: "fixture" | "production";
+  datasetStatus: DatasetStatus;
   id: string;
   slug: string;
   name: string;

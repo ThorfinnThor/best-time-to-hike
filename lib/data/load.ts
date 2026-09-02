@@ -15,4 +15,4 @@ export const getSearchIndex = () => read<SearchDestination[]>("search/destinatio
 export const getRanking = (month:number,theme:"all"|"warm"|"snow-free"|"low-rain"="all") => read<Ranking>(`rankings/${theme === "all" ? "global" : theme}-${month}.json`);
 export const getComparisonIndex = () => read<Array<{slug:string;destinations:[string,string];indexable:boolean}>>("comparisons/comparison-index.json");
 export const getComparison = (slug:string) => read<Comparison>(`comparisons/${slug}.json`);
-export const getManifest = () => read<{datasetStatus:"fixture"|"production";datasetVersion:string;generatedAt:string;destinationCount:number}>("manifest.json");
+export const getManifest = () => read<{datasetStatus:"fixture"|"provisional"|"production";datasetVersion:string;generatedAt:string;destinationCount:number}>("manifest.json");
