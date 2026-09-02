@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { aggregateBandPointMetrics } from "../lib/hiking/band-climate";
 import type { MonthlyPointClimate } from "../lib/hiking/climate";
-import { ElevationHistogram, geometryContains, geometryDistanceKm, tileIdForCoordinate, type DemGeometry } from "../scripts/import/copernicus-dem";
+import { ElevationHistogram, geometryContains, geometryContainsForRasterRow, geometryDistanceKm, tileIdForCoordinate, type DemGeometry } from "../scripts/import/copernicus-dem";
 import { readFileSync } from "node:fs";
 import orography from "../data-config/methodology/era5-land-orography-v1.json";
 
@@ -40,6 +40,22 @@ test("geometry containment respects holes and distance is zero inside", () => {
   assert.equal(geometryContains(geometry, [1,1]), false);
   assert.equal(geometryDistanceKm(geometry, [.25,.25]), 0);
   assert.ok(geometryDistanceKm(geometry, [3,1]) > 100);
+});
+
+test("raster-row containment matches polygon containment away from boundaries", () => {
+  const geometry: DemGeometry = {
+    type: "MultiPolygon",
+    coordinates: [
+      [[[0, 0], [5, 0], [5, 5], [0, 5], [0, 0]], [[2, 2], [3, 2], [3, 3], [2, 3], [2, 2]]],
+      [[[7, 1], [9, 1], [9, 4], [7, 4], [7, 1]]]
+    ]
+  };
+  for (const latitude of [0.5, 1.5, 2.5, 3.5, 4.5]) {
+    const rowContains = geometryContainsForRasterRow(geometry, latitude);
+    for (const longitude of [-0.5, 0.5, 2.5, 4.5, 6, 7.5, 8.5, 9.5]) {
+      assert.equal(rowContains(longitude), geometryContains(geometry, [longitude, latitude]));
+    }
+  }
 });
 
 test("active geometry carries explicit pending provenance and scope", () => {

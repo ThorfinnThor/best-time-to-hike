@@ -73,6 +73,43 @@ function pointInRing(point: Position, ring: Position[]) {
   return inside;
 }
 
+type LongitudeInterval = [number, number];
+type RasterRowPolygon = LongitudeInterval[][];
+
+function ringIntervalsAtLatitude(ring: Position[], latitude: number) {
+  const crossings: number[] = [];
+  for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+    const first = ring[index];
+    const second = ring[previous];
+    if ((first[1] > latitude) === (second[1] > latitude)) continue;
+    crossings.push(first[0] + (latitude - first[1]) * (second[0] - first[0]) / (second[1] - first[1]));
+  }
+  crossings.sort((first, second) => first - second);
+  const intervals: LongitudeInterval[] = [];
+  for (let index = 0; index + 1 < crossings.length; index += 2) {
+    intervals.push([crossings[index], crossings[index + 1]]);
+  }
+  return intervals;
+}
+
+function rasterRowPolygons(geometry: DemGeometry, latitude: number): RasterRowPolygon[] {
+  return rings(geometry).map((polygon) => polygon.map((ring) => ringIntervalsAtLatitude(ring, latitude)));
+}
+
+function intervalsContain(intervals: LongitudeInterval[], longitude: number) {
+  return intervals.some(([minimum, maximum]) => longitude >= minimum && longitude <= maximum);
+}
+
+function rasterRowContains(polygons: RasterRowPolygon[], longitude: number) {
+  return polygons.some(([outer, ...holes]) => intervalsContain(outer, longitude)
+    && holes.every((hole) => !intervalsContain(hole, longitude)));
+}
+
+export function geometryContainsForRasterRow(geometry: DemGeometry, latitude: number) {
+  const polygons = rasterRowPolygons(geometry, latitude);
+  return (longitude: number) => rasterRowContains(polygons, longitude);
+}
+
 export function geometryContains(geometry: DemGeometry, point: Position) {
   return rings(geometry).some((polygon) => pointInRing(point, polygon[0])
     && polygon.slice(1).every((hole) => !pointInRing(point, hole)));
@@ -227,9 +264,10 @@ export async function collectGeometryElevations(
 
     for (let row = 0; row < height; row += 1) {
       const lat = origin[1] + (window[1] + row + 0.5) * resolution[1];
+      const rowContains = geometryContainsForRasterRow(geometry, lat);
       for (let column = 0; column < width; column += 1) {
         const lon = origin[0] + (window[0] + column + 0.5) * resolution[0];
-        if (!geometryContains(geometry, [lon, lat])) continue;
+        if (!rowContains(lon)) continue;
         const value = Number(values[row * width + column]);
         if (!Number.isFinite(value) || noData !== null && value === noData || value <= options.minimumElevationExclusiveM) continue;
         histogram.add(value);
