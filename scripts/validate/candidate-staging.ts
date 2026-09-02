@@ -16,6 +16,7 @@ const fail = (message: string): never => { throw new Error(`CANDIDATE_VALIDATE00
 
 const destinations = readJson<any[]>("destinations.json");
 const geometry = readJson<any>("destination-areas.geojson");
+const representativeness = JSON.parse(readFileSync(join(ROOT, "data-config/methodology/era5-land-representativeness-v1.json"), "utf8"));
 const candidateOrographyPlan = readJson<any>("era5-orography-candidate-plan.json");
 const candidateOrography = readJson<any>("era5-invariants/candidate-orography.json");
 const plan = readJson<any>("era5-request-plan.json");
@@ -48,7 +49,7 @@ for (const destination of destinations) {
   const dem = readJson<any>(`real-dem/${destination.slug}.json`);
   const climate = readJson<any>(`real-climate/${destination.slug}.json`);
   if (sampling.destinationId !== destination.id || sampling.fixture !== false) fail(`${destination.slug} has invalid sampling metadata`);
-  if (sampling.modelOrographyPreflight?.thresholdM !== 600) fail(`${destination.slug} is missing the approved model-orography preflight gate`);
+  if (sampling.modelOrographyPreflight?.thresholdM !== representativeness.modelOrography.blockedMismatchAboveM) fail(`${destination.slug} is missing the approved model-orography preflight gate`);
   if (dem.destinationId !== destination.id || dem.fixture !== false) fail(`${destination.slug} has invalid DEM metadata`);
   if (climate.destinationId !== destination.id
     || climate.schemaVersion !== 2
@@ -70,7 +71,7 @@ for (const destination of destinations) {
     for (const point of sampling.bands[bandId]?.points ?? []) {
       if (!Number.isFinite(point.era5LandGridElevationM)
         || !Number.isFinite(point.modelOrographyMismatchM)
-        || point.modelOrographyMismatchM > 600) {
+        || point.modelOrographyMismatchM > representativeness.modelOrography.blockedMismatchAboveM) {
         fail(`${destination.slug}/${bandId} contains a point outside the model-orography gate`);
       }
     }
