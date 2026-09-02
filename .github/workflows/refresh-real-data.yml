@@ -85,6 +85,10 @@ jobs:
           pnpm data:era5 -- --publish --refresh
           pnpm verify
 
+      - name: Validate candidate staging contracts
+        if: ${{ inputs.publish == false && inputs.candidate_batch == '1' }}
+        run: pnpm candidate:validate
+
       - name: Build staging evidence manifest
         if: ${{ inputs.publish == false }}
         run: pnpm evidence:manifest
@@ -104,6 +108,7 @@ jobs:
             generated/intermediate/era5-request-plan.json
             generated/intermediate/staging-evidence-manifest.json
             generated/intermediate/candidate-batch-1
+            !generated/intermediate/candidate-batch-1/era5-raw
 
       - name: Commit approved static data
         if: ${{ inputs.publish == true && inputs.candidate_batch == 'none' }}

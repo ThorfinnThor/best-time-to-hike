@@ -27,8 +27,14 @@ const evidencePaths = candidateBatch === null
       `${stagingRoot}/real-sampling`,
       `${stagingRoot}/real-climate`,
       `${stagingRoot}/era5-invariants`,
-      `${stagingRoot}/era5-request-plan.json`
+      `${stagingRoot}/era5-request-plan.json`,
+      "generated/intermediate/era5-invariants/era5-land-geopotential.nc"
     ];
+
+const missingEvidencePaths = evidencePaths.filter((path) => !existsSync(join(ROOT, path)));
+if (missingEvidencePaths.length) {
+  throw new Error(`EVIDENCE001 required staging evidence is missing: ${missingEvidencePaths.join(", ")}`);
+}
 
 function files(path: string): string[] {
   if (!existsSync(path)) return [];
