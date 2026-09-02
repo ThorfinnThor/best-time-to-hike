@@ -16,11 +16,18 @@ const fail = (message: string): never => { throw new Error(`CANDIDATE_VALIDATE00
 
 const destinations = readJson<any[]>("destinations.json");
 const geometry = readJson<any>("destination-areas.geojson");
+const candidateOrographyPlan = readJson<any>("era5-orography-candidate-plan.json");
+const candidateOrography = readJson<any>("era5-invariants/candidate-orography.json");
 const plan = readJson<any>("era5-request-plan.json");
 const orography = readJson<any>("era5-invariants/era5-land-orography.json");
 
 if (!destinations.length || destinations.some((destination) => !destination.active)) fail("destination set is empty or inactive");
 if (geometry.features?.length !== destinations.length) fail("geometry count differs from destination count");
+if (!Array.isArray(candidateOrographyPlan.entries) || candidateOrographyPlan.entries.length === 0
+  || candidateOrography.pointCount !== candidateOrographyPlan.entries.length
+  || candidateOrography.points?.length !== candidateOrographyPlan.entries.length) {
+  fail("candidate model-orography preflight is incomplete");
+}
 if (plan.uniquePointCount !== plan.entries?.length) fail("request-plan point count is inconsistent");
 if (new Set(plan.entries.map((entry: any) => entry.key)).size !== plan.uniquePointCount) fail("request-plan keys are not unique");
 if (orography.pointCount !== plan.uniquePointCount || orography.points?.length !== plan.uniquePointCount) {
@@ -41,6 +48,7 @@ for (const destination of destinations) {
   const dem = readJson<any>(`real-dem/${destination.slug}.json`);
   const climate = readJson<any>(`real-climate/${destination.slug}.json`);
   if (sampling.destinationId !== destination.id || sampling.fixture !== false) fail(`${destination.slug} has invalid sampling metadata`);
+  if (sampling.modelOrographyPreflight?.thresholdM !== 600) fail(`${destination.slug} is missing the approved model-orography preflight gate`);
   if (dem.destinationId !== destination.id || dem.fixture !== false) fail(`${destination.slug} has invalid DEM metadata`);
   if (climate.destinationId !== destination.id
     || climate.schemaVersion !== 2
@@ -59,6 +67,13 @@ for (const destination of destinations) {
     fail(`${destination.slug} climate bands differ from the candidate configuration`);
   }
   for (const bandId of configuredBandIds) {
+    for (const point of sampling.bands[bandId]?.points ?? []) {
+      if (!Number.isFinite(point.era5LandGridElevationM)
+        || !Number.isFinite(point.modelOrographyMismatchM)
+        || point.modelOrographyMismatchM > 600) {
+        fail(`${destination.slug}/${bandId} contains a point outside the model-orography gate`);
+      }
+    }
     const months = climate.bands[bandId]?.months;
     if (!Array.isArray(months) || months.length !== 12 || months.some((month: any, index: number) => month.month !== index + 1)) {
       fail(`${destination.slug}/${bandId} does not contain months 1-12 exactly once`);

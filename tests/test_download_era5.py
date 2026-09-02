@@ -36,6 +36,16 @@ class Era5DownloadImporterTest(unittest.TestCase):
         self.assertEqual(quality["precipitation"]["clampedValueCount"], 1)
         self.assertEqual(quality["snowDepth"]["clampedValueCount"], 1)
 
+    def test_glacier_indicator_is_recorded_from_snow_depth(self) -> None:
+        times = [datetime(2020, 1, 1, tzinfo=UTC) + timedelta(hours=index) for index in range(24)]
+        arrays = self.arrays(24)
+        arrays["snowDepthM"][3] = 10.0
+        arrays["snowDepthM"][4] = 12.5
+        quality = MODULE.validate_series(times, arrays, "2020-01-01", "2020-01-01")
+        self.assertEqual(quality["snowDepth"]["maximumOriginalValueM"], 12.5)
+        self.assertEqual(quality["snowDepth"]["officialGlacierIndicatorThresholdM"], 10.0)
+        self.assertEqual(quality["snowDepth"]["glacierIndicatorCount"], 2)
+
         material = self.arrays(24)
         material["precipitationM"][0] = -1.000001e-6
         with self.assertRaisesRegex(RuntimeError, "material negative"):

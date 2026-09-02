@@ -20,6 +20,8 @@ interface SamplingPoint {
   targetElevationM: number;
   elevationMismatchM: number;
   sampleWeight: number;
+  era5LandGridElevationM?: number;
+  modelOrographyMismatchM?: number;
 }
 
 interface OrographyPoint {
@@ -206,6 +208,8 @@ async function main() {
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
   const plan = buildPlan(destinations, samplingRoot);
   const orographyConfig = readJson<any>("data-config/methodology/era5-land-orography-v1.json");
+  const representativenessConfig = readJson<any>("data-config/methodology/era5-land-representativeness-v1.json");
+  const modelOrographyGate = representativenessConfig.modelOrography;
   const requestPlanPath = `${stagingRoot}/era5-request-plan.json`;
   writeJson(requestPlanPath, {
     schemaVersion: 2,
@@ -271,6 +275,11 @@ async function main() {
       const point = consumers[0];
       const pointOrography = orographyByKey.get(key);
       if (!pointOrography) throw new Error(`ERA5_OROGRAPHY001 missing invariant orography for ${key}`);
+      const targetElevations = consumers.map((consumer) => consumer.targetElevationM).filter(Number.isFinite);
+      const modelMismatchM = Math.max(...targetElevations.map((target) => Math.abs(pointOrography.era5LandGridElevationM - target)));
+      if (candidateBatch !== null && modelMismatchM > modelOrographyGate.blockedMismatchAboveM) {
+        throw new Error(`ERA5_REP001 ${key} exceeds the approved ERA5-Land model-orography mismatch gate (${modelMismatchM.toFixed(1)} m > ${modelOrographyGate.blockedMismatchAboveM} m)`);
+      }
       const rawPath = `${stagingRoot}/era5-raw/${key}.ndjson.gz`;
       const metadataPath = `${stagingRoot}/era5-raw/${key}.meta.json`;
       if (refresh || !existsSync(rawPath) || !existsSync(metadataPath)) {
@@ -305,8 +314,17 @@ async function main() {
         || metadata.precipitationQuality?.artifactFloorM !== -0.000001
         || metadata.snowDepthQuality?.policy !== "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO"
         || metadata.snowDepthQuality?.artifactFloorM !== -0.000001
+        || !Number.isFinite(metadata.snowDepthQuality?.maximumOriginalValueM)
+        || !Number.isFinite(metadata.snowDepthQuality?.officialGlacierIndicatorThresholdM)
+        || metadata.snowDepthQuality.officialGlacierIndicatorThresholdM !== representativenessConfig.glacier.officialSnowDepthIndicatorM
         || JSON.stringify(metadata.request) !== JSON.stringify(expectedRequest)) {
         throw new Error(`ERA5_REQUEST001 invalid source response metadata for ${key}`);
+      }
+      if (candidateBatch !== null
+        && representativenessConfig.glacier.excludeIndicatorCellWhenDestinationScopeExcludesGlacier
+        && (metadata.snowDepthQuality.glacierIndicatorCount > 0
+          || metadata.snowDepthQuality.maximumOriginalValueM >= representativenessConfig.glacier.officialSnowDepthIndicatorM)) {
+        throw new Error(`ERA5_REP002 ${key} contains the official glacier-indicator snow-depth signal (>= ${representativenessConfig.glacier.officialSnowDepthIndicatorM} m); candidate staging is blocked until a non-glacier cell is selected`);
       }
       if (!sameGridLocation(metadata.resolvedLocation, pointOrography.resolvedLocation)) {
         throw new Error(`ERA5_OROGRAPHY001 climate and invariant grid locations differ for ${key}`);

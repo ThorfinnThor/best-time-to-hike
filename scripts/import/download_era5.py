@@ -28,6 +28,9 @@ import numpy as np
 
 DATASET = "reanalysis-era5-land-timeseries"
 NETCDF_NEGATIVE_ARTIFACT_FLOOR_M = -1e-6
+# ECMWF documents ERA5-Land snow-depth values >=10 m as an indicator of
+# glacier locations, where snow depth is not well known.
+OFFICIAL_GLACIER_SNOW_DEPTH_INDICATOR_M = 10.0
 VARIABLES = [
     "2m_temperature",
     "2m_dewpoint_temperature",
@@ -218,6 +221,10 @@ def validate_series(
     snow_depth = arrays["snowDepthM"]
     finite_snow_depth = snow_depth[np.isfinite(snow_depth)]
     minimum_snow_depth = float(np.min(finite_snow_depth)) if finite_snow_depth.size else None
+    maximum_snow_depth = float(np.max(finite_snow_depth)) if finite_snow_depth.size else None
+    glacier_indicator_indexes = np.flatnonzero(
+        np.isfinite(snow_depth) & (snow_depth >= OFFICIAL_GLACIER_SNOW_DEPTH_INDICATOR_M)
+    )
     negative_snow_depth_indexes = np.flatnonzero(np.isfinite(snow_depth) & (snow_depth < 0))
     if minimum_snow_depth is not None and minimum_snow_depth < NETCDF_NEGATIVE_ARTIFACT_FLOOR_M:
         sample_indexes = negative_snow_depth_indexes[:3]
@@ -243,6 +250,9 @@ def validate_series(
             "artifactFloorM": NETCDF_NEGATIVE_ARTIFACT_FLOOR_M,
             "clampedValueCount": int(negative_snow_depth_indexes.size),
             "minimumOriginalValueM": minimum_snow_depth,
+            "maximumOriginalValueM": maximum_snow_depth,
+            "officialGlacierIndicatorThresholdM": OFFICIAL_GLACIER_SNOW_DEPTH_INDICATOR_M,
+            "glacierIndicatorCount": int(glacier_indicator_indexes.size),
         },
     }
 

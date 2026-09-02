@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 import type { DestinationConfig } from "../../lib/data/types";
 import { selectSamplingPoints, samplingQuality } from "../../lib/hiking/sampling";
 import { geometryBounds, geometryContains, geometryDistanceKm, medianElevationInWindow, type DemGeometry } from "../import/copernicus-dem";
@@ -18,8 +19,42 @@ interface SamplingCandidate {
   validPixelCount: number;
 }
 
+interface PreparedDestination {
+  destination: DestinationConfig;
+  demPath: string;
+  dem: any;
+  allCandidates: SamplingCandidate[];
+  maskExclusions: any[];
+  candidates: SamplingCandidate[];
+}
+
+interface OrographyPreflightPoint {
+  key: string;
+  era5LandGridElevationM: number;
+  resolvedLocation: { latitude: number; longitude: number };
+}
+
 function grid(value: number) {
   return Math.round(value * 10) / 10;
+}
+
+function coordinateKey(lat: number, lon: number) {
+  const format = (value: number) => value.toFixed(1).replace("-", "m").replace(".", "p");
+  return `${format(lat)}_${format(lon)}`;
+}
+
+function pythonExecutable() {
+  if (process.env.BTH_DATA_PYTHON) return process.env.BTH_DATA_PYTHON;
+  const local = "generated/intermediate/data-venv/bin/python3";
+  return existsSync(local) ? local : "python3";
+}
+
+function runPython(script: string, args: string[]) {
+  return new Promise<void>((resolve, reject) => {
+    const child = spawn(pythonExecutable(), [script, ...args], { stdio: "inherit", env: process.env });
+    child.once("error", reject);
+    child.once("exit", (code) => code === 0 ? resolve() : reject(new Error(`SAMPLING003 Python preflight exited with ${code}`)));
+  });
 }
 
 async function candidatesForGeometry(geometry: DemGeometry, config: any, demIngestion: any) {
@@ -96,6 +131,7 @@ async function main() {
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
   const features = readJson<{features:GeometryFeature[]}>(geometryPath).features;
 
+  const prepared: PreparedDestination[] = [];
   for (const destination of destinations) {
     const feature = features.find((candidate) => candidate.properties.destinationId === destination.id);
     if (!feature) throw new Error(`SAMPLING001 missing geometry for ${destination.id}`);
@@ -111,11 +147,47 @@ async function main() {
       (exclusion:any) => exclusion.lat === candidate.lat && exclusion.lon === candidate.lon
     ));
     if (!candidates.length) throw new Error(`SAMPLING001 no valid ERA5 grid candidates for ${destination.id}`);
+    prepared.push({ destination, demPath, dem, allCandidates, maskExclusions, candidates });
+  }
+
+  const modelOrography = readJson<any>("data-config/methodology/era5-land-representativeness-v1.json").modelOrography;
+  let preflightByKey = new Map<string, OrographyPreflightPoint>();
+  if (candidateBatch !== null) {
+    const entries = [...new Map(prepared.flatMap(({ candidates }) => candidates.map((candidate) => {
+      const key = coordinateKey(candidate.lat, candidate.lon);
+      return [key, { key, lat: candidate.lat, lon: candidate.lon }] as const;
+    }))).values()].sort((first, second) => first.key.localeCompare(second.key));
+    const planPath = `${stagingRoot}/era5-orography-candidate-plan.json`;
+    const outputPath = `${stagingRoot}/era5-invariants/candidate-orography.json`;
+    writeJson(planPath, { schemaVersion: 1, source: "era5-land-invariant-geopotential", entries });
+    await runPython("scripts/import/download_era5_land_orography.py", ["--plan", planPath, "--output", outputPath]);
+    const snapshot = readJson<any>(outputPath);
+    if (snapshot.schemaVersion !== 1 || snapshot.pointCount !== entries.length || snapshot.points?.length !== entries.length) {
+      throw new Error("SAMPLING003 invalid candidate ERA5-Land model-orography preflight");
+    }
+    preflightByKey = new Map((snapshot.points as OrographyPreflightPoint[]).map((point) => [point.key, point]));
+    if (preflightByKey.size !== entries.length || entries.some((entry) => !preflightByKey.has(entry.key))) {
+      throw new Error("SAMPLING003 candidate model-orography preflight point set differs from candidates");
+    }
+    console.log(`Preflighted ${entries.length} candidate ERA5-Land model elevations before climate downloads.`);
+  }
+
+  for (const item of prepared) {
+    const { destination, demPath, dem, allCandidates, maskExclusions } = item;
+    const candidates = item.candidates;
     const bands = Object.fromEntries(destination.elevationBands.map((band) => {
       const targetElevationM = dem.bands[band.id]?.medianM;
       if (!Number.isFinite(targetElevationM)) throw new Error(`SAMPLING001 missing DEM target for ${destination.id}/${band.id}`);
-      const selected = selectSamplingPoints(candidates, targetElevationM).map((point) => {
+      const eligibleCandidates = candidateBatch === null ? candidates : candidates.filter((candidate) => {
+        const modelElevation = preflightByKey.get(coordinateKey(candidate.lat, candidate.lon))?.era5LandGridElevationM;
+        return modelElevation !== undefined && Number.isFinite(modelElevation)
+          && Math.abs(modelElevation - targetElevationM) <= modelOrography.blockedMismatchAboveM;
+      });
+      if (!eligibleCandidates.length) throw new Error(`SAMPLING003 ${destination.id}/${band.id} has no ERA5-Land candidate within ${modelOrography.blockedMismatchAboveM} m of the target elevation`);
+      const selected = selectSamplingPoints(eligibleCandidates, targetElevationM).map((point) => {
         const evidence = candidates.find((candidate) => candidate.lat === point.lat && candidate.lon === point.lon)!;
+        const modelPoint = preflightByKey.get(coordinateKey(point.lat, point.lon));
+        const modelMismatchM = modelPoint ? round(Math.abs(modelPoint.era5LandGridElevationM - targetElevationM), 1) : null;
         const quality = samplingQuality(point.elevationMismatchM);
         const override = overrides.find((value:any) => value.destinationId === destination.id && value.bandId === band.id && value.type === "elevation-mismatch");
         if (quality === "blocked" && !override?.approved) throw new Error(`SAMPLING002 ${destination.id}/${band.id} exceeds 800 m without an approved override`);
@@ -124,8 +196,11 @@ async function main() {
           lat: point.lat,
           lon: point.lon,
           terrainElevationM: point.terrainElevationM,
+          era5LandGridElevationM: modelPoint?.era5LandGridElevationM,
           targetElevationM,
           elevationMismatchM: round(point.elevationMismatchM, 1),
+          modelOrographyMismatchM: modelMismatchM,
+          modelOrographyQuality: modelMismatchM === null ? "unknown" : modelMismatchM <= modelOrography.goodMismatchMaxM ? "good" : "manual-review",
           sampleWeight: point.sampleWeight,
           usedBufferM: evidence.usedBufferM,
           demWindowValidPixelCount: evidence.validPixelCount,
@@ -150,6 +225,18 @@ async function main() {
       demSnapshotHash: sha256(readFileSync(demPath, "utf8")),
       candidateCount: candidates.length,
       excludedCandidateCount: allCandidates.length - candidates.length,
+      modelOrographyPreflight: candidateBatch === null ? null : {
+        source: "ERA5-Land invariant geopotential",
+        sourceConfig: "data-config/methodology/era5-land-orography-v1.json",
+        thresholdM: modelOrography.blockedMismatchAboveM,
+        candidatePointCount: candidates.length,
+        excludedCandidateCount: [...candidates].filter((candidate) => !destination.elevationBands.some((band) => {
+          const target = dem.bands[band.id]?.medianM;
+          const modelElevation = preflightByKey.get(coordinateKey(candidate.lat, candidate.lon))?.era5LandGridElevationM;
+          return Number.isFinite(target) && modelElevation !== undefined && Number.isFinite(modelElevation)
+            && Math.abs(modelElevation - target) <= modelOrography.blockedMismatchAboveM;
+        })).length
+      },
       era5LandMaskExclusions: maskExclusions,
       generatedAt: new Date().toISOString(),
       bands
