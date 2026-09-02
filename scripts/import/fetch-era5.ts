@@ -317,6 +317,7 @@ async function main() {
         || !Number.isFinite(metadata.snowDepthQuality?.maximumOriginalValueM)
         || !Number.isFinite(metadata.snowDepthQuality?.officialGlacierIndicatorThresholdM)
         || metadata.snowDepthQuality.officialGlacierIndicatorThresholdM !== representativenessConfig.glacier.officialSnowDepthIndicatorM
+        || !Number.isInteger(metadata.snowDepthQuality?.glacierIndicatorCount)
         || JSON.stringify(metadata.request) !== JSON.stringify(expectedRequest)) {
         throw new Error(`ERA5_REQUEST001 invalid source response metadata for ${key}`);
       }
