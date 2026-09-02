@@ -126,7 +126,11 @@ export function daylightForLocalDate(localDate: string, lat: number, lon: number
   return output;
 }
 
-/** Number of real UTC hours that map to a local date (23/24/25 across DST). */
+/**
+ * Number of real UTC hours that map to a local date. Most DST transitions
+ * produce 23/24/25 hours, while the IANA history also contains two-hour
+ * political clock changes (for example Mendoza on 1992-10-18).
+ */
 export function expectedHourlyInstants(localDate: string, timezone: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(localDate)) throw new Error(`TIME001 invalid local date: ${localDate}`);
   const cacheKey=`${localDate}|${timezone}`;
@@ -140,7 +144,7 @@ export function expectedHourlyInstants(localDate: string, timezone: string) {
     const instant = new Date(approximateMidnightUtc + offset * 3_600_000);
     if (toLocalDateTime(instant, timezone).localDate === localDate) count += 1;
   }
-  if (count < 23 || count > 25) throw new Error(`TIME001 invalid timezone/day mapping for ${localDate} in ${timezone}`);
+  if (count < 22 || count > 26) throw new Error(`TIME001 invalid timezone/day mapping for ${localDate} in ${timezone}`);
   localDayHourCounts.set(cacheKey,count);
   return count;
 }
