@@ -16,6 +16,7 @@ const fail = (message: string): never => { throw new Error(`CANDIDATE_VALIDATE00
 
 const destinations = readJson<any[]>("destinations.json");
 const geometry = readJson<any>("destination-areas.geojson");
+const manifest = readJson<any>("manifest.json");
 const representativeness = JSON.parse(readFileSync(join(ROOT, "data-config/methodology/era5-land-representativeness-v1.json"), "utf8"));
 const candidateOrographyPlan = readJson<any>("era5-orography-candidate-plan.json");
 const candidateOrography = readJson<any>("era5-invariants/candidate-orography.json");
@@ -24,6 +25,11 @@ const orography = readJson<any>("era5-invariants/era5-land-orography.json");
 
 if (!destinations.length || destinations.some((destination) => !destination.active)) fail("destination set is empty or inactive");
 if (geometry.features?.length !== destinations.length) fail("geometry count differs from destination count");
+if (manifest.destinationCount !== destinations.length
+  || !Array.isArray(manifest.heldDestinations)
+  || destinations.some((destination) => manifest.heldDestinations.includes(destination.id))) {
+  fail("candidate manifest does not match the science-hold disposition");
+}
 if (!Array.isArray(candidateOrographyPlan.entries) || candidateOrographyPlan.entries.length === 0
   || candidateOrography.pointCount !== candidateOrographyPlan.entries.length
   || candidateOrography.points?.length !== candidateOrographyPlan.entries.length) {

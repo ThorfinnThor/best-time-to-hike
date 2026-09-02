@@ -17,6 +17,9 @@ interface Candidate {
 
 interface Decision {
   id: string;
+  stagingDisposition?: "hold" | "eligible";
+  stagingHoldReason?: string;
+  requiredBeforeReentry?: string[];
   geometrySha256: string;
   intendedHikingScope: string;
   excludedClasses: string[];
@@ -53,7 +56,17 @@ function main() {
   const requestedIds = new Set((process.env.BTH_DESTINATIONS ?? "").split(",").map((value) => value.trim()).filter(Boolean));
   const unknownRequestedIds = [...requestedIds].filter((id) => !batch.add.includes(id));
   if (unknownRequestedIds.length) throw new Error(`CANDIDATE001 requested IDs are not in batch ${batchNumber}: ${unknownRequestedIds.join(",")}`);
-  const selectedIds = requestedIds.size ? batch.add.filter((id: string) => requestedIds.has(id)) : batch.add;
+  const heldIds = new Set(science.decisions.filter((decision) => decision.stagingDisposition === "hold").map((decision) => decision.id));
+  for (const heldId of heldIds) {
+    const decision = science.decisions.find((value) => value.id === heldId)!;
+    if (!decision.stagingHoldReason || !decision.requiredBeforeReentry?.length) {
+      throw new Error(`CANDIDATE002 science hold for ${heldId} lacks a reason or re-entry requirements`);
+    }
+  }
+  const requestedHeldIds = [...requestedIds].filter((id) => heldIds.has(id));
+  if (requestedHeldIds.length) throw new Error(`CANDIDATE002 requested candidates are on science hold: ${requestedHeldIds.join(",")}`);
+  const selectedIds = (requestedIds.size ? batch.add.filter((id: string) => requestedIds.has(id)) : batch.add)
+    .filter((id: string) => !heldIds.has(id));
   const candidates = (plan.candidates as Candidate[]).filter((candidate) => selectedIds.includes(candidate.id));
   if (candidates.length !== selectedIds.length) throw new Error("CANDIDATE001 candidate plan is incomplete");
   const destinationConfigs: DestinationConfig[] = [];
@@ -156,6 +169,7 @@ function main() {
     status: "staging-only",
     batch: batchNumber,
     destinationCount: destinationConfigs.length,
+    heldDestinations: [...heldIds].sort(),
     publicActivationAuthorized: false,
     inputs: {
       candidatePlan: "data-config/sources/destination-candidates.json",

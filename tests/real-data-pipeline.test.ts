@@ -102,9 +102,12 @@ test("lapse correction is wired to pinned ERA5-Land orography, not GLO-30 terrai
   assert.match(orography.downloadSha256, /^[a-f0-9]{64}$/);
   const climateImporter = readFileSync("scripts/import/fetch-era5.ts", "utf8");
   const sampler = readFileSync("scripts/geo/build-sampling.ts", "utf8");
+  const candidatePrepare = readFileSync("scripts/geo/prepare-candidate-batch.ts", "utf8");
   assert.match(climateImporter, /era5LandGridElevationM: pointOrography\.era5LandGridElevationM/);
   assert.match(sampler, /era5-orography-candidate-plan\.json/);
   assert.match(sampler, /blockedMismatchAboveM/);
+  assert.match(candidatePrepare, /stagingDisposition === "hold"/);
+  assert.match(candidatePrepare, /heldDestinations/);
   assert.doesNotMatch(climateImporter, /gridElevationM: consumer\.gridElevationM/);
   assert.match(sampler, /terrainElevationM: point\.terrainElevationM/);
 });
