@@ -41,15 +41,26 @@ jobs:
         run: pnpm data:representative-prepare
 
       - name: Cache canonical ERA5-Land point series between fail-closed retries
-        uses: actions/cache@v4
+        id: era5-cache
+        uses: actions/cache/restore@v4
         with:
           path: generated/intermediate/era5-raw
           key: era5-land-point-series-v1-${{ hashFiles('data-config/sources/representative-cell-overrides.json', 'scripts/import/download_era5.py') }}
           restore-keys: |
             era5-land-point-series-v1-
 
-      - name: Fetch and aggregate the official 1991–2020 ERA5-Land point series
-        run: pnpm data:era5 -- --provisional --refresh
+      - name: Fetch missing official 1991–2020 ERA5-Land point series
+        run: pnpm data:era5 -- --provisional --download-only
+
+      - name: Save canonical ERA5-Land point series before scientific gates
+        if: ${{ always() }}
+        uses: actions/cache/save@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-point-series-v1-${{ hashFiles('data-config/sources/representative-cell-overrides.json', 'scripts/import/download_era5.py') }}
+
+      - name: Aggregate the official 1991–2020 ERA5-Land point series
+        run: pnpm data:era5 -- --provisional
 
       - name: Preserve compact source metadata when a gate fails
         if: ${{ always() }}

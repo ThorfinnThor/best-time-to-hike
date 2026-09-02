@@ -39,7 +39,16 @@ export function daylight(date: Date, lat: number, lon: number) {
   return { sunriseUtcHours: sunrise.utcHours, sunsetUtcHours: sunset.utcHours, daylightHours: normalize(sunset.utcHours - sunrise.utcHours, 24), polarState: "normal" as const };
 }
 
-export function inHikingWindow(localMinutes: number, sunriseLocalMinutes: number | null, sunsetLocalMinutes: number | null) {
+export function inHikingWindow(
+  localMinutes: number,
+  sunriseLocalMinutes: number | null,
+  sunsetLocalMinutes: number | null,
+  polarState: "normal" | "polar_day" | "polar_night" = "normal"
+) {
+  // Polar days and nights have no discrete sunrise/sunset event. Keep weather
+  // sampling deterministic in the nominal 08:00-18:00 local clock window;
+  // daylightHours still independently records the astronomical 24 or 0 hours.
+  if (polarState !== "normal") return localMinutes >= 8 * 60 && localMinutes < 18 * 60;
   if (sunriseLocalMinutes === null || sunsetLocalMinutes === null) return false;
   const start = Math.max(8 * 60, sunriseLocalMinutes);
   const end = Math.min(18 * 60, sunsetLocalMinutes);

@@ -172,7 +172,7 @@ export function aggregateDailyClimate(records: HourlyClimateObservation[], optio
       if (record.snowCover !== null) covers.push(record.snowCover);
       if (record.snowDepthM !== null) depths.push(record.snowDepthM);
       const local = toLocalDateTime(new Date(record.utcInstant), options.timezone);
-      if (!inHikingWindow(local.localMinutes, solar.sunriseLocalMinutes, solar.sunsetLocalMinutes)) continue;
+      if (!inHikingWindow(local.localMinutes, solar.sunriseLocalMinutes, solar.sunsetLocalMinutes, solar.polarState)) continue;
       if (record.temperatureK !== null) adjustedTemperaturesHikingC.push(record.temperatureK - 273.15 + temperatureAdjustment.correctionC);
       if (record.temperatureK !== null && record.dewpointK !== null) relativeHumidityHikingPct.push(relativeHumidity(record.temperatureK - 273.15, record.dewpointK - 273.15));
       if (record.windUMs !== null && record.windVMs !== null) windHikingValues.push(windKmh(record.windUMs, record.windVMs));

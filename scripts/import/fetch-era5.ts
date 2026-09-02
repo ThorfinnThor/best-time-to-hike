@@ -191,6 +191,7 @@ async function main() {
   const publish = argumentsSet.has("--publish");
   const provisional = argumentsSet.has("--provisional");
   const refresh = argumentsSet.has("--refresh");
+  const downloadOnly = argumentsSet.has("--download-only");
   const candidateBatch = process.env.BTH_CANDIDATE_BATCH ? Number(process.env.BTH_CANDIDATE_BATCH) : null;
   if (candidateBatch !== null && (!Number.isInteger(candidateBatch) || candidateBatch < 1)) {
     throw new Error("ERA5_REQUEST001 BTH_CANDIDATE_BATCH must be a positive integer");
@@ -280,6 +281,7 @@ async function main() {
     }
   }));
   console.log(`ERA5-Land download pool ready: ${plan.length} point(s), ${pendingDownloads.length} refreshed with concurrency ${configuredConcurrency}.`);
+  if (downloadOnly) return;
 
   const geometryPath = candidateBatch === null ? "data-config/geography/destination-areas.geojson" : `${stagingRoot}/destination-areas.geojson`;
   const geometry = readJson<any>(geometryPath);
@@ -364,7 +366,14 @@ async function main() {
           startYear: 1991,
           endYear: 2020
         });
-        result.monthly.forEach(addTemperatureUtilityScore);
+        result.monthly.forEach((metrics, monthIndex) => {
+          try {
+            addTemperatureUtilityScore(metrics);
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            throw new Error(`${message} for ${destination.id}/${consumer.id}/${monthIndex + 1}`);
+          }
+        });
         pointResults.set(consumer.id, { point: consumer, daily: result.daily, monthly: result.monthly });
       }
     }
