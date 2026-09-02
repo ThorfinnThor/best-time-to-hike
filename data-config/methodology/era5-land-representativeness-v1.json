@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "decisionStatus": "approved-for-staging-implementation",
+  "reviewedAt": "2026-09-02",
+  "productionReleaseApproval": false,
+  "modelOrography": {
+    "goodMismatchMaxM": 300,
+    "manualReviewMismatchMaxM": 600,
+    "blockedMismatchAboveM": 600,
+    "blockCappedTemperatureCorrection": true,
+    "rationale": "Temperature can be lapse-corrected, but snow, precipitation, humidity and wind are not elevation-corrected. A point more than 600 m from the target band is not representative enough for a hiking decision."
+  },
+  "glacier": {
+    "officialSnowDepthIndicatorM": 10,
+    "excludeIndicatorCellWhenDestinationScopeExcludesGlacier": true,
+    "persistentSnowReviewMonthCount": 12,
+    "officialDocumentationUrl": "https://confluence.ecmwf.int/spaces/CKB/pages/140385202/ERA5-Land+data+documentation",
+    "rationale": "ECMWF states that ERA5-Land snow-depth values of 10 m and above indicate glacier locations where snow depth is not well known."
+  },
+  "wind": {
+    "decisionStatus": "review-required",
+    "productionGate": "blocked",
+    "rationale": "The pilot contains no hiking-window hour at or above 40 km/h across ten Alpine grid cells and 1991-2020. ERA5-Land 10 m grid wind must not be presented as an exposed-trail wind hazard without a validated exposure or gust treatment."
+  }
+}

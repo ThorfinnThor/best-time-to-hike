@@ -27,6 +27,13 @@ const science = JSON.parse(readFileSync("data-config/sources/destination-science
     evidence: Array<{url:string}>;
   }>;
 };
+const representativeness = JSON.parse(readFileSync("data-config/methodology/era5-land-representativeness-v1.json", "utf8")) as {
+  decisionStatus: string;
+  productionReleaseApproval: boolean;
+  modelOrography: {goodMismatchMaxM:number;manualReviewMismatchMaxM:number;blockedMismatchAboveM:number;blockCappedTemperatureCorrection:boolean};
+  glacier: {officialSnowDepthIndicatorM:number;excludeIndicatorCellWhenDestinationScopeExcludesGlacier:boolean;persistentSnowReviewMonthCount:number};
+  wind: {productionGate:string};
+};
 
 test("destination intake remains a structurally valid planning-only set", () => {
   assert.equal(plan.status, "planning-only");
@@ -72,4 +79,18 @@ test("batch-one science decisions remain complete staging-only priors", () => {
     assert.ok(decision.evidence.length > 0);
     assert.ok(decision.evidence.every((item) => item.url.startsWith("https://")));
   }
+});
+
+test("candidate representativeness decision remains fail-closed", () => {
+  assert.equal(representativeness.decisionStatus, "approved-for-staging-implementation");
+  assert.equal(representativeness.productionReleaseApproval, false);
+  assert.deepEqual(
+    [representativeness.modelOrography.goodMismatchMaxM, representativeness.modelOrography.manualReviewMismatchMaxM, representativeness.modelOrography.blockedMismatchAboveM],
+    [300, 600, 600]
+  );
+  assert.equal(representativeness.modelOrography.blockCappedTemperatureCorrection, true);
+  assert.equal(representativeness.glacier.officialSnowDepthIndicatorM, 10);
+  assert.equal(representativeness.glacier.excludeIndicatorCellWhenDestinationScopeExcludesGlacier, true);
+  assert.equal(representativeness.glacier.persistentSnowReviewMonthCount, 12);
+  assert.equal(representativeness.wind.productionGate, "blocked");
 });

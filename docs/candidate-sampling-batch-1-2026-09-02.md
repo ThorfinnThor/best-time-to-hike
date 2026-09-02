@@ -35,5 +35,5 @@ Ordino remains the sole strong-penalty case: its narrow lower valley is not well
 ## Remaining gates
 
 - Official Copernicus quality layers remain unavailable through the unsigned public mirror; see `docs/copernicus-quality-layer-access-2026-09-02.md`.
-- ERA5-Land mask evidence and real 1991–2020 climate observations have not yet been downloaded for these 85 unique cells.
+- A real 1991–2020 pilot for Zermatt, Grindelwald and Innsbruck completed in run `33624222565`. Its structural evidence is complete, but the science audit found material ERA5-Land model-orography mismatches, official glacier-indicator snow depths and an unresolved exposed-wind limitation. See `docs/candidate-climate-science-audit-pilot-2026-09-02.md`; the remaining 12 downloads must wait for the representativeness preflight.
 - The sampling outputs remain below `generated/intermediate/candidate-batch-1/` and are not consumed by the public build.
