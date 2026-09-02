@@ -23,6 +23,9 @@ const science = JSON.parse(readFileSync("data-config/sources/destination-science
   decisions: Array<{
     id: string;
     geometrySha256: string;
+    stagingDisposition?: string;
+    stagingHoldReason?: string;
+    requiredBeforeReentry?: string[];
     bands: Array<{id:string;minM:number;maxM:number;weight:number}>;
     evidence: Array<{url:string}>;
   }>;
@@ -79,6 +82,10 @@ test("batch-one science decisions remain complete staging-only priors", () => {
     assert.ok(decision.evidence.length > 0);
     assert.ok(decision.evidence.every((item) => item.url.startsWith("https://")));
   }
+  const zermatt = science.decisions.find((decision) => decision.id === "zermatt");
+  assert.equal(zermatt?.stagingDisposition, "hold");
+  assert.match(zermatt?.stagingHoldReason ?? "", /600 m gate/);
+  assert.equal(zermatt?.requiredBeforeReentry?.length, 3);
 });
 
 test("candidate representativeness decision remains fail-closed", () => {

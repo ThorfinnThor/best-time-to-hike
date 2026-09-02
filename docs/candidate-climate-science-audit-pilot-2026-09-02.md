@@ -25,6 +25,14 @@ The pilot produced structurally valid real ERA5-Land 1991–2020 climate for Zer
 
 No pilot destination has a releasable three-band set.
 
+## Candidate-orography preflight follow-up
+
+GitHub Actions run [#33632003837](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/33632003837) evaluated 226 candidate ERA5-Land model elevations before starting any 30-year climate download. It stopped at the intended fail-closed gate because the Zermatt Valley band has no candidate within 600 m of its 1,965.8 m target elevation.
+
+The municipality polygon is not an adequate proxy for the intended valley hiking scope: its land-surface median is 2,939.8 m, while only 30,313 of 365,173 represented pixels (8.3%) fall in the 1,500–2,200 m Valley band. This explains why local GLO-30 terrain patches can appear suitable while the coarser ERA5-Land model cells remain high-mountain cells.
+
+**SOL decision:** keep the 600 m gate unchanged and place Zermatt on staging hold. Re-entry requires a reviewed trail-network or valley-corridor geometry, a repeated invariant-orography preflight with at least one eligible Valley point, and renewed glacier/persistent-snow QA. Relaxing the threshold would knowingly substitute high-mountain precipitation, snow, humidity and wind for valley conditions and is not acceptable.
+
 ## Findings
 
 ### S1 — terrain matching and model orography diverge
