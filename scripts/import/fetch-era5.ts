@@ -6,7 +6,7 @@ import { createInterface } from "node:readline";
 import type { BandClimateMonth, DestinationConfig } from "../../lib/data/types";
 import { aggregateBandPointMetrics } from "../../lib/hiking/band-climate";
 import { aggregateMonthlyClimate, aggregatePointClimate, type DailyPointClimate, type HourlyClimateObservation, type MonthlyPointClimate } from "../../lib/hiking/climate";
-import { greatCircleDistanceKm } from "../../lib/hiking/sampling";
+import { maximumSeparationKm } from "../../lib/hiking/sampling";
 import { interpolate, overallScore, scoreComponents, type Curve } from "../../lib/scoring";
 import curves from "../../data-config/scoring/curves.json";
 import climateAggregation from "../../data-config/methodology/climate-aggregation-v1.json";
@@ -133,13 +133,9 @@ function completeYearPointMetrics(metrics: MonthlyPointClimate) {
   return metrics.temperatureUtilitySamplesC.length > 0 && required.every((value) => value !== null && Number.isFinite(value));
 }
 
-function maximumSeparation(points: Array<{lat:number;lon:number}>) {
-  return Math.max(0, ...points.flatMap((point, index) => points.slice(index + 1).map((other) => greatCircleDistanceKm(point, other))));
-}
-
 function polygonDiameterKm(geometry: any) {
   const values = (geometry.type === "Polygon" ? geometry.coordinates.flat(1) : geometry.coordinates.flat(2)) as Array<[number,number]>;
-  return maximumSeparation(values.map(([lon, lat]) => ({ lat, lon })));
+  return maximumSeparationKm(values.map(([lon, lat]) => ({ lat, lon })));
 }
 
 function populationStandardDeviation(values: number[]) {
@@ -382,7 +378,7 @@ async function main() {
           targetElevationM: samplingBand.targetElevationM,
           meanElevationMismatchM: round(points.reduce((sum, point) => sum + point.elevationMismatchM * point.sampleWeight, 0), 1),
           samplePointCount: points.length,
-          samplePointMaxSeparationKm: round(maximumSeparation(points), 1),
+          samplePointMaxSeparationKm: round(maximumSeparationKm(points), 1),
           polygonEquivalentDiameterKm: round(diameterKm, 1),
           terrainReliefM: round(demBand.maxM - demBand.minM, 1),
           interannualScoreSd: round(populationStandardDeviation(yearlyScores), 1),

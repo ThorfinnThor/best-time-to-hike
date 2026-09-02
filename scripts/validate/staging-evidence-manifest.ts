@@ -3,13 +3,32 @@ import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { ROOT, writeJson } from "../lib/io";
 
-const evidencePaths = [
-  "generated/intermediate/real-dem",
-  "generated/intermediate/real-sampling",
-  "generated/intermediate/real-climate",
-  "generated/intermediate/era5-invariants",
-  "generated/intermediate/era5-request-plan.json"
-];
+const candidateBatch = process.env.BTH_CANDIDATE_BATCH?.trim() || null;
+if (candidateBatch !== null && candidateBatch !== "1") {
+  throw new Error(`EVIDENCE001 unsupported candidate batch: ${candidateBatch}`);
+}
+
+const stagingRoot = candidateBatch === null
+  ? "generated/intermediate"
+  : `generated/intermediate/candidate-batch-${candidateBatch}`;
+const evidencePaths = candidateBatch === null
+  ? [
+      `${stagingRoot}/real-dem`,
+      `${stagingRoot}/real-sampling`,
+      `${stagingRoot}/real-climate`,
+      `${stagingRoot}/era5-invariants`,
+      `${stagingRoot}/era5-request-plan.json`
+    ]
+  : [
+      `${stagingRoot}/destination-areas.geojson`,
+      `${stagingRoot}/destinations.json`,
+      `${stagingRoot}/manifest.json`,
+      `${stagingRoot}/real-dem`,
+      `${stagingRoot}/real-sampling`,
+      `${stagingRoot}/real-climate`,
+      `${stagingRoot}/era5-invariants`,
+      `${stagingRoot}/era5-request-plan.json`
+    ];
 
 function files(path: string): string[] {
   if (!existsSync(path)) return [];
@@ -37,6 +56,7 @@ const manifest = {
   schemaVersion: 1,
   executionMode: "ingest-staging",
   publish: false,
+  candidateBatch,
   githubRunId: process.env.GITHUB_RUN_ID || null,
   gitCommitSha: process.env.GITHUB_SHA || null,
   fileCount: entries.length,
@@ -44,5 +64,5 @@ const manifest = {
   files: entries
 };
 
-writeJson("generated/intermediate/staging-evidence-manifest.json", manifest);
+writeJson(`${stagingRoot}/staging-evidence-manifest.json`, manifest);
 console.log(`Staging evidence manifest: ${manifest.fileCount} files, ${manifest.totalBytes} bytes.`);

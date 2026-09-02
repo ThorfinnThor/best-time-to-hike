@@ -12,6 +12,30 @@ export const greatCircleDistanceKm = (a: Coordinate, b: Coordinate) => {
   return 2*r*Math.asin(Math.sqrt(value));
 };
 
+export function maximumSeparationKm(points: Coordinate[]) {
+  if (points.length < 2) return 0;
+  const vectors = points.map(({ lat, lon }) => {
+    const latitude = lat * Math.PI / 180;
+    const longitude = lon * Math.PI / 180;
+    const cosLatitude = Math.cos(latitude);
+    return {
+      x: cosLatitude * Math.cos(longitude),
+      y: cosLatitude * Math.sin(longitude),
+      z: Math.sin(latitude)
+    };
+  });
+  let minimumDotProduct = 1;
+  for (let first = 0; first < vectors.length - 1; first += 1) {
+    for (let second = first + 1; second < vectors.length; second += 1) {
+      const dotProduct = vectors[first].x * vectors[second].x
+        + vectors[first].y * vectors[second].y
+        + vectors[first].z * vectors[second].z;
+      if (dotProduct < minimumDotProduct) minimumDotProduct = dotProduct;
+    }
+  }
+  return 6371 * Math.acos(Math.max(-1, Math.min(1, minimumDotProduct)));
+}
+
 export function selectSamplingPoints(candidates: Candidate[], targetElevationM: number, maxPoints = samplingConfig.maxPointsPerBand, slackM = samplingConfig.dispersionMismatchSlackM): SelectedCandidate[] {
   const ranked = candidates.map((candidate)=>({...candidate,elevationMismatchM:Math.abs(candidate.terrainElevationM-targetElevationM)})).sort((a,b)=>a.elevationMismatchM-b.elevationMismatchM || a.lat-b.lat || a.lon-b.lon);
   if (!ranked.length) return [];

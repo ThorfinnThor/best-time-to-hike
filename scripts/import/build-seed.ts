@@ -1,8 +1,6 @@
 import type { BandClimateMonth, DestinationConfig } from "../../lib/data/types";
+import { maximumSeparationKm } from "../../lib/hiking/sampling";
 import { readJson, round, sha256, writeJson } from "../lib/io";
-
-const distanceKm=(a:{lat:number;lon:number},b:{lat:number;lon:number})=>{const radius=6371;const dLat=(b.lat-a.lat)*Math.PI/180;const dLon=(b.lon-a.lon)*Math.PI/180;const value=Math.sin(dLat/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(dLon/2)**2;return 2*radius*Math.asin(Math.sqrt(value));};
-const maximumSeparation=(points:Array<{lat:number;lon:number}>)=>Math.max(0,...points.flatMap((point,index)=>points.slice(index+1).map((other)=>distanceKm(point,other))));
 
 type Profile = { temp: number[]; wet: number[]; snow: number[]; wind: number[]; daylight: number[]; rainMm: number[] };
 const profiles: Record<string, Profile> = {
@@ -55,7 +53,7 @@ for (const destination of destinations) {
   const destinationGeometry=geometry.features.find((feature:any)=>feature.properties.destinationId===destination.id).geometry;
   const polygonPositions=(destinationGeometry.type==="Polygon"?destinationGeometry.coordinates.flat(1):destinationGeometry.coordinates.flat(2)) as Array<[number,number]>;
   const polygonCoordinates=polygonPositions.map(([lon,lat])=>({lat,lon}));
-  const polygonEquivalentDiameterKm=maximumSeparation(polygonCoordinates);
+  const polygonEquivalentDiameterKm=maximumSeparationKm(polygonCoordinates);
   destination.elevationBands.forEach((band, bandIndex) => {
     const targetElevationM = bandMedians[band.id];
     const bandSamplingPoints=samplingBands[band.id].points;
@@ -71,7 +69,7 @@ for (const destination of destinations) {
         targetElevationM,
         meanElevationMismatchM: round(bandSamplingPoints.reduce((sum:number,point:any)=>sum+point.elevationMismatchM*point.sampleWeight,0),1),
         samplePointCount: 3,
-        samplePointMaxSeparationKm: round(maximumSeparation(bandSamplingPoints),1),
+        samplePointMaxSeparationKm: round(maximumSeparationKm(bandSamplingPoints),1),
         polygonEquivalentDiameterKm: round(polygonEquivalentDiameterKm,1),
         terrainReliefM: Math.min(1900, band.maxM - band.minM + bandIndex * 150),
         interannualScoreSd: 7 + bandIndex * 1.5,
