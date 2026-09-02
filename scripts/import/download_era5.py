@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import io
 import json
 import math
 import os
@@ -249,14 +250,16 @@ def validate_series(
 def write_observations(path: Path, times: list[datetime], arrays: dict[str, np.ndarray]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
-    with gzip.open(temporary, "wt", encoding="utf-8", newline="\n") as stream:
-        for index, timestamp in enumerate(times):
-            record = {
-                "utcInstant": timestamp.strftime("%Y-%m-%dT%H:00:00.000Z"),
-                **{name: finite_or_none(values[index]) for name, values in arrays.items()},
-            }
-            stream.write(json.dumps(record, separators=(",", ":"), allow_nan=False))
-            stream.write("\n")
+    with temporary.open("wb") as raw_stream:
+        with gzip.GzipFile(filename="", mode="wb", fileobj=raw_stream, mtime=0) as compressed_stream:
+            with io.TextIOWrapper(compressed_stream, encoding="utf-8", newline="\n") as stream:
+                for index, timestamp in enumerate(times):
+                    record = {
+                        "utcInstant": timestamp.strftime("%Y-%m-%dT%H:00:00.000Z"),
+                        **{name: finite_or_none(values[index]) for name, values in arrays.items()},
+                    }
+                    stream.write(json.dumps(record, separators=(",", ":"), allow_nan=False))
+                    stream.write("\n")
     os.replace(temporary, path)
 
 
@@ -281,6 +284,7 @@ def main() -> None:
         times, arrays, variable_metadata, resolved = read_netcdf_files(files)
         quality = validate_series(times, arrays, args.start_date, args.end_date)
         write_observations(args.output, times, arrays)
+        canonical_observation_hash = sha256_file(args.output)
 
     args.metadata.parent.mkdir(parents=True, exist_ok=True)
     metadata = {
@@ -298,6 +302,15 @@ def main() -> None:
         "resolvedLocation": resolved,
         "variables": variable_metadata,
         "downloadSha256": archive_hash,
+        "canonicalObservation": {
+            "encoding": "gzip-ndjson-utf8",
+            "gzipMtime": 0,
+            "sha256": canonical_observation_hash,
+        },
+        "importer": {
+            "path": "scripts/import/download_era5.py",
+            "sha256": sha256_file(Path(__file__)),
+        },
         "retrievedAt": datetime.now(UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z"),
     }
     temporary_metadata = args.metadata.with_suffix(args.metadata.suffix + ".tmp")

@@ -9,8 +9,8 @@ function pythonExecutable() {
   return existsSync(local) ? local : "python3";
 }
 
-test("ERA5-Land invariant-orography Python importer tests pass", () => {
-  const result = spawnSync(pythonExecutable(), ["tests/test_era5_land_orography.py"], {
+test("ERA5-Land Python importer tests pass", () => {
+  const result = spawnSync(pythonExecutable(), ["-m", "unittest", "discover", "-s", "tests", "-p", "test_*.py"], {
     cwd: process.cwd(),
     encoding: "utf8"
   });

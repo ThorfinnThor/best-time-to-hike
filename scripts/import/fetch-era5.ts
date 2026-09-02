@@ -1,5 +1,6 @@
 import { createReadStream, existsSync, readFileSync } from "node:fs";
 import { spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { createGunzip } from "node:zlib";
 import { createInterface } from "node:readline";
 import type { BandClimateMonth, DestinationConfig } from "../../lib/data/types";
@@ -71,6 +72,10 @@ const VARIABLES = [
 function coordinateKey(lat: number, lon: number) {
   const format = (value:number) => value.toFixed(1).replace("-", "m").replace(".", "p");
   return `${format(lat)}_${format(lon)}`;
+}
+
+function fileSha256(path: string) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
 
 function pythonExecutable() {
@@ -243,6 +248,7 @@ async function main() {
   }
 
   const geometry = readJson<any>("data-config/geography/destination-areas.geojson");
+  const expectedImporterHash = sha256(readFileSync("scripts/import/download_era5.py", "utf8"));
   for (const destination of destinations) {
     const samplingPath = publish
       ? `data-snapshots/sampling/${destination.slug}.json`
@@ -281,8 +287,22 @@ async function main() {
         data_format: "netcdf"
       };
       if (metadata.observationCount !== 262_992
+        || metadata.dataset !== "reanalysis-era5-land-timeseries"
+        || metadata.datasetDoi !== "10.24381/ee82e357"
         || metadata.precipitationSemantics !== "INCREMENTAL_PER_TIMESTEP_M"
         || metadata.snowCoverSemantics !== "FRACTION_0_TO_1"
+        || metadata.firstUtcInstant !== "1991-01-01T00:00:00.000Z"
+        || metadata.lastUtcInstant !== "2020-12-31T23:00:00.000Z"
+        || metadata.canonicalObservation?.encoding !== "gzip-ndjson-utf8"
+        || metadata.canonicalObservation?.gzipMtime !== 0
+        || !/^[a-f0-9]{64}$/.test(metadata.canonicalObservation?.sha256 ?? "")
+        || metadata.canonicalObservation.sha256 !== fileSha256(rawPath)
+        || metadata.importer?.path !== "scripts/import/download_era5.py"
+        || metadata.importer?.sha256 !== expectedImporterHash
+        || metadata.precipitationQuality?.policy !== "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO"
+        || metadata.precipitationQuality?.artifactFloorM !== -0.000001
+        || metadata.snowDepthQuality?.policy !== "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO"
+        || metadata.snowDepthQuality?.artifactFloorM !== -0.000001
         || JSON.stringify(metadata.request) !== JSON.stringify(expectedRequest)) {
         throw new Error(`ERA5_REQUEST001 invalid source response metadata for ${key}`);
       }
@@ -400,6 +420,13 @@ async function main() {
         resolvedLocation: metadata.climate.resolvedLocation,
         observationCount: metadata.climate.observationCount,
         downloadSha256: metadata.climate.downloadSha256,
+        canonicalObservation: metadata.climate.canonicalObservation,
+        importer: metadata.climate.importer,
+        variables: metadata.climate.variables,
+        precipitationQuality: metadata.climate.precipitationQuality,
+        snowDepthQuality: metadata.climate.snowDepthQuality,
+        firstUtcInstant: metadata.climate.firstUtcInstant,
+        lastUtcInstant: metadata.climate.lastUtcInstant,
         retrievedAt: metadata.climate.retrievedAt,
         geopotentialM2S2: metadata.orography.geopotentialM2S2,
         era5LandGridElevationM: metadata.orography.era5LandGridElevationM

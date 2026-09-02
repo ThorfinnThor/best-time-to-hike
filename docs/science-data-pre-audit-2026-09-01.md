@@ -77,11 +77,15 @@ The release packet supplies a private R2 key and archive SHA-256 but no committe
 
 Required resolution: hash the canonical NDJSON, persist importer/version checksums and the essential unit/normalisation/clamp metadata into the climate provenance, commit or attach a non-sensitive per-file artifact manifest, and add deterministic Python tests with synthetic NetCDF fixtures.
 
+Implementation update (2026-09-02): the importer now writes deterministic gzip-NDJSON, records and verifies its SHA-256 and the importer source hash, and carries variable, normalisation and clamp metadata into `sourceDownloads`. Committed Python tests cover conversion and deterministic output. A fresh real-data staging artifact is still required before this new provenance can be reviewed in evidence; a non-sensitive per-file artifact manifest remains open.
+
 #### M4. The `-1e-6 m` negative-value floor is a local policy, not an ECMWF threshold
 
 ECMWF confirms that de-accumulating packed precipitation can create small signed artifacts, but its threshold examples are context-specific and do not prescribe `-1e-6 m`. The current hard fail below that floor is conservative relative to the observed staged precipitation minimum and is operationally reasonable, but it must be documented as a versioned local decision. Snow depth is instantaneous physical height, so the precipitation packing FAQ is not direct evidence for applying the same numeric floor to snow depth.
 
 Required resolution: add committed importer tests at the exact boundary, retain empirical distributions of clamped values per download, and review separate precipitation and snow-height tolerances after a larger destination sample.
+
+Implementation update (2026-09-02): committed tests now cover values at the exact `-1e-6 m` boundary and rejection immediately below it, and ingestion validates the recorded policies and floors. The empirical review across a larger destination sample and the decision on separate precipitation/snow-depth tolerances remain open.
 
 #### M5. The time-series access path needs a production fallback
 
