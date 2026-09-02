@@ -13,6 +13,7 @@ const configFiles = [
   "data-config/methodology/data-quality-v1.json",
   "data-config/methodology/rounding-v1.json",
   "data-config/methodology/release-approvals.json",
+  "data-config/methodology/recommendation-eligibility-v1.json",
   "data-config/methodology/sampling-v1.json",
   "data-config/methodology/source-semantics.json",
   "data-config/scoring/curves.json",
@@ -27,7 +28,10 @@ const destinations = destinationFiles.map((file) => JSON.parse(readFileSync(file
 const dataQuality = readJson<{warningCount:number;warnings:unknown[]}>("generated/reports/data-quality.json");
 const months = destinations.flatMap((destination) => destination.months);
 const bands = months.flatMap((month) => month.bands);
-const scores = months.map((month) => month.overallScore).sort((a, b) => a - b);
+const recommendationMonths = months.filter((month) => month.recommendationEligible);
+const heldDestinations = destinations.filter((destination) => destination.recommendationHoldReason === "persistent-snow");
+const confidenceCappedMonths = months.filter((month) => month.confidenceScore !== null && month.confidenceScore <= 64 && month.confidenceLevel === "low");
+const scores = months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore]).sort((a, b) => a - b);
 const completeness = bands.map((band) => band.dataCompleteness).sort((a, b) => a - b);
 const samplingFiles = readdirSync(join(ROOT, "data-snapshots/sampling")).filter((file) => file.endsWith(".json"));
 const samplingPoints = samplingFiles.flatMap((file) => {
@@ -73,6 +77,13 @@ const report = {
     goldenCases: golden.cases.length
   },
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },
+  recommendationPolicy: {
+    eligibleMonths: recommendationMonths.length,
+    ineligibleMonths: months.length - recommendationMonths.length,
+    heldDestinations: heldDestinations.map((destination) => destination.slug).sort(),
+    confidenceCappedMonths: confidenceCappedMonths.length,
+    unvalidatedGridWindCaveatMonths: months.filter((month) => month.caveats.includes("unvalidated-grid-wind")).length
+  },
   distributions: {
     overallScore: { min: scores[0], median: percentile(scores, 0.5), max: scores.at(-1) },
     bandCompleteness: { min: completeness[0], median: percentile(completeness, 0.5), max: completeness.at(-1) },

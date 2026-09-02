@@ -3,6 +3,7 @@ import { join, relative } from "node:path";
 import Ajv2020 from "ajv/dist/2020";
 import type { DestinationConfig, PublicDestination } from "../../lib/data/types";
 import { overallScore, roundHalfAwayFromZero } from "../../lib/scoring";
+import { hasPersistentSnowHold } from "../../lib/scoring/recommendations";
 import { greatCircleDistanceKm } from "../../lib/hiking/sampling";
 import { readJson, ROOT, sha256 } from "../lib/io";
 
@@ -31,9 +32,11 @@ const demIngestion=readJson<any>("data-config/methodology/dem-ingestion-v1.json"
 const era5LandOrography=readJson<any>("data-config/methodology/era5-land-orography-v1.json");
 const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
+const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
 assert(Math.abs(Object.values(scoringWeights.overall).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Overall score weights do not sum to 1");
 assert(Math.abs(Object.values(confidence.weights).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Confidence weights do not sum to 1");
 assert(scoringWeights.algorithmVersion===architecture.algorithmVersion,"Algorithm version config mismatch");
+assert(recommendation.algorithmVersion===architecture.algorithmVersion,"Recommendation algorithm version config mismatch");
 for(const [name,curve] of Object.entries(curves))if(Array.isArray(curve)){
   assert(curve.length>=2,`${name}: scoring curve needs at least two points`);
   assert(curve.every((point:any,index:number)=>Array.isArray(point)&&point.length===2&&Number.isFinite(point[0])&&Number.isFinite(point[1])&&point[1]>=0&&point[1]<=100&&(index===0||point[0]>curve[index-1][0])),`${name}: scoring curve points must have increasing x and scores in 0..100`);
@@ -104,14 +107,30 @@ for (const file of detailFiles) {
   const config = configs.find((item)=>item.id===destination.id);
   assert(Boolean(config?.active), `${destination.slug}: public destination is not active in config`);
   assert(destination.datasetStatus===manifest.datasetStatus, `${destination.slug}: dataset status differs from manifest`);
+  assert(Number.isFinite(destination.representativeCell.lat)&&Number.isFinite(destination.representativeCell.lon)&&Number.isFinite(destination.representativeCell.modelElevationM),`${destination.slug}: representative cell provenance is incomplete`);
+  const selectedPoint=Object.values(readJson<any>(`data-snapshots/sampling/${destination.slug}.json`).bands).flatMap((band:any)=>band.points).find((point:any)=>point.selectionRank===1);
+  assert(Boolean(selectedPoint)&&destination.representativeCell.lat===selectedPoint.lat&&destination.representativeCell.lon===selectedPoint.lon,`${destination.slug}: exported representative cell does not match selected sampling point`);
+  assert(Math.abs(destination.representativeCell.modelElevationM-(selectedPoint?.representativeModelElevationM ?? selectedPoint?.gridElevationM ?? selectedPoint?.targetElevationM))<1e-6,`${destination.slug}: exported representative model elevation mismatch`);
   assert(JSON.stringify(destination.months.map((month)=>month.month))===JSON.stringify(Array.from({length:12},(_,index)=>index+1)), `${destination.slug}: months must be ordered 1..12`);
   assert(destination.elevation.minM<=destination.elevation.medianM&&destination.elevation.medianM<=destination.elevation.maxM, `${destination.slug}: invalid elevation ordering`);
   assert(destination.alternatives.every((slug)=>slugs.has(slug)&&slug!==destination.slug), `${destination.slug}: invalid alternative`);
-  const expectedBestMonths=[...destination.months].sort((a,b)=>b.overallScore-a.overallScore||a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
+  const expectedHold = hasPersistentSnowHold(destination.months);
+  const hasEligibleMonth = destination.months.some((month)=>month.recommendationEligible);
+  assert(destination.recommendationEligible===(!expectedHold&&hasEligibleMonth),`${destination.slug}: destination recommendation eligibility mismatch`);
+  if (expectedHold) {
+    assert(destination.recommendationHoldReason==="persistent-snow",`${destination.slug}: persistent-snow hold reason missing`);
+    assert(destination.bestMonths.length===0,`${destination.slug}: held destination must not have best months`);
+    assert(destination.months.every((month)=>!month.recommendationEligible),`${destination.slug}: held destination month is recommendation eligible`);
+    assert(destination.months.every((month)=>month.overallScore===null&&month.scoreLevel===null&&month.confidenceScore===null&&month.confidenceLevel===null&&month.components===null),`${destination.slug}: held destination publishes score claims`);
+    assert(destination.months.every((month)=>month.bands.every((band)=>band.overallScore===null&&band.scoreLevel===null&&band.confidenceScore===null&&band.confidenceLevel===null&&band.components===null)),`${destination.slug}: held destination band publishes score claims`);
+  }
+  const expectedBestMonths=[...destination.months].filter((month)=>month.recommendationEligible&&month.overallScore!==null).sort((a,b)=>b.overallScore!-a.overallScore!||a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
   assert(JSON.stringify(destination.bestMonths)===JSON.stringify(expectedBestMonths),`${destination.slug}: best months are not reproducible`);
   for (const month of destination.months) {
-    assert(month.overallScore>=0&&month.overallScore<=100, `${destination.slug}/${month.month}: score range`);
-    assert(month.confidenceScore>=0&&month.confidenceScore<=100, `${destination.slug}/${month.month}: confidence range`);
+    if (!expectedHold) {
+      assert(month.overallScore!==null&&month.overallScore>=0&&month.overallScore<=100, `${destination.slug}/${month.month}: score range`);
+      assert(month.confidenceScore!==null&&month.confidenceScore>=0&&month.confidenceScore<=100, `${destination.slug}/${month.month}: confidence range`);
+    }
     assert(month.bands.length===config?.elevationBands.length,`${destination.slug}/${month.month}: band count mismatch`);
     assert(month.bands.every((band)=>band.month===month.month&&config?.elevationBands.some((candidate)=>candidate.id===band.bandId)),`${destination.slug}/${month.month}: invalid band identity`);
     const sampling=readJson<any>(`data-snapshots/sampling/${destination.slug}.json`);
@@ -123,6 +142,7 @@ for (const file of detailFiles) {
       assert(Math.abs(band.meanElevationMismatchM-expectedMismatch)<=.1,`${destination.slug}/${month.month}/${band.bandId}: mean elevation mismatch not reproducible`);
       assert(Math.abs(band.samplePointMaxSeparationKm-expectedSeparation)<=.1,`${destination.slug}/${month.month}/${band.bandId}: sample separation not reproducible`);
       assert(band.validInterannualYearCount<=band.sampleYearCount,`${destination.slug}/${month.month}/${band.bandId}: valid interannual years exceed sample years`);
+      if (!expectedHold && !month.recommendationEligible) assert(band.overallScore!==null&&band.overallScore<=recommendation.ineligibleScoreMaximum&&band.scoreLevel==="poor"&&band.confidenceScore!==null&&band.confidenceLevel!==null&&band.components!==null,`${destination.slug}/${month.month}/${band.bandId}: ineligible band score is not guarded`);
     }
     for (const value of [month.metrics.wetDayProbability,month.metrics.heavyRainDayProbability,month.metrics.snowDayProbability,month.metrics.hotDayProbability,month.metrics.severeHotDayProbability,month.metrics.highWindHourProbability,month.metrics.severeWindHourProbability,month.metrics.dataCompleteness]) assert(value>=0&&value<=1,`${destination.slug}/${month.month}: probability range`);
     assert(month.metrics.wetDayProbability>=month.metrics.heavyRainDayProbability,`${destination.slug}/${month.month}: wet < heavy`);
@@ -131,7 +151,14 @@ for (const file of detailFiles) {
     assert(month.metrics.temperatureHikingP10C<=month.metrics.temperatureHikingMeanC&&month.metrics.temperatureHikingMeanC<=month.metrics.temperatureHikingP90C,`${destination.slug}/${month.month}: temperature percentile ordering`);
     assert(month.metrics.windHikingMeanKmh>=0,`${destination.slug}/${month.month}: negative wind`);
     assert(month.metrics.daylightHoursMean>=0&&month.metrics.daylightHoursMean<=24,`${destination.slug}/${month.month}: daylight range`);
-    assert(Math.abs(roundHalfAwayFromZero(overallScore(month.components))-month.overallScore)<=1,`${destination.slug}/${month.month}: score not reproducible`);
+    if (month.recommendationEligible) assert(month.components!==null&&month.overallScore!==null&&Math.abs(roundHalfAwayFromZero(overallScore(month.components))-month.overallScore)<=1,`${destination.slug}/${month.month}: score not reproducible`);
+    if (!expectedHold && !month.recommendationEligible) assert(month.overallScore!==null&&month.overallScore<=recommendation.ineligibleScoreMaximum && month.scoreLevel==="poor",`${destination.slug}/${month.month}: ineligible month is not capped at poor/49`);
+    const samplingForConfidence=readJson<any>(`data-snapshots/sampling/${destination.slug}.json`);
+    const samplePointCount=Math.min(...Object.values(samplingForConfidence.bands).map((band:any)=>band.points.length));
+    if (!expectedHold && destination.datasetStatus === "provisional" && samplePointCount === 1 && samplingForConfidence.representativenessApproved !== true) {
+      assert(month.confidenceScore!==null&&month.confidenceScore<=recommendation.provisionalSinglePointConfidenceCap.maximumScore && month.confidenceLevel==="low",`${destination.slug}/${month.month}: provisional single-point confidence cap missing`);
+      assert(month.bands.every((band)=>band.confidenceScore!==null&&band.confidenceScore<=recommendation.provisionalSinglePointConfidenceCap.maximumScore && band.confidenceLevel==="low"),`${destination.slug}/${month.month}: band confidence cap missing`);
+    }
   }
 }
 assert(publicDestinations.length===configs.filter((item)=>item.active).length,"Active config/public destination count mismatch");
@@ -145,19 +172,20 @@ for (const file of rankingFiles) {
   assert(data.entries.every((entry:any,index:number)=>entry.rank===index+1),`${data.id}: ranking positions must be contiguous`);
   assert(data.entries.every((entry:any)=>destinationBySlug.has(entry.slug)),`${data.id}: unknown destination`);
   assert(data.entries.every((entry:any,index:number,array:any[])=>index===0||array[index-1].score>entry.score||array[index-1].score===entry.score&&array[index-1].confidence>entry.confidence||array[index-1].score===entry.score&&array[index-1].confidence===entry.confidence&&array[index-1].slug.localeCompare(entry.slug)<=0),`${data.id}: entries are not deterministically sorted`);
+  assert(data.entries.every((entry:any)=>destinationBySlug.get(entry.slug)?.recommendationEligible && destinationBySlug.get(entry.slug)?.months[data.month-1]?.recommendationEligible),`${data.id}: ranking contains an ineligible month or destination`);
   if(manifest.datasetStatus!=="production") assert(data.indexable===false,`${data.id}: non-production ranking must be noindex`);
 }
 assert(JSON.stringify([...rankingIds].sort())===JSON.stringify([...manifest.rankingIds].sort()),"Manifest ranking IDs mismatch");
 for (const file of files(join(root,"comparisons")).filter((path)=>!path.endsWith("comparison-index.json"))) {
   const data=JSON.parse(readFileSync(file,"utf8"));
   assert(validateComparison(data),`${relative(root,file)} schema: ${ajv.errorsText(validateComparison.errors)}`);
-  assert(data.months.every((month:any)=>month.winner==="tie"?month.firstScore===month.secondScore:month.winner===data.destinations[month.firstScore>month.secondScore?0:1]),`${data.slug}: winner is inconsistent with scores`);
+  assert(data.months.every((month:any)=>month.firstScore===null||month.secondScore===null ? month.winner===null : month.winner==="tie"?month.firstScore===month.secondScore:month.winner===data.destinations[month.firstScore>month.secondScore?0:1]),`${data.slug}: winner is inconsistent with scores`);
   if(manifest.datasetStatus!=="production") assert(data.indexable===false,`${data.slug}: non-production comparison must be noindex`);
 }
 const search=readJson<any[]>("public/data/hiking/search/destination-index.json");
 assert(validateSearch(search),`Search schema: ${ajv.errorsText(validateSearch.errors)}`);
-assert(JSON.stringify(search.map((item)=>item.slug).sort())===JSON.stringify([...destinationBySlug.keys()].sort()),"Search destination set mismatch");
-assert(search.every((item)=>item.monthly.every((month:any,index:number)=>month.m===index+1)),"Search months must be ordered 1..12");
+assert(JSON.stringify(search.map((item)=>item.slug).sort())===JSON.stringify([...destinationBySlug.values()].filter((destination)=>destination.recommendationEligible).map((destination)=>destination.slug).sort()),"Search destination set mismatch");
+assert(search.every((item)=>item.monthly.length>=1&&item.monthly.every((month:any)=>month.recommendationEligible===true&&month.m>=1&&month.m<=12)&&new Set(item.monthly.map((month:any)=>month.m)).size===item.monthly.length&&item.monthly.every((month:any,index:number,array:any[])=>index===0||array[index-1].m<month.m)),"Search months must contain only eligible months in ascending order");
 for (const [path,expected] of Object.entries(manifest.fileChecksums as Record<string,string>)) assert(sha256(readFileSync(join(root,path)))===expected,`Checksum mismatch: ${path}`);
 const allPublicFiles = files(root);
 const checksummedFiles=allPublicFiles.filter((file)=>!file.endsWith("manifest.json")).map((file)=>relative(root,file)).sort();

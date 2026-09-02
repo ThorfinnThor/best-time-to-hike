@@ -7,7 +7,7 @@
     "slug":{"$ref":"#/$defs/slug"},
     "destinations":{"type":"array","minItems":2,"maxItems":2,"uniqueItems":true,"items":{"$ref":"#/$defs/slug"}},
     "indexable":{"type":"boolean"},
-    "months":{"type":"array","minItems":12,"maxItems":12,"items":{"type":"object","required":["month","firstScore","secondScore","winner"],"properties":{"month":{"type":"integer","minimum":1,"maximum":12},"firstScore":{"$ref":"#/$defs/score"},"secondScore":{"$ref":"#/$defs/score"},"winner":{"anyOf":[{"const":"tie"},{"$ref":"#/$defs/slug"}]}},"additionalProperties":false}}
+    "months":{"type":"array","minItems":12,"maxItems":12,"items":{"type":"object","required":["month","firstScore","secondScore","winner"],"properties":{"month":{"type":"integer","minimum":1,"maximum":12},"firstScore":{"anyOf":[{"$ref":"#/$defs/score"},{"type":"null"}]},"secondScore":{"anyOf":[{"$ref":"#/$defs/score"},{"type":"null"}]},"winner":{"anyOf":[{"const":"tie"},{"$ref":"#/$defs/slug"},{"type":"null"}]}},"additionalProperties":false}}
   },
   "additionalProperties":false,
   "$defs":{"slug":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},"score":{"type":"number","minimum":0,"maximum":100}}

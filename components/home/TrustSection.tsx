@@ -20,8 +20,8 @@ const copy = {
     heading: "Why you can trust the result",
     items: [
       ["data", "Historical climate data", "Monthly hiking conditions are derived from long-term climate records, not marketing copy."],
-      ["elevation", "Elevation-aware", "Low ground, mid elevations and high terrain are evaluated separately before they are combined."],
-      ["method", "Transparent scoring", "Temperature, rain, snow, heat, wind and daylight remain visible behind every score."],
+      ["elevation", "Selected-cell scope", "Each current destination uses one selected representative ERA5-Land model-grid cell, not a whole-region or route average."],
+      ["method", "Transparent scoring", "Temperature, rain, snow, heat, coarse grid-cell wind and daylight remain visible behind every score."],
       ["limits", "Clear limitations", "Climate suitability is not a forecast. Current weather, trail and safety information still matter."],
     ],
   },
@@ -29,8 +29,8 @@ const copy = {
     heading: "Warum du dem Ergebnis vertrauen kannst",
     items: [
       ["data", "Historische Klimadaten", "Monatliche Wanderbedingungen stammen aus langfristigen Klimareihen, nicht aus Werbetexten."],
-      ["elevation", "Höhenabhängig", "Tal, mittlere Lagen und Hochlagen werden getrennt bewertet und anschließend kombiniert."],
-      ["method", "Transparente Wertung", "Temperatur, Regen, Schnee, Hitze, Wind und Tageslicht bleiben hinter jedem Wert sichtbar."],
+      ["elevation", "Ausgewählte Zelle", "Jedes aktuelle Ziel nutzt eine ausgewählte repräsentative ERA5-Land-Modellgitterzelle, nicht eine ganze Region oder einzelne Route."],
+      ["method", "Transparente Wertung", "Temperatur, Regen, Schnee, Hitze, grober Gitterwind und Tageslicht bleiben hinter jedem Wert sichtbar."],
       ["limits", "Klare Grenzen", "Klimaeignung ist keine Vorhersage. Aktuelles Wetter, Wege und Sicherheit müssen geprüft werden."],
     ],
   },

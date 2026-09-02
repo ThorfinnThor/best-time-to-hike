@@ -4,7 +4,7 @@ import type { Comparison, PublicDestination, Ranking, SearchDestination } from "
 
 const root = join(process.cwd(),"public/data/hiking");
 const read = <T>(path:string):T => JSON.parse(readFileSync(join(root,path),"utf8")) as T;
-export const getDestinationIndex = () => read<Array<{id:string;slug:string;name:string;countryCode:string;countryName:string;continent:string;region:string;tags:string[];bestMonths:number[]}>>("destinations/index.json");
+export const getDestinationIndex = () => read<Array<{id:string;slug:string;name:string;countryCode:string;countryName:string;continent:string;region:string;tags:string[];recommendationEligible:boolean;bestMonths:number[]}>>("destinations/index.json");
 export const getDestination = (slug:string) => {
   const entry = getDestinationIndex().find((item)=>item.slug===slug);
   if (!entry) return null;

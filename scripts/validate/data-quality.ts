@@ -32,6 +32,20 @@ for(const destination of destinations){
     if(mismatch>config.strongElevationMismatchAboveM)warnings.push({code:"STRONG_ELEVATION_MISMATCH",destinationId:destination.id,detail:`${bandId} maximum ${mismatch}m`});
   }
 }
-const report={reportVersion:1,datasetVersion:manifest.datasetVersion,generatedFromManifestAt:manifest.generatedAt,datasetStatus:manifest.datasetStatus,warningCount:warnings.length,warnings};
+const report={
+  reportVersion:1,
+  datasetVersion:manifest.datasetVersion,
+  generatedFromManifestAt:manifest.generatedAt,
+  datasetStatus:manifest.datasetStatus,
+  destinationCount:destinations.length,
+  recommendationPolicy:{
+    eligibleMonths:destinations.flatMap((destination)=>destination.months).filter((month)=>month.recommendationEligible).length,
+    ineligibleMonths:destinations.flatMap((destination)=>destination.months).filter((month)=>!month.recommendationEligible).length,
+    heldDestinations:destinations.filter((destination)=>destination.recommendationHoldReason === "persistent-snow").map((destination)=>destination.slug).sort(),
+    confidenceCappedMonths:destinations.flatMap((destination)=>destination.months).filter((month)=>month.confidenceScore!==null&&month.confidenceScore<=64&&month.confidenceLevel==="low").length
+  },
+  warningCount:warnings.length,
+  warnings
+};
 writeJson("generated/reports/data-quality.json",report);
 console.log(`Data-quality report: ${warnings.length} warning(s); generated/reports/data-quality.json`);

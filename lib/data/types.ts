@@ -73,19 +73,23 @@ export interface ComponentScores {
 }
 
 export interface PublicBandMonth extends BandClimateMonth {
-  components: ComponentScores;
-  overallScore: number;
-  confidenceScore: number;
-  confidenceLevel: ConfidenceLevel;
+  /** Null on review-only held destinations: no score claim is published. */
+  components: ComponentScores | null;
+  overallScore: number | null;
+  scoreLevel: ScoreLevel | null;
+  confidenceScore: number | null;
+  confidenceLevel: ConfidenceLevel | null;
 }
 
 export interface PublicMonth {
   month: number;
-  overallScore: number;
-  scoreLevel: ScoreLevel;
-  confidenceScore: number;
-  confidenceLevel: ConfidenceLevel;
-  components: ComponentScores;
+  recommendationEligible: boolean;
+  /** Null on review-only held destinations: no score claim is published. */
+  overallScore: number | null;
+  scoreLevel: ScoreLevel | null;
+  confidenceScore: number | null;
+  confidenceLevel: ConfidenceLevel | null;
+  components: ComponentScores | null;
   metrics: ClimateMetrics;
   bands: PublicBandMonth[];
   reasons: string[];
@@ -108,7 +112,10 @@ export interface PublicDestination {
   coordinates: { lat: number; lon: number };
   elevationBands: ElevationBandConfig[];
   elevation: { minM: number; medianM: number; maxM: number };
+  representativeCell: { lat: number; lon: number; modelElevationM: number; overrideLabel?: string; overrideReason?: string };
   months: PublicMonth[];
+  recommendationEligible: boolean;
+  recommendationHoldReason?: "persistent-snow";
   bestMonths: number[];
   alternatives: string[];
   provenance: Record<string, string>;
@@ -123,7 +130,8 @@ export interface SearchDestination {
   continent: string;
   region: string;
   tags: string[];
-  monthly: Array<{m: number; score: number; temp: number; wet: number; snow: number; hot: number; wind: number; daylight: number; confidence: number}>;
+  recommendationEligible: boolean;
+  monthly: Array<{m: number; score: number; temp: number; wet: number; snow: number; hot: number; wind: number; daylight: number; confidence: number; recommendationEligible: boolean}>;
 }
 
 export interface RankingEntry {
@@ -153,5 +161,5 @@ export interface Comparison {
   slug: string;
   destinations: [string, string];
   indexable: boolean;
-  months: Array<{month: number; firstScore: number; secondScore: number; winner: string | "tie"}>;
+  months: Array<{month: number; firstScore: number | null; secondScore: number | null; winner: string | "tie" | null}>;
 }

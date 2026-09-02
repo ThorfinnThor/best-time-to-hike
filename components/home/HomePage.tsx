@@ -37,7 +37,7 @@ const copy = {
 
 export function HomePage({ locale }: { locale: Locale }) {
   const content = copy[locale];
-  const destinations = getAllDestinations();
+  const destinations = getAllDestinations().filter((destination) => destination.recommendationEligible);
 
   return (
     <>
@@ -66,7 +66,8 @@ export function HomePage({ locale }: { locale: Locale }) {
         </div>
         <div className="destination-summary-grid">
           {destinations.map((destination) => {
-            const bestMonth = destination.bestMonths[0] ?? 6;
+            const bestMonth = destination.bestMonths[0];
+            if (!bestMonth) return null;
             const month = destination.months[bestMonth - 1];
             return (
               <article className="destination-summary-card" key={destination.slug}>

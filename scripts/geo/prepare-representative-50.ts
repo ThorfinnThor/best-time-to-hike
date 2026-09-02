@@ -138,7 +138,7 @@ async function main() {
           status:"reviewed",
           sourceType:"project-curated-draft",
           sourceLabel:overrides[destination.id]?.label ?? "ERA5-Land representative 0.1-degree model-grid cell v1",
-          intendedScope:"Historical climate at one representative model-grid cell nearest the configured destination coordinate; not a trail-corridor or whole-region average.",
+          intendedScope:"Historical climate at one selected representative model-grid cell; not a trail-corridor or whole-region average.",
           excludedClasses:["whole-region-average","route-specific-conditions","live-weather"],
           bandRationale:overrides[destination.id]?.reason ?? "One model-elevation band prevents unsupported interpolation of precipitation, snow and wind between terrain levels.",
           weightRationale:"The single representative cell has weight 1 by definition.",

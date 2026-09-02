@@ -62,7 +62,13 @@ export function confidenceScore(metrics: BandClimateMonth): number {
   let terrainWind = interpolate(metrics.terrainReliefM, confidenceConfig.curves.terrainReliefM as Curve);
   if (metrics.highWindHourProbability > confidenceConfig.terrainWind.highWindProbabilityThreshold && metrics.terrainReliefM > confidenceConfig.terrainWind.highReliefThresholdM) terrainWind = Math.max(0, terrainWind - confidenceConfig.terrainWind.penalty);
   const c = confidenceConfig.weights;
-  return c.completeness * completeness + c.elevation * elevation + c.spatial * spatial + c.interannual * interannual + c.terrainWind * terrainWind;
+  // ERA5-Land 10 m wind is currently a coarse grid-cell value, not a
+  // validated exposed-trail/gust model. It must not increase destination
+  // representativeness confidence before the wind gate is approved.
+  const includeTerrainWind = confidenceConfig.terrainWind.confidenceContribution !== "excluded-unvalidated-grid-wind";
+  const activeWeight = c.completeness + c.elevation + c.spatial + c.interannual + (includeTerrainWind ? c.terrainWind : 0);
+  const weighted = c.completeness * completeness + c.elevation * elevation + c.spatial * spatial + c.interannual * interannual + (includeTerrainWind ? c.terrainWind * terrainWind : 0);
+  return weighted / activeWeight;
 }
 
 export function confidenceLevel(score: number): ConfidenceLevel {
