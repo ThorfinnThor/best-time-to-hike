@@ -82,10 +82,10 @@ test("batch-one science decisions remain complete staging-only priors", () => {
     assert.ok(decision.evidence.length > 0);
     assert.ok(decision.evidence.every((item) => item.url.startsWith("https://")));
   }
-  const zermatt = science.decisions.find((decision) => decision.id === "zermatt");
-  assert.equal(zermatt?.stagingDisposition, "hold");
-  assert.match(zermatt?.stagingHoldReason ?? "", /600 m gate/);
-  assert.equal(zermatt?.requiredBeforeReentry?.length, 3);
+  const held = science.decisions.filter((decision) => decision.stagingDisposition === "hold");
+  assert.deepEqual(held.map((decision) => decision.id).sort(), ["innsbruck", "zermatt"]);
+  assert.ok(held.every((decision) => (decision.stagingHoldReason?.length ?? 0) > 100));
+  assert.ok(held.every((decision) => decision.requiredBeforeReentry?.length === 3));
 });
 
 test("candidate representativeness decision remains fail-closed", () => {

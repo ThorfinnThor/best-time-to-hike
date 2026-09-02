@@ -33,6 +33,10 @@ The municipality polygon is not an adequate proxy for the intended valley hiking
 
 **SOL decision:** keep the 600 m gate unchanged and place Zermatt on staging hold. Re-entry requires a reviewed trail-network or valley-corridor geometry, a repeated invariant-orography preflight with at least one eligible Valley point, and renewed glacier/persistent-snow QA. Relaxing the threshold would knowingly substitute high-mountain precipitation, snow, humidity and wind for valley conditions and is not acceptable.
 
+Follow-up run [#33638639281](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/33638639281) correctly skipped Zermatt and preflighted 222 points for the remaining 14 candidates. Grindelwald passed sampling construction, but Innsbruck then failed the joint terrain/model gate. Its locally suitable Foothill point at 47.3 N, 11.5 E is only 44.1 m from the 639.3 m target in the local GLO-30 window, yet the official ERA5-Land model elevation differs by 767.4 m. After that model-invalid point is excluded, the remaining model-eligible candidate differs from the target by more than 800 m in local GLO-30 terrain.
+
+**SOL decision:** place Innsbruck on staging hold as well. A point must represent both the intended hiking terrain and the model grid; passing either test alone is insufficient. Re-entry requires reviewed lower-trail/access-corridor geometry, at least one Foothill point inside both gates, and a scope decision on whether urban lower walks belong in this mountain-climate product.
+
 ## Findings
 
 ### S1 — terrain matching and model orography diverge
