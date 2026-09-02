@@ -27,6 +27,8 @@ type OSMResult = {
 const sleep = (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 const execFileAsync = promisify(execFile);
 const queryOverrides: Record<string, string> = {
+  cairngorms: "Cairngorms National Park, United Kingdom",
+  lofotodden: "Lofotodden National Park, Norway",
   rila: "Rila National Park, Bulgaria",
   durmitor: "Durmitor National Park, Montenegro"
 };
@@ -97,7 +99,8 @@ async function main() {
         name: result.name,
         displayName: result.display_name,
         boundingBox: result.boundingbox,
-        responseSha256: createHash("sha256").update(raw).digest("hex")
+        responseSha256: createHash("sha256").update(raw).digest("hex"),
+        geometrySha256: createHash("sha256").update(JSON.stringify(result.geojson)).digest("hex")
       },
       geometry: result.geojson
     };

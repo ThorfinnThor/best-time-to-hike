@@ -17,8 +17,8 @@ Implementation status for all rows: `pending geometry source and elevation bands
 | Benasque | Pyrenees | LUNA | SOL if elevation/mask anomalies |
 | Lake District | British Isles | LUNA | SOL required for water-mask edge cases |
 | Eryri (Snowdonia) | British Isles | LUNA | SOL if coastal/water masks are anomalous |
-| Scottish Highlands | British Isles | LUNA | SOL if coastal/water masks are anomalous |
-| Lofoten | Scandinavia | LUNA | SOL required for coastline/water masks |
+| Cairngorms National Park | British Isles | LUNA | SOL if elevation/mask anomalies occur |
+| Lofotodden National Park | Scandinavia | LUNA | SOL if coastline/water masks are anomalous |
 | Jotunheimen | Scandinavia | LUNA | SOL if glacier/water masks are anomalous |
 | Rila Mountains | Balkans | LUNA | SOL if lake/karst masks are anomalous |
 | Triglav National Park | Alps | LUNA | SOL if lake/karst masks are anomalous |
