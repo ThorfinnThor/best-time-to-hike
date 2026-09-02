@@ -2,6 +2,8 @@
 
 Normal code changes run the offline gate: rebuild from committed snapshots, validate, test, typecheck, and static build. No remote scientific source is required.
 
+Candidate batch 1 uses the manual `Refresh real static data` workflow with `publish=false` and `candidate_batch=1`. An optional comma-separated `destinations` input limits the staging run. Candidate mode rebuilds sourced geometry, DEM profiles, isolated configs, sampling and ERA5-Land outputs under `generated/intermediate/candidate-batch-1/`; the workflow rejects `publish=true` for every candidate batch.
+
 The full gate is `pnpm verify`. A successful run also proves export determinism and writes `generated/reports/release-report.json`. That report is diagnostic and cannot approve a source or Golden label; unresolved gates remain explicit `BLOCKED_*` entries.
 
 `pnpm data:quality` writes the companion `generated/reports/data-quality.json`. Its configured warnings cover abrupt adjacent-month temperature changes, low completeness, identical cross-destination climate vectors, collapsed sampling coordinates, and strong elevation mismatch. Warnings are review signals and are never silently corrected.

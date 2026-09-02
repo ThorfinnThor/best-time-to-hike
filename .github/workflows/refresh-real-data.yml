@@ -12,6 +12,14 @@ on:
         description: "Optional comma-separated destination slugs"
         required: false
         type: string
+      candidate_batch:
+        description: "Run an isolated candidate batch instead of active destinations"
+        required: true
+        type: choice
+        options:
+          - none
+          - "1"
+        default: none
 
 permissions:
   contents: write
@@ -26,6 +34,8 @@ jobs:
     timeout-minutes: 360
     env:
       BTH_DESTINATIONS: ${{ inputs.destinations }}
+      BTH_CANDIDATE_BATCH: ${{ inputs.candidate_batch == '1' && '1' || '' }}
+      BTH_GEOMETRY_BATCH: ${{ inputs.candidate_batch == '1' && '1' || '' }}
       BTH_EXECUTION_MODE: ingest-staging
       CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
       NEXT_PUBLIC_DATA_STATUS: fixture
@@ -47,15 +57,28 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm data:setup-python
 
+      - name: Reject publication of candidate batches
+        if: ${{ inputs.publish == true && inputs.candidate_batch != 'none' }}
+        run: exit 1
+
       - name: Stage real DEM, sampling, and ERA5-Land data
-        if: ${{ inputs.publish == false }}
+        if: ${{ inputs.publish == false && inputs.candidate_batch == 'none' }}
         run: |
           pnpm data:dem
           pnpm data:sampling
           pnpm data:era5 -- --refresh
 
+      - name: Stage candidate geometry, DEM, sampling, and ERA5-Land data
+        if: ${{ inputs.publish == false && inputs.candidate_batch == '1' }}
+        run: |
+          pnpm data:geometry
+          pnpm data:dem-profile
+          pnpm data:candidate-prepare
+          pnpm data:sampling
+          pnpm data:era5 -- --refresh
+
       - name: Build approved committed snapshots
-        if: ${{ inputs.publish == true }}
+        if: ${{ inputs.publish == true && inputs.candidate_batch == 'none' }}
         run: |
           pnpm data:dem -- --publish
           pnpm data:sampling -- --publish
@@ -63,7 +86,7 @@ jobs:
           pnpm verify
 
       - name: Build staging evidence manifest
-        if: ${{ inputs.publish == false }}
+        if: ${{ inputs.publish == false && inputs.candidate_batch == 'none' }}
         run: pnpm evidence:manifest
 
       - name: Upload staging evidence
@@ -80,9 +103,10 @@ jobs:
             generated/intermediate/era5-invariants
             generated/intermediate/era5-request-plan.json
             generated/intermediate/staging-evidence-manifest.json
+            generated/intermediate/candidate-batch-1
 
       - name: Commit approved static data
-        if: ${{ inputs.publish == true }}
+        if: ${{ inputs.publish == true && inputs.candidate_batch == 'none' }}
         run: |
           git config user.name "best-time-to-hike-bot"
           git config user.email "actions@users.noreply.github.com"

@@ -160,12 +160,10 @@ function roundClimateMetrics(metrics: ReturnType<typeof aggregateBandPointMetric
   })) as unknown as ReturnType<typeof aggregateBandPointMetrics>;
 }
 
-function buildPlan(destinations: DestinationConfig[], staging: boolean): RequestPlanEntry[] {
+function buildPlan(destinations: DestinationConfig[], samplingRoot: string): RequestPlanEntry[] {
   const entries = new Map<string, RequestPlanEntry>();
   for (const destination of destinations) {
-    const samplingPath = staging
-      ? `generated/intermediate/real-sampling/${destination.slug}.json`
-      : `data-snapshots/sampling/${destination.slug}.json`;
+    const samplingPath = `${samplingRoot}/${destination.slug}.json`;
     const sampling = readJson<any>(samplingPath);
     if (sampling.fixture) throw new Error(`ERA5_REQUEST001 ${destination.id} still uses fixture sampling`);
     for (const [bandId, band] of Object.entries(sampling.bands) as Array<[string,any]>) {
@@ -194,17 +192,26 @@ async function main() {
   const planOnly = argumentsSet.has("--plan");
   const publish = argumentsSet.has("--publish");
   const refresh = argumentsSet.has("--refresh");
+  const candidateBatch = process.env.BTH_CANDIDATE_BATCH ? Number(process.env.BTH_CANDIDATE_BATCH) : null;
+  if (candidateBatch !== null && (!Number.isInteger(candidateBatch) || candidateBatch < 1)) {
+    throw new Error("ERA5_REQUEST001 BTH_CANDIDATE_BATCH must be a positive integer");
+  }
+  if (candidateBatch !== null && publish) throw new Error("ERA5_REQUEST001 candidate batches cannot be published");
   const destinationArgument = [...argumentsSet].find((value) => value.startsWith("--destination="));
   const selectedSlug = destinationArgument?.slice("--destination=".length);
   const requestedSlugs = new Set((selectedSlug ? [selectedSlug] : (process.env.BTH_DESTINATIONS ?? "").split(","))
     .map((value) => value.trim()).filter(Boolean));
   if (publish) requireApprovedSource("era5Land");
-  const destinations = readJson<DestinationConfig[]>("data-config/sources/destinations.json")
+  const stagingRoot = candidateBatch === null ? "generated/intermediate" : `generated/intermediate/candidate-batch-${candidateBatch}`;
+  const destinationPath = candidateBatch === null ? "data-config/sources/destinations.json" : `${stagingRoot}/destinations.json`;
+  const samplingRoot = publish ? "data-snapshots/sampling" : `${stagingRoot}/real-sampling`;
+  const destinations = readJson<DestinationConfig[]>(destinationPath)
     .filter((destination) => destination.active && (!requestedSlugs.size || requestedSlugs.has(destination.slug)));
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
-  const plan = buildPlan(destinations, !publish);
+  const plan = buildPlan(destinations, samplingRoot);
   const orographyConfig = readJson<any>("data-config/methodology/era5-land-orography-v1.json");
-  writeJson("generated/intermediate/era5-request-plan.json", {
+  const requestPlanPath = `${stagingRoot}/era5-request-plan.json`;
+  writeJson(requestPlanPath, {
     schemaVersion: 2,
     source: "reanalysis-era5-land-timeseries",
     orographySource: {
@@ -218,16 +225,16 @@ async function main() {
     entries: plan
   });
   if (planOnly) {
-    console.log(`Planned ${plan.length} unique ERA5-Land point requests → generated/intermediate/era5-request-plan.json`);
+    console.log(`Planned ${plan.length} unique ERA5-Land point requests → ${requestPlanPath}`);
     return;
   }
   if (!process.env.CDSAPI_KEY) {
     throw new Error("BLOCKED_OPERATOR_SECRET: set CDSAPI_KEY after accepting the ERA5-Land time-series dataset terms in the CDS portal");
   }
 
-  const orographyPath = "generated/intermediate/era5-invariants/era5-land-orography.json";
+  const orographyPath = `${stagingRoot}/era5-invariants/era5-land-orography.json`;
   await runPython("scripts/import/download_era5_land_orography.py", [
-    "--plan", "generated/intermediate/era5-request-plan.json",
+    "--plan", requestPlanPath,
     "--output", orographyPath
   ], "ERA5_OROGRAPHY001");
   const orography = readJson<OrographySnapshot>(orographyPath);
@@ -247,15 +254,14 @@ async function main() {
     throw new Error("ERA5_OROGRAPHY001 invariant-orography point set differs from the request plan");
   }
 
-  const geometry = readJson<any>("data-config/geography/destination-areas.geojson");
+  const geometryPath = candidateBatch === null ? "data-config/geography/destination-areas.geojson" : `${stagingRoot}/destination-areas.geojson`;
+  const geometry = readJson<any>(geometryPath);
   const expectedImporterHash = sha256(readFileSync("scripts/import/download_era5.py", "utf8"));
   for (const destination of destinations) {
-    const samplingPath = publish
-      ? `data-snapshots/sampling/${destination.slug}.json`
-      : `generated/intermediate/real-sampling/${destination.slug}.json`;
+    const samplingPath = `${samplingRoot}/${destination.slug}.json`;
     const demPath = publish
       ? `data-snapshots/dem/${destination.slug}.json`
-      : `generated/intermediate/real-dem/${destination.slug}.json`;
+      : `${stagingRoot}/real-dem/${destination.slug}.json`;
     const sampling = readJson<any>(samplingPath);
     const dem = readJson<any>(demPath);
     const pointResults = new Map<string, PointResult>();
@@ -269,8 +275,8 @@ async function main() {
       const point = consumers[0];
       const pointOrography = orographyByKey.get(key);
       if (!pointOrography) throw new Error(`ERA5_OROGRAPHY001 missing invariant orography for ${key}`);
-      const rawPath = `generated/intermediate/era5-raw/${key}.ndjson.gz`;
-      const metadataPath = `generated/intermediate/era5-raw/${key}.meta.json`;
+      const rawPath = `${stagingRoot}/era5-raw/${key}.ndjson.gz`;
+      const metadataPath = `${stagingRoot}/era5-raw/${key}.meta.json`;
       if (refresh || !existsSync(rawPath) || !existsSync(metadataPath)) {
         console.log(`Downloading ERA5-Land 1991–2020 for ${destination.name} at ${point.lat.toFixed(1)}, ${point.lon.toFixed(1)}...`);
         await runPython("scripts/import/download_era5.py", [
@@ -388,7 +394,7 @@ async function main() {
     const retrievedAt = pointMetadata.map((metadata) => metadata.climate.retrievedAt).sort().at(-1);
     const snapshot = {
       schemaVersion: 2,
-      datasetStatus: "production",
+      datasetStatus: candidateBatch === null ? "production" : "staging",
       destinationId: destination.id,
       fixture: false,
       source: "era5-land-timeseries",
@@ -435,7 +441,7 @@ async function main() {
     };
     const output = publish
       ? `data-snapshots/climate/${destination.slug}.json`
-      : `generated/intermediate/real-climate/${destination.slug}.json`;
+      : `${stagingRoot}/real-climate/${destination.slug}.json`;
     writeJson(output, snapshot);
     console.log(`${publish ? "Published" : "Staged"} real ERA5-Land climate → ${output}`);
   }

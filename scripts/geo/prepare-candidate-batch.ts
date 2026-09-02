@@ -50,8 +50,12 @@ function main() {
   );
   if (geometry.unresolvedCount !== 0) throw new Error("CANDIDATE001 unresolved candidate geometry remains");
 
-  const candidates = (plan.candidates as Candidate[]).filter((candidate) => batch.add.includes(candidate.id));
-  if (candidates.length !== batch.add.length) throw new Error("CANDIDATE001 candidate plan is incomplete");
+  const requestedIds = new Set((process.env.BTH_DESTINATIONS ?? "").split(",").map((value) => value.trim()).filter(Boolean));
+  const unknownRequestedIds = [...requestedIds].filter((id) => !batch.add.includes(id));
+  if (unknownRequestedIds.length) throw new Error(`CANDIDATE001 requested IDs are not in batch ${batchNumber}: ${unknownRequestedIds.join(",")}`);
+  const selectedIds = requestedIds.size ? batch.add.filter((id: string) => requestedIds.has(id)) : batch.add;
+  const candidates = (plan.candidates as Candidate[]).filter((candidate) => selectedIds.includes(candidate.id));
+  if (candidates.length !== selectedIds.length) throw new Error("CANDIDATE001 candidate plan is incomplete");
   const destinationConfigs: DestinationConfig[] = [];
   const features: unknown[] = [];
 
