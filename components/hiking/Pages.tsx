@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Comparison, Locale, PublicDestination, Ranking } from "@/lib/data/types";
 import { comparePath, destinationPath, monthName, rankingPath } from "@/lib/i18n/config";
-import { getDestination } from "@/lib/data/load";
+import { getDestination, getManifest } from "@/lib/data/load";
 import { ScoreRing } from "./ScoreRing";
 import { ScoreChart } from "./ScoreChart";
 import { ComponentGrid } from "./ComponentGrid";
@@ -12,7 +12,7 @@ const copy = {
 };
 
 export function FixtureNotice({locale}:{locale:Locale}) {
-  const realData = process.env.NEXT_PUBLIC_DATA_STATUS === "provisional" || process.env.NEXT_PUBLIC_DATA_STATUS === "production";
+  const realData = getManifest().datasetStatus !== "fixture";
   return <div className="fixture-notice"><strong>{realData ? (locale === "de" ? "Real-Data-Beta" : "Real-data beta") : (locale === "de" ? "Demo-Datensatz" : "Demo dataset")}</strong><span>{realData ? (locale === "de" ? "ERA5-Land-Klimanormal 1991–2020 für einen repräsentativen Modell-Gitterpunkt. Keine Vorhersage und kein Ersatz für aktuelle Weg- oder Sicherheitsinformationen." : "ERA5-Land 1991–2020 climate normal for one representative model-grid cell. Not a forecast or a substitute for current trail and safety information.") : (locale === "de" ? "Diese Version nutzt klar gekennzeichnete synthetische Fixtures. Nicht für Reise- oder Sicherheitsentscheidungen." : "This build uses clearly labeled synthetic fixtures. Do not use it for travel or safety decisions.")}</span></div>;
 }
 

@@ -143,7 +143,8 @@ async function main() {
     const point = byKey.get(coordinateKey(destination.id))!;
     const elevation = round(point.era5LandGridElevationM,1);
     const samplePoint = {
-      id:`${destination.id}-representative-1`, lat:destination.coordinates.lat, lon:destination.coordinates.lon,
+      id:`${destination.id}-representative-1`,
+      lat:round(point.resolvedLocation.latitude,6), lon:round(point.resolvedLocation.longitude,6),
       representativeModelElevationM:elevation, targetElevationM:elevation, elevationMismatchM:0,
       sampleWeight:1, usedBufferM:0, selectionRank:1
     };

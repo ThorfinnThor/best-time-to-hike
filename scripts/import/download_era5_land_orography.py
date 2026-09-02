@@ -28,7 +28,7 @@ DEFAULT_CONFIG = Path("data-config/methodology/era5-land-orography-v1.json")
 DEFAULT_CACHE = Path("generated/intermediate/era5-invariants/era5-land-geopotential.nc")
 # The pinned NetCDF stores coordinates as float32; a theoretical half-cell
 # offset of 0.05° can therefore decode a few 1e-7 degrees above 0.05.
-GRID_TOLERANCE_DEGREES = 0.050001
+GRID_TOLERANCE_DEGREES = 0.05001
 
 
 def parse_args() -> argparse.Namespace:
@@ -104,7 +104,18 @@ def nearest_index(values: np.ndarray, requested: float, circular: bool = False) 
         differences = np.abs(((numeric - requested + 180) % 360) - 180)
     else:
         differences = np.abs(numeric - requested)
-    return int(np.argmin(differences))
+    minimum = float(np.min(differences))
+    # The CDS point service has deterministic half-cell tie-breaking: the
+    # southern latitude and eastern longitude win. Reproduce that rule for
+    # the independently downloaded invariant field so both products resolve
+    # to the exact same model cell even when a request lies on a midpoint.
+    tied = np.flatnonzero(differences <= minimum + 1e-6)
+    if tied.size == 1:
+        return int(tied[0])
+    if circular:
+        signed_eastward = ((numeric[tied] - requested + 540) % 360) - 180
+        return int(tied[int(np.argmax(signed_eastward))])
+    return int(tied[int(np.argmin(numeric[tied]))])
 
 
 def extract_points(source: Path, entries: list[dict[str, Any]], gravity: float) -> list[dict[str, Any]]:
