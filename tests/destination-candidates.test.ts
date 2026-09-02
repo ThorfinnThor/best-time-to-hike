@@ -17,6 +17,16 @@ const plan = JSON.parse(readFileSync("data-config/sources/destination-candidates
   candidates: Candidate[];
 };
 const active = JSON.parse(readFileSync("data-config/sources/destinations.json", "utf8")) as Array<{id:string}>;
+const science = JSON.parse(readFileSync("data-config/sources/destination-science-decisions-batch-1.json", "utf8")) as {
+  status: string;
+  approval: boolean;
+  decisions: Array<{
+    id: string;
+    geometrySha256: string;
+    bands: Array<{id:string;minM:number;maxM:number;weight:number}>;
+    evidence: Array<{url:string}>;
+  }>;
+};
 
 test("destination intake remains a structurally valid planning-only set", () => {
   assert.equal(plan.status, "planning-only");
@@ -42,5 +52,24 @@ test("destination intake remains a structurally valid planning-only set", () => 
     assert.ok(candidate.candidateCentroid.lat >= -90 && candidate.candidateCentroid.lat <= 90);
     assert.ok(candidate.candidateCentroid.lon >= -180 && candidate.candidateCentroid.lon <= 180);
     assert.doesNotThrow(() => new Intl.DateTimeFormat("en", { timeZone: candidate.timezone }));
+  }
+});
+
+test("batch-one science decisions remain complete staging-only priors", () => {
+  assert.equal(science.status, "science-draft");
+  assert.equal(science.approval, false);
+  assert.equal(science.decisions.length, 15);
+  assert.deepEqual(
+    science.decisions.map((decision) => decision.id).sort(),
+    plan.plannedBatches[0].add.slice().sort()
+  );
+  for (const decision of science.decisions) {
+    assert.match(decision.geometrySha256, /^[a-f0-9]{64}$/);
+    assert.equal(decision.bands.length, 3);
+    assert.ok(Math.abs(decision.bands.reduce((sum, band) => sum + band.weight, 0) - 1) < 1e-9);
+    assert.ok(decision.bands.every((band) => band.minM < band.maxM && band.weight > 0));
+    assert.ok(decision.bands.slice(1).every((band, index) => band.minM === decision.bands[index].maxM));
+    assert.ok(decision.evidence.length > 0);
+    assert.ok(decision.evidence.every((item) => item.url.startsWith("https://")));
   }
 });

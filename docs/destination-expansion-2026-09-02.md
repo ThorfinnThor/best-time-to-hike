@@ -4,7 +4,7 @@ The catalogue grows in two controlled batches. Candidate entries remain planning
 
 ## Batch 1 — 5 to 20
 
-Implementation status for all rows: `pending geometry source and elevation bands`.
+Implementation status for all rows: `sourced geometry and SOL elevation-band science draft complete; water/quality masks and sampling pending`.
 
 | Destination | Region | Data preparation | Science review |
 | --- | --- | --- | --- |

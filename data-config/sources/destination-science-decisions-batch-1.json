@@ -1,0 +1,189 @@
+{
+  "schemaVersion": 1,
+  "status": "science-draft",
+  "batch": 1,
+  "reviewedAt": "2026-09-02",
+  "approval": false,
+  "method": {
+    "bandCount": 3,
+    "boundaryRule": "Use rounded, contiguous elevation regimes supported by the candidate DEM distribution and official hiking-route examples. Exclude elevation tails dominated by unrelated lowland, glacier, climbing or non-representative summit terrain where appropriate.",
+    "weightRule": "Staging priors rounded to 0.05 from the documented mix of lower, middle and upper hiking opportunities. These are route-catalogue proxies, not visitor-frequency estimates.",
+    "requiredFollowUp": "Validate each prior against trail-network elevation coverage, Copernicus water/quality layers and ERA5-Land sampling. Keep destinationGeometryAndElevation.approved false until that evidence and manual representative-route QA are complete."
+  },
+  "decisions": [
+    {
+      "id": "zermatt",
+      "geometrySha256": "72bb1f22c071af32fe4d64416636d75a1e4f3a75650b6996379c1997892c49a2",
+      "intendedHikingScope": "Marked valley, mountain and alpine hiking routes in the municipality of Zermatt, ending below mountaineering-only terrain.",
+      "excludedClasses": ["open-water", "urban-fringe", "glacier-ice", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":1500,"maxM":2200,"weight":0.2},{"id":"alpine","minM":2200,"maxM":2800,"weight":0.5},{"id":"high-alpine","minM":2800,"maxM":3400,"weight":0.3}],
+      "evidence": [
+        {"title":"Zermatt Tourism hiking catalogue","url":"https://zermatt.swiss/en/activities/hiking-mountaineering/hiking/hiking-trails","observation":"The official catalogue spans easy village routes through alpine hiking trails."},
+        {"title":"Matterhorn Glacier Trail","url":"https://zermatt.swiss/en/p/matterhorn-glacier-trail-nr-26-01tVj000005EvtBIAS","observation":"A marked T3 hiking route covers 2,570–2,928 m; the Hörnli hiking route ends at 3,260 m before the climbing route begins."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "grindelwald",
+      "geometrySha256": "79f1428e63e181bd30e3b151dd2873c8a5fb1fcea937462e4281f8ca73963fb4",
+      "intendedHikingScope": "Valley, forest, panoramic and high-altitude hiking routes within the Grindelwald municipality, excluding glacier and climbing terrain.",
+      "excludedClasses": ["open-water", "urban-fringe", "glacier-ice", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":700,"maxM":1500,"weight":0.2},{"id":"alpine","minM":1500,"maxM":2300,"weight":0.55},{"id":"high-alpine","minM":2300,"maxM":3000,"weight":0.25}],
+      "evidence": [
+        {"title":"Jungfrau Region hiking catalogue","url":"https://www.jungfrau.ch/en-gb/prices-and-tickets/?region=grindelwaldwengen","observation":"Official examples include the Eiger Trail at 1,616–2,348 m and Schynige Platte–First at 1,967–2,681 m."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "innsbruck",
+      "geometrySha256": "60a101a3647f6fea0378f5a47e53aee9c7d655027b3a916658c8fcb0d1f6882b",
+      "intendedHikingScope": "The municipality's lower walks, mountain-hut approaches and marked alpine routes reached from Innsbruck.",
+      "excludedClasses": ["open-water", "dense-urban-core", "technical-climbing-terrain"],
+      "bands": [{"id":"foothill","minM":550,"maxM":1000,"weight":0.25},{"id":"mountain","minM":1000,"maxM":1800,"weight":0.4},{"id":"alpine","minM":1800,"maxM":2400,"weight":0.35}],
+      "evidence": [
+        {"title":"Innsbruck hiking catalogue","url":"https://www.innsbruck.info/en/hiking/d/hiking-trails.html","observation":"The official catalogue contains 261 recommendations from easy walks to mountain and multi-day routes."},
+        {"title":"Zirbenweg trail","url":"https://www.innsbruck.info/en/hiking/m/the-zirbenweg-trail.html","observation":"A prominent easy high route follows the treeline around 1,952–2,060 m."}
+      ],
+      "maskReviewRequired": false
+    },
+    {
+      "id": "kitzbuhel",
+      "geometrySha256": "a83d559c2ccbe859d27d62f594c6af9b0387c1a34d126471cdc56f38076c39ec",
+      "intendedHikingScope": "Valley approaches, alpine pastures, long-distance trails and non-technical summits across the Kitzbühel Alps relation.",
+      "excludedClasses": ["open-water", "urban-fringe", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":450,"maxM":1000,"weight":0.25},{"id":"mountain","minM":1000,"maxM":1600,"weight":0.5},{"id":"alpine","minM":1600,"maxM":2200,"weight":0.25}],
+      "evidence": [
+        {"title":"KAT Walk Alpine","url":"https://www.kitzbueheler-alpen.com/media/katwalk-image-broschure-en-komp.pdf","observation":"The official 106 km multi-stage hiking route traverses the Kitzbühel Alps and anchors the middle-elevation hiking scope."}
+      ],
+      "maskReviewRequired": false
+    },
+    {
+      "id": "ordino",
+      "geometrySha256": "47c4e59e92661cfde2e7c5d664d385ebdc08139b3da7bbbcb76c0b56b5fdf063",
+      "intendedHikingScope": "Parish trails from inhabited valleys through forests and lakes to marked non-technical peaks.",
+      "excludedClasses": ["open-water", "urban-fringe", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":1200,"maxM":1800,"weight":0.2},{"id":"alpine","minM":1800,"maxM":2400,"weight":0.5},{"id":"high-alpine","minM":2400,"maxM":2950,"weight":0.3}],
+      "evidence": [
+        {"title":"Bordes de l'Ensegur route","url":"https://visitandorra.com/content/dam/visitandorra/ca/assets/documents/cfs/itinerary/hiking-trail-bordes-del-ensegur/bordes-de-ensegur-cat.pdf","observation":"An official lower/middle route spans about 1,365–1,854 m."},
+        {"title":"Ordino Estripagecs challenge","url":"https://visitandorra.com/en/nature--sports/hiking-route-ordino-estripagecs/","observation":"The official peak challenge includes six peaks above 2,700 m and Serrera at 2,913 m."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "gavarnie",
+      "geometrySha256": "fd927f314117dd42b2d68e4e2b0e00a7305b3f8b3370a230e019bf4d43b5d268",
+      "intendedHikingScope": "The classic cirque approach, balcony paths, pasture/lake routes and marked high routes below technical climbing terrain.",
+      "excludedClasses": ["open-water", "glacier-ice", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":1150,"maxM":1800,"weight":0.3},{"id":"alpine","minM":1800,"maxM":2400,"weight":0.5},{"id":"high-alpine","minM":2400,"maxM":3000,"weight":0.2}],
+      "evidence": [
+        {"title":"Cirque de Gavarnie hikes","url":"https://www.tourisme-hautes-pyrenees.com/montagne-ete/randonnee/spots-incontournables/cirque-gavarnie/","observation":"The official classic route gains about 200 m, with an optional additional 150 m, while balcony routes reach higher terrain."},
+        {"title":"Gavarnie Valleys hiking catalogue","url":"https://www.valleesdegavarnie.com/en/terre-de-randonnees/","observation":"The catalogue spans easy medium-altitude paths, lakes, passes and summit routes."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "benasque",
+      "geometrySha256": "e60dbd06c6072d93589a13fe0c3d64d327eef1d9feff1b3d566add0cc9dc9b84",
+      "intendedHikingScope": "Benasque-sector valley, refuge, lake and marked high-mountain routes in Posets-Maladeta, excluding glacier travel and climbing.",
+      "excludedClasses": ["open-water", "urban-fringe", "glacier-ice", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":1050,"maxM":1800,"weight":0.15},{"id":"alpine","minM":1800,"maxM":2500,"weight":0.5},{"id":"high-alpine","minM":2500,"maxM":3400,"weight":0.35}],
+      "evidence": [
+        {"title":"Posets-Maladeta Natural Park","url":"https://www.aragon.es/-/parque-natural-de-posets-maladeta","observation":"The Government of Aragón publishes dedicated Benasque-sector trails and mountain-safety maps."},
+        {"title":"Aragón nature guide","url":"https://www.turismodearagon.com/wp-content/uploads/2023/08/7.-Naturaleza-Ingles-2022.pdf","observation":"More than 70% of the area is above 1,800 m and the hiking network includes high refuges and glacial terrain."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "lake-district",
+      "geometrySha256": "d659cfeb6fcddac9092ee46d32a9470429b91ffde3c52d8f587901cdbcdb6974",
+      "intendedHikingScope": "National Park walking routes from lake shores and valleys through fells to non-technical summits.",
+      "excludedClasses": ["open-water", "urban-fringe", "technical-climbing-terrain"],
+      "bands": [{"id":"lowland","minM":0,"maxM":250,"weight":0.35},{"id":"fell","minM":250,"maxM":600,"weight":0.45},{"id":"high-fell","minM":600,"maxM":1000,"weight":0.2}],
+      "evidence": [
+        {"title":"Lake District walking routes","url":"https://lakedistrict.gov.uk/explore/things-to-do/walking/walking-routes/","observation":"The official catalogue deliberately spans low-level lake and valley routes through challenging Scafell Pike walks."},
+        {"title":"Rights of way and access","url":"https://lakedistrict.gov.uk/explore/plan-your-visit/rights-of-way-access/","observation":"The park records more than 3,200 km of public rights of way."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "snowdonia",
+      "geometrySha256": "d18ad7a11eb578e951382d2cde6a46eaf09ef1cad4bf2d59783836b11687daa7",
+      "intendedHikingScope": "Eryri's promoted coastal, woodland, valley, upland and mountain paths, excluding water and technical climbing lines.",
+      "excludedClasses": ["open-water", "urban-fringe", "technical-climbing-terrain"],
+      "bands": [{"id":"lowland","minM":0,"maxM":250,"weight":0.3},{"id":"upland","minM":250,"maxM":600,"weight":0.45},{"id":"mountain","minM":600,"maxM":1100,"weight":0.25}],
+      "evidence": [
+        {"title":"Eryri National Park walks","url":"https://www.eryri.llyw.cymru/visit/walks/","observation":"The park reports 1,497 miles of approved paths across coastal, woodland, family and mountain settings."},
+        {"title":"Watkin Path promoted route","url":"https://eryri.llyw.cymru/wp-content/uploads/2023/11/APCE_WatkinPath_CY.pdf","observation":"An official promoted route connects low terrain to the Yr Wyddfa summit area around 1,085 m."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "cairngorms",
+      "geometrySha256": "b62e81fce3bb683988a7685a5982f4330ce9556fa3537c0b22cf06748b46db97",
+      "intendedHikingScope": "National Park local paths, forest and glen routes, hill walks and plateau routes suitable for hiking.",
+      "excludedClasses": ["open-water", "urban-fringe", "technical-climbing-terrain"],
+      "bands": [{"id":"lowland","minM":100,"maxM":400,"weight":0.3},{"id":"upland","minM":400,"maxM":800,"weight":0.45},{"id":"plateau","minM":800,"maxM":1350,"weight":0.25}],
+      "evidence": [
+        {"title":"Cairngorms paths and trails","url":"https://cairngorms.co.uk/visiting/paths-and-trails","observation":"The park lists over 100 local paths ranging from woodland and riverside strolls to strenuous hill routes."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "lofotodden",
+      "geometrySha256": "c40b9eaa56a5397cc7fc9558312d46bb0c46b07ee0c5d41de1f4ee933baa084d",
+      "intendedHikingScope": "Marked coastal, beach-access and mountain hiking routes within Lofotodden National Park, excluding open water and unmarked technical ridges.",
+      "excludedClasses": ["open-water", "technical-ridge", "cliff-face"],
+      "bands": [{"id":"coastal","minM":0,"maxM":200,"weight":0.3},{"id":"mountain","minM":200,"maxM":600,"weight":0.55},{"id":"high-ridge","minM":600,"maxM":1050,"weight":0.15}],
+      "evidence": [
+        {"title":"Ryten and Kvalvika trail guide","url":"https://www.lofotoddennp.com/en/experience-lofotodden-national-park/kvalvika-ryten/","observation":"The official popular route links beach terrain with the Ryten summit at about 543 m."},
+        {"title":"Experience Lofotodden","url":"https://www.lofotoddennp.com/en/experience-lofotodden-national-park/","observation":"Official suggestions include beaches, Ryten and coastal peaks; the park's highest peak is about 1,029 m."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "jotunheimen",
+      "geometrySha256": "054084281384853e40cb5c99098a9281f28e3e06f540644db6704167ca0e2bbb",
+      "intendedHikingScope": "Marked lake, cabin-to-cabin, ridge and summit hiking routes within the Jotunheimen mountain-range polygon.",
+      "excludedClasses": ["open-water", "glacier-ice", "technical-climbing-terrain"],
+      "bands": [{"id":"lower-mountain","minM":950,"maxM":1400,"weight":0.15},{"id":"alpine","minM":1400,"maxM":1900,"weight":0.5},{"id":"high-alpine","minM":1900,"maxM":2500,"weight":0.35}],
+      "evidence": [
+        {"title":"Jotunheimen experiences and routes","url":"https://www.jotunheimen.info/en/experiences-and-tourist-destinations/","observation":"Official examples range from routes along Gjende around the 1,200 m vegetation limit through Besseggen and multi-day hikes to 2,469 m summits."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "rila",
+      "geometrySha256": "774924716ac5aed7b2f01c9de7268967b84668259c53a68f504e1f1141368fe9",
+      "intendedHikingScope": "Official pedestrian routes in Rila National Park from forest approaches through high lakes and marked non-technical summits.",
+      "excludedClasses": ["open-water", "urban-fringe", "technical-climbing-terrain"],
+      "bands": [{"id":"lower-mountain","minM":800,"maxM":1600,"weight":0.15},{"id":"alpine","minM":1600,"maxM":2300,"weight":0.5},{"id":"high-alpine","minM":2300,"maxM":2950,"weight":0.35}],
+      "evidence": [
+        {"title":"Rila National Park Directorate","url":"https://rilanationalpark.bg/en/","observation":"The official park site provides pedestrian tourism, park maps, Musala and Malyovitsa visitor information."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "triglav",
+      "geometrySha256": "9b377eb0e2e22a1b67ccda077af8347917a51f9e5e73dc2cc6f3a2b29701e77d",
+      "intendedHikingScope": "Designated valley, educational, long-distance, hut and high-mountain hiking paths within Triglav National Park.",
+      "excludedClasses": ["open-water", "glacier-ice", "technical-climbing-terrain"],
+      "bands": [{"id":"valley","minM":200,"maxM":1000,"weight":0.2},{"id":"alpine","minM":1000,"maxM":1800,"weight":0.5},{"id":"high-alpine","minM":1800,"maxM":2850,"weight":0.3}],
+      "evidence": [
+        {"title":"Triglavska Bistrica Trail and park paths","url":"https://www.tnp.si/media/2410/tnp_zgibanka_ang_kor8.pdf","observation":"The park's official material includes valley educational paths and long-distance hiking while directing visitors to designated paths."}
+      ],
+      "maskReviewRequired": true
+    },
+    {
+      "id": "durmitor",
+      "geometrySha256": "84c6cc4f85d2a897afa7431205b83b29490c6c1608bc8e31b3882a11633b5957",
+      "intendedHikingScope": "Marked National Park lake, plateau, pass and non-technical summit hiking routes, excluding canyon water and climbing-only terrain.",
+      "excludedClasses": ["open-water", "river-and-canyon-water", "technical-climbing-terrain"],
+      "bands": [{"id":"lower-mountain","minM":500,"maxM":1400,"weight":0.15},{"id":"alpine","minM":1400,"maxM":2000,"weight":0.5},{"id":"high-alpine","minM":2000,"maxM":2550,"weight":0.35}],
+      "evidence": [
+        {"title":"Montenegro Tourism — Durmitor National Park","url":"https://www.montenegro.travel/en/unique-montenegro/national-parks-of-montenegro/durmitor-national-park","observation":"The official destination records a 500–2,523 m range, 100 km of marked hiking routes and 48 peaks above 2,000 m."},
+        {"title":"Official Montenegro hiking map","url":"https://www.montenegro.travel/uploads/brochures/Hiking%20Map.pdf","observation":"Official route examples include the park circuit, 2,180–2,522 m summit objectives and lower trailheads."}
+      ],
+      "maskReviewRequired": true
+    }
+  ]
+}
