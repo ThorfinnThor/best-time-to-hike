@@ -17,7 +17,7 @@ At the time of this pre-audit, two methodology issues blocked a science/data app
 
 Implementation update, 2026-09-01: H1 has been corrected in code. The sampler now labels the GLO-30 window median `terrainElevationM` and uses it only for terrain matching. A hash-pinned importer extracts `z` from ECMWF's official 0.1° ERA5-Land invariant NetCDF, converts it with `z / 9.80665`, verifies that the time-series and invariant products resolve to the same grid coordinate, and passes only `era5LandGridElevationM` to the lapse correction. The previous 34-point staging artifact was superseded and required a rebuild; the corrected rebuild is recorded below. H2 and the remaining findings still block science/data approval.
 
-Corrected staging evidence, reviewed 2026-09-02: GitHub Actions run [#33564822420](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/33564822420) completed successfully with `publish:false`. It contains 34 production-marked source points, 262,992 observations per point, 180 complete band-month records, and official invariant-orography metadata for all 34 points. H1 is therefore resolved for the rebuilt staging evidence; H2 and the remaining findings still block science/data approval. See `docs/release-packet-real-data-staging-2026-09-02.md`.
+Corrected staging evidence, reviewed 2026-09-02: GitHub Actions run [#33608647742](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/33608647742) completed successfully with `publish:false`. It contains 34 production-marked source points, 262,992 observations per point, 180 complete band-month records, official invariant-orography metadata, canonical-output hashes and importer/unit/normalisation metadata for all 34 points. H1 is resolved for the rebuilt staging evidence; H2 and the remaining findings still block science/data approval. See `docs/release-packet-real-data-staging-2026-09-02.md`.
 
 ## Authoritative sources reviewed
 
@@ -77,7 +77,7 @@ The release packet supplies a private R2 key and archive SHA-256 but no committe
 
 Required resolution: hash the canonical NDJSON, persist importer/version checksums and the essential unit/normalisation/clamp metadata into the climate provenance, commit or attach a non-sensitive per-file artifact manifest, and add deterministic Python tests with synthetic NetCDF fixtures.
 
-Implementation update (2026-09-02): the importer now writes deterministic gzip-NDJSON, records and verifies its SHA-256 and the importer source hash, and carries variable, normalisation and clamp metadata into `sourceDownloads`. Committed Python tests cover conversion and deterministic output. Staging uploads now include a non-sensitive manifest with per-file byte counts and SHA-256 values bound to the Actions run and Git commit. A fresh real-data staging artifact is still required before this new provenance can be reviewed in evidence.
+Implementation update (2026-09-02): the importer now writes deterministic gzip-NDJSON, records and verifies its SHA-256 and the importer source hash, and carries variable, normalisation and clamp metadata into `sourceDownloads`. Committed Python tests cover conversion and deterministic output. Run `33608647742` confirms those fields for all 34 points, and `docs/real-data-staging-33608647742.manifest.json` records every uploaded file, byte count and SHA-256 against the exact run and commit. Future staging uploads generate the same portable manifest automatically. Raw CDS responses remain ephemeral, so fully independent source replay still requires re-querying CDS.
 
 #### M4. The `-1e-6 m` negative-value floor is a local policy, not an ECMWF threshold
 
@@ -85,7 +85,7 @@ ECMWF confirms that de-accumulating packed precipitation can create small signed
 
 Required resolution: add committed importer tests at the exact boundary, retain empirical distributions of clamped values per download, and review separate precipitation and snow-height tolerances after a larger destination sample.
 
-Implementation update (2026-09-02): committed tests now cover values at the exact `-1e-6 m` boundary and rejection immediately below it, and ingestion validates the recorded policies and floors. The empirical review across a larger destination sample and the decision on separate precipitation/snow-depth tolerances remain open.
+Implementation update (2026-09-02): committed tests now cover values at the exact `-1e-6 m` boundary and rejection immediately below it, and ingestion validates the recorded policies and floors. Across the 34-point staging sample, precipitation clamping affected 1.3727% of values (minimum `-5.960464477539063e-8 m`) and snow-depth clamping 72.1842% (minimum `-7.3453647229951e-24 m`). The latter is pervasive near-zero signed noise rather than material negative snow height. A separate precipitation/snow-depth policy decision remains open before approval.
 
 #### M5. The time-series access path needs a production fallback
 
