@@ -38,7 +38,8 @@ assert(/output:\s*["']export["']/.test(nextConfig), "Next.js must remain a stati
 assert(/images:\s*\{\s*unoptimized:\s*true/.test(nextConfig), "Static export must keep Next images unoptimized");
 assert(packageJson.devDependencies.tsx!==undefined&&readFileSync(join(ROOT,"package.json"),"utf8").includes('"postbuild": "tsx scripts/export/fix-static-languages.ts"'),"Static locale post-build must remain enabled");
 assert(/pages_build_output_dir\s*["']?\s*:\s*["']\.\/out["']/.test(wranglerConfig), "Cloudflare Pages output must be ./out");
-assert(robotsSource.includes('disallow:"/"'), "Fixture robots policy must disallow crawling");
+// Semantics, not whitespace: the rule must exist, however it is formatted.
+assert(/disallow:\s*\[?\s*["']\/["']/.test(robotsSource), "Fixture robots policy must disallow crawling");
 assert(sitemapSource.includes("return []"), "Fixture sitemap policy must emit no URLs");
 assert(invariants.runtimeDatabase === false && invariants.runtimeClimateApi === false && invariants.runtimeDemApi === false, "Runtime data-source invariants must remain disabled");
 

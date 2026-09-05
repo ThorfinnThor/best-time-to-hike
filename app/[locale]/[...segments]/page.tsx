@@ -10,12 +10,14 @@ import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
 import { locales, monthName, themes } from "@/lib/i18n/config";
-import { t } from "@/lib/i18n/dict";
+import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { altLanguages } from "@/lib/i18n/links";
+import { absoluteUrl, SITE } from "@/lib/site";
 import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
 import { breadcrumbLd, destinationFaqLd, organisationLd, webSiteLd } from "@/lib/seo/jsonld";
 import { JsonLd } from "@/components/seo/JsonLd";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { routeCatalog } from "@/lib/seo/route-catalog";
 import type { ComponentScores, Locale } from "@/lib/data/types";
 
@@ -45,6 +47,7 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
   const page=resolvePageId(locale,segments);
   if(!page) return {};
   const seo = pageSeo(page, locale);
+  const canonical = absoluteUrl(pathFor(page, locale));
   return {
     title: seo.title,
     description: seo.description,
@@ -52,6 +55,16 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
     // Crawlable either way; only pages that answer a question with substance
     // enter the index. See lib/seo/page-seo.ts for why.
     robots: {index: seo.index, follow: true},
+    openGraph: {
+      type: "article",
+      siteName: SITE.name,
+      locale: locale === "de" ? "de_DE" : "en_GB",
+      title: seo.title,
+      description: seo.description,
+      url: canonical,
+      images: [{url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: seo.title}],
+    },
+    twitter: {card: "summary_large_image", title: seo.title, description: seo.description},
   };
 }
 
@@ -86,8 +99,13 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
   switch (page.kind) {
     case "home": return <><JsonLd data={webSiteLd(locale)}/><JsonLd data={organisationLd()}/><HomePage locale={locale}/></>;
     case "finder": return <FinderPage locale={locale}/>;
-    case "destination": { const destination=getDestination(page.slug); if(!destination) notFound(); return <>
-      <JsonLd data={breadcrumbLd([{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: destination.name, path: pathFor(page, locale)}])}/>
+    case "destination": { const destination=getDestination(page.slug); if(!destination) notFound();
+      const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)},
+                   {name: taxonomyLabel(locale, "continents", destination.continent), path: pathFor({kind:"finder"}, locale)},
+                   {name: destination.name, path: pathFor(page, locale)}];
+      return <>
+      <JsonLd data={breadcrumbLd(trail)}/>
+      <Breadcrumbs trail={trail} locale={locale}/>
       <JsonLd data={destinationFaqLd(destination, locale)}/>
       <DestinationPage destination={destination} locale={locale}/>
       <LongformArticle destination={destination} locale={locale}/>

@@ -25,6 +25,9 @@ import type { PageId } from "@/lib/i18n/resolve";
  */
 export interface PageSeo { title: string; description: string; index: boolean; reasons: string[] }
 
+/** Social card metadata, shared by OpenGraph and Twitter. */
+export interface PageSocial { title: string; description: string; url: string; image: string }
+
 const clamp = (text: string, max = 155) => text.length <= max ? text : `${text.slice(0, max - 1).replace(/[\s,;.]+\S*$/, "")}…`;
 
 function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo {
