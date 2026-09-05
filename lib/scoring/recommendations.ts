@@ -1,5 +1,6 @@
 import representativenessConfig from "@/data-config/methodology/era5-land-representativeness-v1.json";
 import recommendationConfig from "@/data-config/methodology/recommendation-eligibility-v1.json";
+import { confidenceLevel, scoreLevel } from "@/lib/scoring/index";
 import type { ComponentScores, ConfidenceLevel, DatasetStatus, PublicMonth, ScoreLevel } from "@/lib/data/types";
 
 export const CRITICAL_COMPONENT_KEYS = ["temperature", "precipitation", "snow", "heatStress", "wind", "daylight"] as const;
@@ -28,13 +29,9 @@ export function recommendationDecision(
   return {
     recommendationEligible,
     overallScore: guardedScore,
-    scoreLevel: scoreLevelFor(guardedScore),
+    scoreLevel: scoreLevel(guardedScore),
     failingComponents,
   };
-}
-
-export function scoreLevelFor(score: number): ScoreLevel {
-  return score >= 90 ? "excellent" : score >= 80 ? "very-good" : score >= 65 ? "good" : score >= 50 ? "fair" : "poor";
 }
 
 export function hasPersistentSnowHold(months: Array<Pick<PublicMonth, "metrics">>): boolean {
@@ -62,9 +59,6 @@ export function guardConfidence(
     const maximum = recommendationConfig.provisionalSinglePointConfidenceCap.maximumScore;
     return { score: Math.min(maximum, Math.max(0, confidence)), level: "low" };
   }
-  return { score: Math.max(0, Math.min(100, confidence)), level: confidenceLevelFor(confidence) };
+  return { score: Math.max(0, Math.min(100, confidence)), level: confidenceLevel(confidence) };
 }
 
-export function confidenceLevelFor(score: number): ConfidenceLevel {
-  return score >= 85 ? "high" : score >= 65 ? "moderate" : "low";
-}

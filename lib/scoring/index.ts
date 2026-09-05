@@ -1,6 +1,7 @@
 import curves from "@/data-config/scoring/curves.json";
 import weights from "@/data-config/scoring/weights.json";
 import confidenceConfig from "@/data-config/methodology/confidence-v1.json";
+import levels from "@/data-config/scoring/levels.json";
 import climateAggregation from "@/data-config/methodology/climate-aggregation-v1.json";
 import type { BandClimateMonth, ComponentScores, ConfidenceLevel, ScoreLevel } from "@/lib/data/types";
 
@@ -75,8 +76,19 @@ export function confidenceLevel(score: number): ConfidenceLevel {
   return score >= confidenceConfig.levels.highMinimum ? "high" : score >= confidenceConfig.levels.moderateMinimum ? "moderate" : "low";
 }
 
+/**
+ * The only definition of the score ladder. `confidenceLevel` above is the only
+ * definition of the confidence ladder. Both read their boundaries from config
+ * so a methodology edit moves every label in the product at once; a second
+ * hardcoded copy is the defect recorded as mistakes.md #13.
+ */
 export function scoreLevel(score: number): ScoreLevel {
-  return score >= 90 ? "excellent" : score >= 80 ? "very-good" : score >= 65 ? "good" : score >= 50 ? "fair" : "poor";
+  const band = levels.score;
+  return score >= band.excellentMinimum ? "excellent"
+    : score >= band.veryGoodMinimum ? "very-good"
+    : score >= band.goodMinimum ? "good"
+    : score >= band.fairMinimum ? "fair"
+    : "poor";
 }
 
 export function adjustTemperature(rawC: number, era5LandGridElevationM: number, targetElevationM: number) {

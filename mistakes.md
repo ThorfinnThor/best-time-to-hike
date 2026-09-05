@@ -146,7 +146,11 @@ display centroid by 4.5 km (Zermatt), 10.9 km (Grindelwald), 13.0 km (Torres del
 data (`elevationBands.length`, the presence of an override), never written as a constant. Say
 "selected representative cell" whenever an override exists. Export and render the resolved cell
 coordinate, model elevation and override reason so a reader can audit the number they are shown.
-**This still needs a regression test** asserting that no structural claim contradicts the manifest.
+**Guarded since 2026-09-05** by `tests/copy-claims.test.ts`, which compares the words to the data:
+the single-cell copy fails if any destination gains a second elevation band, no string may call the
+cell "nearest" while `representative-cell-overrides.json` has entries, the methodology paragraph's
+percentages must match `weights.json`, and the search index may not contain a destination the science
+layer withholds.
 
 ## 10. Release evidence described a superseded build
 
@@ -187,19 +191,27 @@ and double-counts one destination concept.
 concepts need an explicit parent relationship, not adjacency. Decide this before production indexing,
 because it changes URLs.
 
-## 13. The same thresholds are written down twice
+## 13. The same thresholds were written down three times
 
-**latent — found during review, no guard exists.**
+**found during review, fixed 2026-09-05.**
 
-`scoreLevel` in `lib/scoring/index.ts:79` and `scoreLevelFor` in `lib/scoring/recommendations.ts:37`
-are byte-identical ladders (90/80/65/50). Worse, `confidenceLevel` in `index.ts:75` reads
-`highMinimum`/`moderateMinimum` from `confidence-v1.json`, while `confidenceLevelFor` in
-`recommendations.ts:69` hardcodes `85`/`65`. They agree today only by coincidence: editing the
-methodology config would silently desynchronise the two.
+`scoreLevel` in `lib/scoring/index.ts` and `scoreLevelFor` in `lib/scoring/recommendations.ts` were
+byte-identical ladders (90/80/65/50). `confidenceLevel` read `highMinimum`/`moderateMinimum` from
+`confidence-v1.json` while `confidenceLevelFor` hardcoded `85`/`65`; they agreed only by coincidence,
+and editing the methodology config would have silently desynchronised them.
+
+The third copy was the worst. `ScoreRing.tsx` coloured the ring with `score >= 85` / `score >= 65` —
+the *confidence* boundaries applied to a *score*. A month at 82 published the label "very-good" and
+was drawn in the middling colour.
+
+Fixed by moving the score ladder into `data-config/scoring/levels.json` (same values), deleting both
+duplicates, and deriving the ring colour from `scoreLevel()`. The published data rebuilt
+byte-for-byte, confirming no label moved.
 
 **Rule.** One threshold, one definition, read from config. Before adding a helper, grep for its
-thresholds. When consolidating these, keep the config-reading version and add a test that changing
-`confidence-v1.json` moves every label in the product.
+thresholds — and check whether the numbers you are about to reuse belong to the quantity you are
+actually measuring. `tests/levels.test.ts` states every boundary in terms of the config and fails on
+any hardcoded numeric ladder in `lib/`, `scripts/` or `components/`.
 
 ## 14. Evidence that could not be replayed from Git
 
@@ -223,6 +235,24 @@ and real bands hold 1–3. Nobody had checked the prose against the config.
 
 **Rule.** Numbers in documentation are assertions and need the same regression tests as code. A
 structural test now covers the planning file's status, count, IDs, coordinates, regions and zones.
+
+## 16. Two URLs, one page
+
+**found during the i18n port, fixed 2026-09-05.**
+
+`routeCatalog()` emitted both `/en/best-hiking-destinations/june` and
+`/en/best-hiking-destinations/europe/june`. The page component read the month with
+`segments.at(-1)`, so the `europe` segment was accepted and then ignored: both URLs rendered the
+identical global ranking. That is 24 published URLs of exact duplication, in a product whose own
+`evaluateIndexability` lists `cannibalization` as a reason to withhold a page from the index.
+
+It survived because nothing ever asked whether two routes could describe the same page. The i18n
+port surfaced it immediately: resolving a URL to a page identity and rebuilding it could not
+round-trip, because the rebuild had no idea where `europe` came from.
+
+**Rule.** Every published route must describe a distinct page. A path segment that the renderer
+ignores is not a route, it is a duplicate. When a filter or facet appears in a URL, either it changes
+what the page shows or it does not belong in the URL.
 
 ---
 

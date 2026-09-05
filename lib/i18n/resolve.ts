@@ -14,10 +14,7 @@ export type PageId =
   | { kind: "finder" }
   | { kind: "destination"; slug: string }
   | { kind: "destinationMonth"; slug: string; month: number }
-  // `region` is the optional catalogue segment in
-  // /<rankings>/<region>/<month>. It is carried through unchanged so the URL
-  // rebuilds exactly; it does not currently change what the page renders.
-  | { kind: "ranking"; month: number; region?: string }
+  | { kind: "ranking"; month: number }
   | { kind: "themeRanking"; theme: ThemeKey; month: number }
   | { kind: "compare"; slug: string }
   | { kind: "info"; key: InfoRouteKey };
@@ -38,10 +35,9 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
     return null;
   }
 
-  if (head === routes.rankings[locale] && (rest.length === 1 || rest.length === 2)) {
-    const month = monthNumber(rest.at(-1)!, locale);
-    if (!month) return null;
-    return rest.length === 2 ? { kind: "ranking", month, region: rest[0] } : { kind: "ranking", month };
+  if (head === routes.rankings[locale] && rest.length === 1) {
+    const month = monthNumber(rest[0], locale);
+    return month ? { kind: "ranking", month } : null;
   }
 
   for (const theme of themeKeys) {
@@ -66,7 +62,7 @@ export function pathFor(page: PageId, locale: Locale): string {
     case "finder": return links.finder(locale);
     case "destination": return links.destination(locale, page.slug);
     case "destinationMonth": return links.destinationMonth(locale, page.slug, page.month);
-    case "ranking": return page.region ? links.regionRanking(locale, page.region, page.month) : links.ranking(locale, page.month);
+    case "ranking": return links.ranking(locale, page.month);
     case "themeRanking": return links.themeRanking(locale, page.theme, page.month);
     case "compare": return links.compare(locale, page.slug);
     case "info": return links[page.key](locale);

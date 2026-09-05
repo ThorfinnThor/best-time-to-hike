@@ -14,7 +14,6 @@ export function routeCatalog(): StaticRoute[] {
     }
     for (let month=1;month<=12;month+=1) {
       output.push({locale,segments:[routes.rankings[locale],monthSlug(month,locale)]});
-      output.push({locale,segments:[routes.rankings[locale],"europe",monthSlug(month,locale)]});
       for (const key of ["warm","snowFree","lowRain"] as const) output.push({locale,segments:[routes[key][locale],monthSlug(month,locale)]});
     }
     for (const comparison of getComparisonIndex()) output.push({locale,segments:[routes.compare[locale],comparison.slug]});

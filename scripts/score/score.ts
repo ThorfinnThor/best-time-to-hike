@@ -1,6 +1,7 @@
 import type { BandClimateMonth, ComponentScores, ConfidenceLevel, DatasetStatus, DestinationConfig, PublicBandMonth, PublicMonth, ScoreLevel } from "../../lib/data/types";
 import { confidenceScore, overallScore, roundHalfAwayFromZero, scoreComponents } from "../../lib/scoring";
-import { guardConfidence, hasPersistentSnowHold, recommendationDecision, scoreLevelFor } from "../../lib/scoring/recommendations";
+import { guardConfidence, hasPersistentSnowHold, recommendationDecision } from "../../lib/scoring/recommendations";
+import { scoreLevel } from "../../lib/scoring/index";
 import recommendationConfig from "../../data-config/methodology/recommendation-eligibility-v1.json";
 import { readJson, round, writeJson } from "../lib/io";
 
@@ -43,7 +44,7 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
       const components = scoreComponents(metrics);
       const score = overallScore(components);
       const confidence = guardConfidence(confidenceScore(metrics), datasetStatus, metrics.samplePointCount, representativenessApproved);
-      return {...metrics, components, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevelFor(score), confidenceScore: roundHalfAwayFromZero(confidence.score), confidenceLevel: confidence.level};
+      return {...metrics, components, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence.score), confidenceLevel: confidence.level};
     });
     const internalComponents = weightedComponents(bands, destination);
     const score = overallScore(internalComponents);
@@ -61,7 +62,7 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
     metrics.temperatureUtilitySamplesC=metrics.temperatureUtilitySamplesC.map((value:number)=>round(value,1));
     const publicBands=bands.map((band)=>({...band,components:roundedComponents(band.components)}));
     const confidenceGuard = guardConfidence(confidence, datasetStatus, Math.min(...bands.map((band) => band.samplePointCount)), representativenessApproved);
-    const output: ScoredMonth = {month: monthIndex+1, recommendationEligible: true, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevelFor(score), confidenceScore: roundHalfAwayFromZero(confidenceGuard.score), confidenceLevel: confidenceGuard.level, components:roundedComponents(internalComponents), metrics, bands:publicBands, reasons: [], caveats: ["historical-climatology-not-a-forecast", ...(datasetStatus === "fixture" ? [] : ["unvalidated-grid-wind" as const])], rawComponents: internalComponents, rawOverallScore: score};
+    const output: ScoredMonth = {month: monthIndex+1, recommendationEligible: true, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidenceGuard.score), confidenceLevel: confidenceGuard.level, components:roundedComponents(internalComponents), metrics, bands:publicBands, reasons: [], caveats: ["historical-climatology-not-a-forecast", ...(datasetStatus === "fixture" ? [] : ["unvalidated-grid-wind" as const])], rawComponents: internalComponents, rawOverallScore: score};
     output.reasons = reasonCodes(output);
     return output;
   });

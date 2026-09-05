@@ -20,7 +20,6 @@ export const links = {
   destination: (locale: Locale, slug: string) => `${prefix(locale)}/${routes.destination[locale]}/${slug}`,
   destinationMonth: (locale: Locale, slug: string, month: number) => `${prefix(locale)}/${routes.destination[locale]}/${slug}/${monthSlug(month, locale)}`,
   ranking: (locale: Locale, month: number) => `${prefix(locale)}/${routes.rankings[locale]}/${monthSlug(month, locale)}`,
-  regionRanking: (locale: Locale, region: string, month: number) => `${prefix(locale)}/${routes.rankings[locale]}/${region}/${monthSlug(month, locale)}`,
   themeRanking: (locale: Locale, theme: ThemeKey, month: number) => `${prefix(locale)}/${routes[themeRoute[theme]][locale]}/${monthSlug(month, locale)}`,
   compare: (locale: Locale, slug: string) => `${prefix(locale)}/${routes.compare[locale]}/${slug}`,
   methodology: (locale: Locale) => `${prefix(locale)}/${routes.methodology[locale]}`,
