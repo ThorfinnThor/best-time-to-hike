@@ -1,5 +1,6 @@
 import { getComparisonIndex, getDestinationIndex } from "@/lib/data/load";
 import { locales, monthSlug, routes } from "@/lib/i18n/config";
+import { areaCatalogue } from "@/lib/seo/areas";
 import type { Locale } from "@/lib/data/types";
 
 export interface StaticRoute { locale: Locale; segments: string[] }
@@ -12,6 +13,7 @@ export function routeCatalog(): StaticRoute[] {
       output.push({locale,segments:[routes.destination[locale],destination.slug]});
       for (let month=1;month<=12;month+=1) output.push({locale,segments:[routes.destination[locale],destination.slug,monthSlug(month,locale)]});
     }
+    for (const area of areaCatalogue()) output.push({locale,segments:[routes.rankings[locale],area.id]});
     for (let month=1;month<=12;month+=1) {
       output.push({locale,segments:[routes.rankings[locale],monthSlug(month,locale)]});
       for (const key of ["warm","snowFree","lowRain"] as const) output.push({locale,segments:[routes[key][locale],monthSlug(month,locale)]});

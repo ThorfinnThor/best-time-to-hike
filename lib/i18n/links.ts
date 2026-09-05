@@ -19,6 +19,7 @@ export const links = {
   finder: (locale: Locale) => `${prefix(locale)}/${routes.finder[locale]}`,
   destination: (locale: Locale, slug: string) => `${prefix(locale)}/${routes.destination[locale]}/${slug}`,
   destinationMonth: (locale: Locale, slug: string, month: number) => `${prefix(locale)}/${routes.destination[locale]}/${slug}/${monthSlug(month, locale)}`,
+  areaRanking: (locale: Locale, area: string) => `${prefix(locale)}/${routes.rankings[locale]}/${area}`,
   ranking: (locale: Locale, month: number) => `${prefix(locale)}/${routes.rankings[locale]}/${monthSlug(month, locale)}`,
   themeRanking: (locale: Locale, theme: ThemeKey, month: number) => `${prefix(locale)}/${routes[themeRoute[theme]][locale]}/${monthSlug(month, locale)}`,
   compareIndex: (locale: Locale) => `${prefix(locale)}/${routes.compare[locale]}`,

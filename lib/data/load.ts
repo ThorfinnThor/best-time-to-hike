@@ -3,7 +3,16 @@ import { join } from "node:path";
 import type { Comparison, CompactSearchDestination, PublicDestination, Ranking } from "@/lib/data/types";
 
 const root = join(process.cwd(),"public/data/hiking");
-const read = <T>(path:string):T => JSON.parse(readFileSync(join(root,path),"utf8")) as T;
+// Static export renders thousands of pages in one process and the published
+// data cannot change while it does, so each file is parsed once.
+const cache = new Map<string, unknown>();
+const read = <T>(path:string):T => {
+  const hit = cache.get(path);
+  if (hit !== undefined) return hit as T;
+  const parsed = JSON.parse(readFileSync(join(root,path),"utf8")) as T;
+  cache.set(path, parsed);
+  return parsed;
+};
 export const getDestinationIndex = () => read<Array<{id:string;slug:string;name:string;countryCode:string;countryName:string;continent:string;region:string;tags:string[];recommendationEligible:boolean;bestMonths:number[]}>>("destinations/index.json");
 export const getDestination = (slug:string) => {
   const entry = getDestinationIndex().find((item)=>item.slug===slug);

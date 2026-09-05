@@ -15,7 +15,9 @@ import { altLanguages } from "@/lib/i18n/links";
 import { absoluteUrl, SITE } from "@/lib/site";
 import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
-import { breadcrumbLd, destinationFaqLd, organisationLd, webSiteLd } from "@/lib/seo/jsonld";
+import { breadcrumbLd, destinationFaqLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
+import { areaById } from "@/lib/seo/areas";
+import { AreaRankingPage } from "@/components/hiking/AreaRankingPage";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ComparisonTool } from "@/components/compare/ComparisonTool";
@@ -100,6 +102,11 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
     </>; }
     case "destinationMonth": { const destination=getDestination(page.slug); if(!destination) notFound(); return <MonthPage destination={destination} month={page.month} locale={locale}/>; }
     case "ranking": return <RankingPage ranking={getRanking(page.month)} locale={locale}/>;
+    case "areaRanking": { const area=areaById(page.area); if(!area) notFound();
+      const label=taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
+      const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: label, path: pathFor(page, locale)}];
+      return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={rankingLd(label, area.destinations.slice(0, 20).map((destination) => ({name: destination.name, path: pathFor({kind:"destination", slug: destination.slug}, locale)})))}/>
+        <Breadcrumbs trail={trail} locale={locale}/><FixtureNotice locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
     case "compare": { if(!getComparisonIndex().some((item)=>item.slug===page.slug)) notFound(); return <ComparisonPage comparison={getComparison(page.slug)} locale={locale}/>; }
     case "compareTool": { const copy=t(locale); return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.pickTwo}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }

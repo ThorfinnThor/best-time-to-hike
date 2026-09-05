@@ -7,6 +7,7 @@
 // locale's home page.
 import { infoRouteKeys, locales, monthNumber, routes, themeKeys, type InfoRouteKey, type ThemeKey } from "@/lib/i18n/config";
 import { links } from "@/lib/i18n/links";
+import { areaById } from "@/lib/seo/areas";
 import type { Locale } from "@/lib/data/types";
 
 export type PageId =
@@ -15,6 +16,7 @@ export type PageId =
   | { kind: "destination"; slug: string }
   | { kind: "destinationMonth"; slug: string; month: number }
   | { kind: "ranking"; month: number }
+  | { kind: "areaRanking"; area: string }
   | { kind: "themeRanking"; theme: ThemeKey; month: number }
   | { kind: "compare"; slug: string }
   | { kind: "compareTool" }
@@ -37,8 +39,10 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
   }
 
   if (head === routes.rankings[locale] && rest.length === 1) {
+    // Month slugs win: they are a closed set, so an area can never shadow one.
     const month = monthNumber(rest[0], locale);
-    return month ? { kind: "ranking", month } : null;
+    if (month) return { kind: "ranking", month };
+    return areaById(rest[0]) ? { kind: "areaRanking", area: rest[0] } : null;
   }
 
   for (const theme of themeKeys) {
@@ -68,6 +72,7 @@ export function pathFor(page: PageId, locale: Locale): string {
     case "destination": return links.destination(locale, page.slug);
     case "destinationMonth": return links.destinationMonth(locale, page.slug, page.month);
     case "ranking": return links.ranking(locale, page.month);
+    case "areaRanking": return links.areaRanking(locale, page.area);
     case "themeRanking": return links.themeRanking(locale, page.theme, page.month);
     case "compare": return links.compare(locale, page.slug);
     case "compareTool": return links.compareIndex(locale);

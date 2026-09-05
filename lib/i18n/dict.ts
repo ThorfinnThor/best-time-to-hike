@@ -70,6 +70,7 @@ export const DICT = {
       score: "Hiking score",
       allMonths: "See all months",
       byMonth: "Best hiking destinations by month",
+      byArea: "Browse by area",
     },
     trust: {
       eyebrow: "Decide with context",
@@ -314,6 +315,21 @@ export const DICT = {
       bandsHeading: "From low ground to the mountains",
       adjacentAria: "Adjacent months",
     },
+    area: {
+      eyebrow: "Area guide",
+      heading: (area: string) => `Hiking ${area}`,
+      intro: (count: number, countries: number, low: number, high: number) =>
+        `${count} destinations across ${countries} ${countries === 1 ? "country" : "countries"}, from ${low} to ${high} metres, ranked by their strongest scored month.`,
+      seasonEyebrow: "When the area opens",
+      seasonHeading: (months: string) => `Most of it is walkable in ${months}`,
+      seasonNote: (count: number) => `How many of the ${count} destinations clear the recommendation gate in each month.`,
+      rankedEyebrow: "Ranked by best month",
+      rankedHeading: (count: number) => `${count} destinations`,
+      withheldEyebrow: "Withheld",
+      withheldHeading: (count: number) => `${count} ${count === 1 ? "destination is" : "destinations are"} not recommended here`,
+      reasonSnow: "snow in all twelve months at the selected cell",
+      reasonNoMonth: "no month clears every critical component",
+    },
     ranking: {
       heading: "Best hiking destinations",
       headingIn: (month: string) => `Best hiking destinations in ${month}`,
@@ -431,6 +447,7 @@ export const DICT = {
       score: "Wanderwert",
       allMonths: "Alle Monate ansehen",
       byMonth: "Beste Wanderziele nach Monat",
+      byArea: "Nach Region stöbern",
     },
     trust: {
       eyebrow: "Nachvollziehbar entscheiden",
@@ -675,6 +692,21 @@ export const DICT = {
       bandsHeading: "Vom Tal bis ins Gebirge",
       adjacentAria: "Benachbarte Monate",
     },
+    area: {
+      eyebrow: "Regionsführer",
+      heading: (area: string) => `${area}: Wandern und beste Zeit`,
+      intro: (count: number, countries: number, low: number, high: number) =>
+        `${count} Ziele in ${countries} ${countries === 1 ? "Land" : "Ländern"}, von ${low} bis ${high} Metern, sortiert nach ihrem besten bewerteten Monat.`,
+      seasonEyebrow: "Wann die Region öffnet",
+      seasonHeading: (months: string) => `Am meisten begehbar im ${months}`,
+      seasonNote: (count: number) => `Wie viele der ${count} Ziele in jedem Monat den Empfehlungstest erfüllen.`,
+      rankedEyebrow: "Nach bestem Monat sortiert",
+      rankedHeading: (count: number) => `${count} Ziele`,
+      withheldEyebrow: "Zurückgehalten",
+      withheldHeading: (count: number) => `${count} ${count === 1 ? "Ziel wird" : "Ziele werden"} hier nicht empfohlen`,
+      reasonSnow: "ganzjährig Schnee an der ausgewählten Zelle",
+      reasonNoMonth: "kein Monat erfüllt alle kritischen Komponenten",
+    },
     ranking: {
       heading: "Beste Wanderziele",
       headingIn: (month: string) => `Beste Wanderziele im ${month}`,
@@ -748,6 +780,28 @@ const titleize = (id: string) => id.split("-").map((part) => part.charAt(0).toUp
  * published id has no real translation, so the fallback stays a safety net
  * rather than a substitute for translating.
  */
+/**
+ * Area names that take a definite article in English: the Alps, the Andes, the
+ * Rockies, but Patagonia, Europe, Iceland. There is no reliable rule, so this
+ * is a list. German avoids the problem entirely by putting the label first,
+ * because "in den Alpen" and "in Patagonien" need different cases and a
+ * template that guesses would be wrong half the time.
+ */
+const TAKES_ARTICLE = new Set([
+  "alps", "altai", "andes", "apennines", "appalachians", "arabian-highlands", "atacama", "atlas",
+  "australian-highlands", "australian-outback", "balkans", "brazilian-highlands", "british-isles",
+  "canadian-rockies", "cape-fold-mountains", "carpathians", "caucasus", "central-european-uplands",
+  "coast-mountains", "colorado-plateau", "dolomites", "drakensberg", "east-africa-highlands",
+  "great-basin", "guiana-highlands", "himalaya", "iberian-mountains", "japanese-alps", "karakoram",
+  "levant", "madagascar-highlands", "mediterranean", "mongolian-steppe", "new-guinea-highlands",
+  "new-zealand-alps", "pacific-northwest", "pamir", "pyrenees", "rockies", "sahara-massifs",
+  "sierra-madre", "sierra-nevada", "southeast-asia-highlands", "southern-africa-highlands",
+  "tian-shan", "west-africa-highlands", "western-ghats",
+]);
+
+/** "the Alps" or "Patagonia", for English prose. */
+export const withArticle = (id: string, label: string) => (TAKES_ARTICLE.has(id) ? `the ${label}` : label);
+
 export function taxonomyLabel(locale: Locale, kind: "continents" | "regions" | "tags", id: string): string {
   const table = DICT[locale].taxonomy[kind] as Record<string, string>;
   return table[id] ?? titleize(id);

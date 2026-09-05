@@ -2,6 +2,8 @@ import type { Locale, PublicDestination } from "@/lib/data/types";
 import { monthName } from "@/lib/i18n/config";
 import { getDestination, getManifest } from "@/lib/data/load";
 import { profileFor } from "@/lib/seo/profile";
+import { areaById, areaProfile } from "@/lib/seo/areas";
+import { taxonomyLabel, withArticle } from "@/lib/i18n/dict";
 import { evaluateIndexability } from "@/lib/seo/indexability";
 import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
@@ -122,6 +124,23 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         : `Destinations that clear our climate criteria in ${monthName(page.month, locale)}, ordered by hiking suitability then data confidence.`),
       index: getManifest().datasetStatus === "production",
       reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+    case "areaRanking": {
+      const area = areaById(page.area);
+      if (!area) return {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-area"]};
+      const profile = areaProfile(area);
+      const label = taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
+      const peak = profile.peakMonths.map((month) => monthName(month, locale)).join(" / ");
+      return {
+        title: de ? `${label}: beste Wanderzeit und Ziele` : `Hiking ${withArticle(area.id, label)}: when to go and where`,
+        description: clamp(de
+          ? `${area.destinations.length} Ziele von ${profile.elevationMinM} bis ${profile.elevationMaxM} Metern. Am meisten begehbar im ${peak}.`
+          : `${area.destinations.length} destinations from ${profile.elevationMinM} to ${profile.elevationMaxM} metres. Most of the area is walkable in ${peak}.`),
+        // An area page ranks a real set and says something specific about its
+        // season, so it earns an index slot where a month slice of the same
+        // set would not.
+        index: getManifest().datasetStatus === "production",
+        reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+    }
     case "themeRanking": return {
       title: de ? `${page.theme === "warm" ? "Warm wandern" : page.theme === "snowFree" ? "Schneefrei wandern" : "Wenig Regen"} im ${monthName(page.month, locale)}`
                : `${page.theme === "warm" ? "Warm hiking" : page.theme === "snowFree" ? "Snow-free hiking" : "Low-rain hiking"} in ${monthName(page.month, locale)}`,

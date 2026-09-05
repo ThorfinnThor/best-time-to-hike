@@ -5,7 +5,8 @@ import { TrustSection } from "@/components/home/TrustSection";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { getAllDestinations } from "@/lib/data/load";
 import { monthName } from "@/lib/i18n/config";
-import { t } from "@/lib/i18n/dict";
+import { t, taxonomyLabel } from "@/lib/i18n/dict";
+import { areaCatalogue } from "@/lib/seo/areas";
 import { destinationPath, links } from "@/lib/i18n/links";
 import type { Locale } from "@/lib/data/types";
 
@@ -88,6 +89,15 @@ export function HomePage({ locale }: { locale: Locale }) {
             const month = index + 1;
             return <Link key={month} href={links.ranking(locale, month)}>{monthName(month, locale)}</Link>;
           })}
+        </div>
+      </section>
+
+      <section className="content-section area-links">
+        <h2>{content.byArea}</h2>
+        <div className="month-chips">
+          {areaCatalogue().map((area) => <Link key={area.id} href={links.areaRanking(locale, area.id)}>
+            {taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id)}
+          </Link>)}
         </div>
       </section>
 
