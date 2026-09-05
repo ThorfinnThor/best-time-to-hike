@@ -8,10 +8,12 @@
  *
  *   --check                     resolve model elevations and report; write nothing
  *   --candidates=<path>         add a candidate file (repeatable)
- *   --only=<id,id>              restrict the run to these destination ids
+ *   --only=<id,id>              activate only these candidates (trial batches)
  *
- * With no --candidates flag the live destination master is prepared on its own,
- * which is the safe default: a candidate batch is only ever included on request.
+ * Writing is ADDITIVE. Live destinations pass through untouched: their configs,
+ * geometry and snapshots are never rewritten, so a trial batch cannot truncate
+ * the catalogue and cannot churn evidence timestamps for destinations it did
+ * not touch. Only newly activated candidates are resolved and written.
  */
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -96,9 +98,16 @@ async function main() {
     }
   }
 
-  const selected = only ? intake.filter((entry) => only.has(entry.id)) : intake;
+  // --only narrows which candidates activate; live destinations are always kept
+  // so a trial batch can never remove a published destination.
+  const activated = intake.filter((entry) => entry.isNew && (!only || only.has(entry.id)));
+  const selected = checkOnly && only ? intake.filter((entry) => only.has(entry.id)) : [...intake.filter((entry) => !entry.isNew), ...activated];
   if (!selected.length) throw new Error("CATALOGUE001 no destinations selected");
   if (new Set(selected.map((entry) => entry.id)).size !== selected.length) throw new Error("CATALOGUE001 destination ids are not unique");
+  if (only) {
+    const unknown = [...only].filter((id) => !intake.some((entry) => entry.id === id));
+    if (unknown.length) throw new Error(`CATALOGUE001 --only names unknown destinations: ${unknown.join(", ")}`);
+  }
 
   const cells = new Map<string, string>();
   for (const entry of selected) {
@@ -158,7 +167,7 @@ async function main() {
     throw new Error(`CATALOGUE001 ${unresolved.length} point(s) have no ERA5-Land model elevation: ${unresolved.map((entry) => entry.id).join(", ")}`);
   }
 
-  const destinations: DestinationConfig[] = selected.map((entry) => {
+  const prepared: DestinationConfig[] = activated.map((entry) => {
     const elevation = round(byKey.get(coordinateKey(entry.id))!.era5LandGridElevationM, 1);
     return {
       id: entry.id, slug: entry.id, name: entry.name,
@@ -169,10 +178,12 @@ async function main() {
       elevationBands: [{id: "representative", minM: Math.floor(elevation - 50), maxM: Math.ceil(elevation + 50), weight: 1}],
     };
   });
-  writeJson("data-config/sources/destinations.json", destinations);
+  if (!prepared.length) { console.log("Nothing to activate; live catalogue unchanged."); return; }
+  writeJson("data-config/sources/destinations.json", [...live, ...prepared]);
 
   const halfCell = 0.05;
-  const features = selected.map((entry) => {
+  const existingFeatures = readJson<{features: unknown[]}>("data-config/geography/destination-areas.geojson").features;
+  const newFeatures = activated.map((entry) => {
     const {latitude, longitude} = byKey.get(coordinateKey(entry.id))!.resolvedLocation;
     return {
       type: "Feature" as const,
@@ -198,9 +209,9 @@ async function main() {
       ]]},
     };
   });
-  writeJson("data-config/geography/destination-areas.geojson", {type: "FeatureCollection", features});
+  writeJson("data-config/geography/destination-areas.geojson", {type: "FeatureCollection", features: [...existingFeatures, ...newFeatures]});
 
-  for (const destination of destinations) {
+  for (const destination of prepared) {
     const point = byKey.get(coordinateKey(destination.id))!;
     const elevation = round(point.era5LandGridElevationM, 1);
     writeJson(`data-snapshots/sampling/${destination.slug}.json`, {
@@ -222,7 +233,7 @@ async function main() {
       bands: {representative: {minM: elevation, medianM: elevation, maxM: elevation, pixelCount: 1}},
     });
   }
-  console.log(`Prepared ${destinations.length} one-cell destination configs and provisional model-elevation snapshots.`);
+  console.log(`Activated ${prepared.length} new destination(s); catalogue is now ${live.length + prepared.length}. Live entries were not rewritten.`);
 }
 
 main().catch((error: unknown) => {
