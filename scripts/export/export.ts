@@ -20,8 +20,10 @@ const publicDestinations: PublicDestination[] = scored.map(({destination, dem, m
 });
 
 for (const destination of publicDestinations) {
+  // The destination file already carries its months. A second per-destination
+  // copy under monthly/ was written by this exporter and read by nothing:
+  // half the published dataset, duplicated.
   writeJson(`public/data/hiking/destinations/${destination.countryCode.toLowerCase()}/${destination.slug}.json`, destination);
-  writeJson(`public/data/hiking/monthly/${destination.slug}.json`, {slug:destination.slug,months:destination.months});
 }
 writeJson("public/data/hiking/destinations/index.json", publicDestinations.map(({id,slug,name,countryCode,countryName,continent,region,tags,recommendationEligible,bestMonths})=>({id,slug,name,countryCode,countryName,continent,region,tags,recommendationEligible,bestMonths})));
 
