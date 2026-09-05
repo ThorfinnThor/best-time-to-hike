@@ -171,3 +171,24 @@ test("relaxations are measured, and never offer a withheld destination", () => {
     assert.ok(!results.some((result) => result.destination.slug === "held-place"), "a relaxation surfaced a withheld destination");
   }
 });
+
+test("the match score measures fit, and does not saturate at 100", () => {
+  // It used to be `hiking score + 12` clamped, so 230 results all read 100%.
+  const perfect = destination("perfect", 17, 0, 0, 70);
+  const wetter = destination("wetter", 17, .5, 0, 95);
+  const colder = destination("colder", 2, 0, 0, 95);
+  const results = matchDestinations([perfect, wetter, colder], inMonth(7));
+  const by = Object.fromEntries(results.map((result) => [result.destination.slug, result.match]));
+  assert.equal(by["perfect"], 100, "a month inside every stated preference is a full match");
+  assert.ok(by["wetter"] < 80, `a wet month should not read as a near-perfect fit, got ${by["wetter"]}`);
+  assert.ok(by["colder"] < 80, `a month well below the range should not read as a near-perfect fit, got ${by["colder"]}`);
+  // A high hiking score must not rescue a poor fit: that was the old bug.
+  assert.ok(by["wetter"] < by["perfect"] && by["colder"] < by["perfect"]);
+});
+
+test("the rain ceiling excludes rather than merely penalising", () => {
+  const drizzle = destination("drizzle", 16, .45, 0, 88);
+  const dry = destination("dry", 16, .05, 0, 70);
+  assert.deepEqual(matchDestinations([drizzle, dry], inMonth(9, {maxWetDays: 0.25})).map((r) => r.destination.slug), ["dry"]);
+  assert.equal(matchDestinations([drizzle, dry], inMonth(9)).length, 2);
+});

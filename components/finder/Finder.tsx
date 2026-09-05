@@ -9,11 +9,17 @@ import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, links } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
 import { SaveButton } from "@/components/finder/SaveButton";
+import { DestinationImage } from "@/components/media/DestinationImage";
 
+/**
+ * A preset must actually do what its label says. "Low rain in September" used
+ * to set only the month and one degree of temperature, because its rain flag
+ * was already the default, so the chip named a filter it did not apply.
+ */
 const PRESETS = [
-  {month: 5, min: 16, max: 27, rain: true, snow: true},
-  {month: 6, min: 8, max: 24, rain: false, snow: true},
-  {month: 9, min: 10, max: 25, rain: true, snow: true},
+  {month: 5, minTemp: 16, maxTemp: 27, avoidRain: true, avoidSnow: true, maxWetDays: 1},
+  {month: 6, minTemp: 8, maxTemp: 24, avoidRain: false, avoidSnow: true, maxWetDays: 1},
+  {month: 9, minTemp: 10, maxTemp: 25, avoidRain: true, avoidSnow: true, maxWetDays: 0.25},
 ] as const;
 
 const DAYLIGHT_FLOORS = [0, 8, 10, 12, 14] as const;
@@ -101,7 +107,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
   const toggleTag = (tag: string) => update({tags: preferences.tags.includes(tag) ? preferences.tags.filter((item) => item !== tag) : [...preferences.tags, tag]});
 
   function applyPreset(preset: (typeof PRESETS)[number]) {
-    const next = {...defaultPreferences, months: [preset.month], minTemp: preset.min, maxTemp: preset.max, avoidRain: preset.rain, avoidSnow: preset.snow};
+    const next = {...defaultPreferences, ...preset, months: [preset.month]};
     setPreferences(next);
     if (navigates) { goToFinder(next); return; }
     setSubmitted(true);
@@ -154,22 +160,24 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
         </label> : null}
       </div>
 
-      {!compact ? <fieldset className="finder-months">
-        <legend>{copy.finder.monthsLegend}</legend>
-        {Array.from({length: 12}, (_, index) => index + 1).map((month) => <button type="button" key={month}
-          className={preferences.months.includes(month) ? "tag-chip active" : "tag-chip"}
-          aria-pressed={preferences.months.includes(month)}
-          onClick={() => update({months: preferences.months.includes(month)
-            ? preferences.months.filter((value) => value !== month)
-            : [...preferences.months, month].sort((a, b) => a - b)})}>
-          {monthNameShort(month, locale)}
-        </button>)}
-      </fieldset> : null}
-
-      {!compact ? <fieldset className="finder-tags">
-        <legend>{copy.finder.terrain}</legend>
-        {facets.tags.map((tag) => <button type="button" key={tag} className={preferences.tags.includes(tag) ? "tag-chip active" : "tag-chip"} onClick={() => toggleTag(tag)} aria-pressed={preferences.tags.includes(tag)}>{taxonomyLabel(locale, "tags", tag)}</button>)}
-      </fieldset> : null}
+      {!compact ? <details className="finder-more-filters">
+        <summary>{copy.finder.moreFilters}</summary>
+        <fieldset className="finder-months">
+          <legend>{copy.finder.monthsLegend}</legend>
+          {Array.from({length: 12}, (_, index) => index + 1).map((month) => <button type="button" key={month}
+            className={preferences.months.includes(month) ? "tag-chip active" : "tag-chip"}
+            aria-pressed={preferences.months.includes(month)}
+            onClick={() => update({months: preferences.months.includes(month)
+              ? preferences.months.filter((value) => value !== month)
+              : [...preferences.months, month].sort((a, b) => a - b)})}>
+            {monthNameShort(month, locale)}
+          </button>)}
+        </fieldset>
+        <fieldset className="finder-tags">
+          <legend>{copy.finder.terrain}</legend>
+          {facets.tags.map((tag) => <button type="button" key={tag} className={preferences.tags.includes(tag) ? "tag-chip active" : "tag-chip"} onClick={() => toggleTag(tag)} aria-pressed={preferences.tags.includes(tag)}>{taxonomyLabel(locale, "tags", tag)}</button>)}
+        </fieldset>
+      </details> : null}
 
       {compact ? <button className="finder-submit" type="submit">{copy.finder.submit}</button> : null}
     </form>
@@ -194,17 +202,30 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
       </div> : null}
 
       {savedOnly && !filtered.length ? <div className="finder-empty" role="status"><strong>{copy.finder.savedEmpty}</strong></div>
-      : filtered.length ? <div className="finder-results">
-        {shown.map(({destination, month, match, reasons}, index) => <Link key={destination.slug} href={destinationPath(locale, destination.slug, month.m)} className="result-card">
-          <span className="result-rank">{String(index + 1).padStart(2, "0")}</span>
-          <div>
-            <strong>{destination.name}</strong>
-            <small>{destination.countryCode} · {taxonomyLabel(locale, "regions", destination.region)} · {Math.round(month.temp)}°C · {Math.round(month.wet * 100)}% {copy.common.wetDays}</small>
-            <small className="result-why">{preferences.months.length === 1 ? copy.finder.inMonth(monthName(month.m, locale)) : copy.finder.bestMonthFound(monthName(month.m, locale))} · {reasons.map((reason) => copy.finder.reasons[reason]).join(" · ")}</small>
+      : filtered.length ? <div className="result-grid">
+        {shown.map(({destination, month, match, reasons}) => <article className="result-tile" key={destination.slug}>
+          <Link className="result-tile-art" href={destinationPath(locale, destination.slug, month.m)} aria-label={destination.name}>
+            <DestinationImage slug={destination.slug} name={destination.name} region={taxonomyLabel(locale, "regions", destination.region)}/>
+            <span className="result-tile-score" title={copy.finder.scoreTitle}>{month.score}</span>
+          </Link>
+          <div className="result-tile-body">
+            <div className="result-tile-heading">
+              <div>
+                <span>{destination.countryCode} · {Math.round(month.temp)}°C · {Math.round(month.wet * 100)}% {copy.common.wetDays}</span>
+                <h3><Link href={destinationPath(locale, destination.slug, month.m)}>{destination.name}</Link></h3>
+              </div>
+              <SaveButton slug={destination.slug} name={destination.name} saved={isSaved(destination.slug)} onToggle={toggleSaved} locale={locale}/>
+            </div>
+            <p className="result-tile-month">{preferences.months.length === 1 ? copy.finder.inMonth(monthName(month.m, locale)) : copy.finder.bestMonthFound(monthName(month.m, locale))}</p>
+            <ul className="result-tile-reasons">
+              {reasons.slice(0, 3).map((reason) => <li key={reason}>{copy.finder.reasons[reason]}</li>)}
+            </ul>
+            <div className="result-tile-foot">
+              <span className="result-tile-match"><strong>{match}%</strong> {copy.common.match}</span>
+              <Link href={destinationPath(locale, destination.slug, month.m)}>{copy.finder.seeDetails}</Link>
+            </div>
           </div>
-          <div className="result-score"><strong>{match}%</strong><span>{copy.common.match}</span></div>
-          <SaveButton slug={destination.slug} name={destination.name} saved={isSaved(destination.slug)} onToggle={toggleSaved} locale={locale}/>
-        </Link>)}
+        </article>)}
       </div> : <div className="finder-empty" role="status">
         <strong>{copy.finder.noResultsTitle}</strong>
         <p>{copy.finder.noResultsBody}</p>

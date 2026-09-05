@@ -141,3 +141,28 @@ body{font-size:16px;-webkit-font-smoothing:antialiased}
 .area-note{margin-top:14px;color:#68736b;font-size:.85rem}
 .area-withheld ul{margin:0;padding:0;list-style:none;border-top:1px solid var(--line)}.area-withheld li{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:10px;padding:12px 2px;border-bottom:1px solid var(--line)}.area-withheld a{font-weight:700}.area-withheld span{color:#78857b;font-size:.84rem}
 @media(max-width:720px){.area-months{grid-template-columns:repeat(6,1fr);height:auto;gap:8px}.area-months li{height:96px}}
+
+/* Finder results as cards. A ranked text list gave no sense of place; these
+   reuse the destination photography that already ships. */
+.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(288px,1fr));gap:22px;margin-top:24px}
+.result-tile{display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(23,35,28,.09);border-radius:20px;background:var(--paper);transition:transform .18s,box-shadow .18s}.result-tile:hover{transform:translateY(-2px);box-shadow:0 18px 44px rgba(23,35,28,.13)}
+.result-tile-art{position:relative;display:block;height:168px}.result-tile-art .destination-card-art{height:100%}.result-tile-score{position:absolute;z-index:2;right:10px;bottom:10px;min-width:42px;border-radius:99px;background:rgba(23,35,28,.78);padding:5px 11px;color:#fff;text-align:center;font:500 1rem Georgia}
+.result-tile-body{display:flex;flex-direction:column;gap:9px;flex:1;padding:15px 17px 17px}
+.result-tile-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.result-tile-heading>div>span{text-transform:uppercase;letter-spacing:.08em;font-size:.66rem;font-weight:800;color:var(--fern)}.result-tile-heading h3{margin:3px 0 0;font:500 1.32rem/1.2 Georgia}.result-tile-heading h3 a{color:inherit}
+.result-tile-month{margin:0;color:#5d6a60;font-size:.84rem}
+.result-tile-reasons{display:flex;flex-wrap:wrap;gap:6px;margin:0;padding:0;list-style:none}.result-tile-reasons li{border-radius:99px;background:var(--mist);padding:3px 9px;font-size:.72rem;color:var(--moss)}
+.result-tile-foot{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:auto;padding-top:11px;border-top:1px solid var(--line)}.result-tile-match{font-size:.76rem;color:#68736b}.result-tile-match strong{font:500 1.15rem Georgia;color:var(--moss)}.result-tile-foot a{font-weight:700;font-size:.8rem}
+@media(max-width:720px){.result-grid{grid-template-columns:1fr;gap:16px}.result-tile-art{height:150px}}
+
+/* Tool pages lead with the tool. The finder's intro was 854px tall and the
+   first result sat at 4,673px, so the page looked empty until you scrolled. */
+.finder-page .page-intro,.compare-tool ~ .page-intro{padding-top:52px;padding-bottom:34px}
+.page-intro:has(+ .finder-page),.page-intro:has(+ .compare-tool){padding:52px 0 30px}
+.page-intro:has(+ .finder-page) h1,.page-intro:has(+ .compare-tool) h1{font-size:clamp(2.2rem,4.4vw,3.1rem)}
+.finder-more-filters{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}
+.finder-more-filters summary{cursor:pointer;list-style:none;text-transform:uppercase;letter-spacing:.1em;font-size:.7rem;font-weight:800;color:var(--fern);padding:6px 0}
+.finder-more-filters summary::-webkit-details-marker{display:none}
+.finder-more-filters summary::before{content:"+ ";font-weight:800}
+.finder-more-filters[open] summary::before{content:"– "}
+.finder-more-filters[open] summary{margin-bottom:4px}
+@media (pointer: coarse){.finder-more-filters summary{padding:12px 0}}

@@ -23,6 +23,8 @@ export interface FinderPreferences {
   avoidHeat: boolean;
   /** Hard floor in hours. 0 means no daylight constraint. */
   minDaylight: number;
+  /** Hard ceiling on wet-day probability, 0..1. 1 means no rain constraint. */
+  maxWetDays: number;
   /** Model elevation of the destination's representative cell, in metres. */
   minElevation: number;
   maxElevation: number;
@@ -44,6 +46,7 @@ export const defaultPreferences: FinderPreferences = {
   avoidSnow: true,
   avoidHeat: false,
   minDaylight: 0,
+  maxWetDays: 1,
   minElevation: 0,
   maxElevation: ELEVATION_CEILING,
   tags: [],
@@ -97,14 +100,26 @@ function reasonsFor(month: SearchMonth, preferences: FinderPreferences): ReasonK
   return reasons;
 }
 
+/**
+ * How well a month fits what the reader asked for. Zero to one hundred.
+ *
+ * This deliberately does NOT include the published hiking score. It used to:
+ * the value was `score - penalties + 12` clamped at 100, so any destination
+ * scoring 88 or better with small penalties displayed 100% and 230 results
+ * were all "100% match". A number that is almost always 100 is not a
+ * measurement, it is decoration, and it made the sort meaningless too.
+ *
+ * The hiking score is shown next to it, so the two answer different questions:
+ * how good is this place, and how close is it to what you asked for.
+ */
 function matchScore(month: SearchMonth, preferences: FinderPreferences): number {
-  const temperaturePenalty = month.temp < preferences.minTemp
-    ? (preferences.minTemp - month.temp) * 3
-    : month.temp > preferences.maxTemp ? (month.temp - preferences.maxTemp) * 3 : 0;
-  const rainPenalty = preferences.avoidRain ? month.wet * 32 : month.wet * 8;
-  const snowPenalty = preferences.avoidSnow ? month.snow * 45 : month.snow * 6;
-  const heatPenalty = preferences.avoidHeat ? month.hot * 40 : month.hot * 10;
-  return Math.max(0, Math.min(100, month.score - temperaturePenalty - rainPenalty - snowPenalty - heatPenalty + 12));
+  const belowRange = Math.max(0, preferences.minTemp - month.temp);
+  const aboveRange = Math.max(0, month.temp - preferences.maxTemp);
+  const temperaturePenalty = Math.min(45, (belowRange + aboveRange) * 4);
+  const rainPenalty = (preferences.avoidRain ? 45 : 12) * month.wet;
+  const snowPenalty = (preferences.avoidSnow ? 55 : 10) * month.snow;
+  const heatPenalty = (preferences.avoidHeat ? 45 : 12) * month.hot;
+  return Math.max(0, Math.min(100, 100 - temperaturePenalty - rainPenalty - snowPenalty - heatPenalty));
 }
 
 /**
@@ -127,7 +142,8 @@ export function matchDestinations(destinations: SearchDestination[], preferences
     const candidates = destination.monthly.filter((month) =>
       month.recommendationEligible
       && (preferences.months.length === 0 || preferences.months.includes(month.m))
-      && month.daylight >= preferences.minDaylight);
+      && month.daylight >= preferences.minDaylight
+      && month.wet <= preferences.maxWetDays);
     if (!candidates.length) continue;
 
     let best: FinderResult | null = null;
@@ -175,6 +191,7 @@ export function preferencesToQuery(preferences: FinderPreferences): string {
   if (preferences.avoidSnow !== d.avoidSnow) params.set("snow", preferences.avoidSnow ? "1" : "0");
   if (preferences.avoidHeat !== d.avoidHeat) params.set("heat", preferences.avoidHeat ? "1" : "0");
   if (preferences.minDaylight !== d.minDaylight) params.set("day", String(preferences.minDaylight));
+  if (preferences.maxWetDays !== d.maxWetDays) params.set("wet", String(preferences.maxWetDays));
   if (preferences.minElevation !== d.minElevation) params.set("emin", String(preferences.minElevation));
   if (preferences.maxElevation !== d.maxElevation) params.set("emax", String(preferences.maxElevation));
   if (preferences.tags.length) params.set("tags", [...preferences.tags].sort().join(","));
@@ -210,6 +227,7 @@ export function preferencesFromQuery(search: string): FinderPreferences {
     avoidSnow: flag("snow", d.avoidSnow),
     avoidHeat: flag("heat", d.avoidHeat),
     minDaylight: number("day", d.minDaylight),
+    maxWetDays: number("wet", d.maxWetDays),
     minElevation: number("emin", d.minElevation),
     maxElevation: number("emax", d.maxElevation),
     tags: (params.get("tags") ?? "").split(",").map((tag) => tag.trim()).filter(Boolean),
@@ -233,7 +251,7 @@ export function relaxations(destinations: SearchDestination[], preferences: Find
   const candidates: Array<{key: Relaxation["key"]; patch: Partial<FinderPreferences>}> = [
     {key: "months", patch: {months: []}},
     {key: "temperature", patch: {minTemp: d.minTemp - 10, maxTemp: d.maxTemp + 8}},
-    {key: "rain", patch: {avoidRain: false}},
+    {key: "rain", patch: {avoidRain: false, maxWetDays: 1}},
     {key: "snow", patch: {avoidSnow: false}},
     {key: "heat", patch: {avoidHeat: false}},
     {key: "daylight", patch: {minDaylight: 0}},
