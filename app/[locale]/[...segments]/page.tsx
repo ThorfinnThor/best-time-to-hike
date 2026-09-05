@@ -5,6 +5,7 @@ import { allImages } from "@/lib/media/images";
 import { Finder } from "@/components/finder/Finder";
 import { HomePage } from "@/components/home/HomePage";
 import { ComparisonPage, DestinationPage, FixtureNotice, MethodNote, MonthPage, RankingPage } from "@/components/hiking/Pages";
+import { LongformArticle } from "@/components/seo/LongformArticle";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
@@ -12,6 +13,9 @@ import { locales, monthName, themes } from "@/lib/i18n/config";
 import { t } from "@/lib/i18n/dict";
 import { altLanguages } from "@/lib/i18n/links";
 import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
+import { pageSeo } from "@/lib/seo/page-seo";
+import { breadcrumbLd, destinationFaqLd, organisationLd, webSiteLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/JsonLd";
 import { routeCatalog } from "@/lib/seo/route-catalog";
 import type { ComponentScores, Locale } from "@/lib/data/types";
 
@@ -20,7 +24,7 @@ export const dynamicParams = false;
 export const dynamic = "force-static";
 export function generateStaticParams(){return routeCatalog().filter((route)=>route.segments.length>0);}
 
-function pageTitle(locale:Locale,page:PageId):string {
+function unusedPageTitle(locale:Locale,page:PageId):string {
   const copy = t(locale);
   switch (page.kind) {
     case "home": return copy.info.homeTitle;
@@ -40,10 +44,14 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
   const locale=raw as Locale;
   const page=resolvePageId(locale,segments);
   if(!page) return {};
+  const seo = pageSeo(page, locale);
   return {
-    title: pageTitle(locale,page),
+    title: seo.title,
+    description: seo.description,
     alternates: altLanguages((target)=>pathFor(page,target), locale),
-    robots: {index: process.env.NEXT_PUBLIC_DATA_STATUS==="production", follow: true},
+    // Crawlable either way; only pages that answer a question with substance
+    // enter the index. See lib/seo/page-seo.ts for why.
+    robots: {index: seo.index, follow: true},
   };
 }
 
@@ -76,9 +84,14 @@ function FinderPage({locale}:{locale:Locale}) {
 
 function renderPage(locale:Locale,page:PageId):React.ReactNode {
   switch (page.kind) {
-    case "home": return <HomePage locale={locale}/>;
+    case "home": return <><JsonLd data={webSiteLd(locale)}/><JsonLd data={organisationLd()}/><HomePage locale={locale}/></>;
     case "finder": return <FinderPage locale={locale}/>;
-    case "destination": { const destination=getDestination(page.slug); if(!destination) notFound(); return <DestinationPage destination={destination} locale={locale}/>; }
+    case "destination": { const destination=getDestination(page.slug); if(!destination) notFound(); return <>
+      <JsonLd data={breadcrumbLd([{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: destination.name, path: pathFor(page, locale)}])}/>
+      <JsonLd data={destinationFaqLd(destination, locale)}/>
+      <DestinationPage destination={destination} locale={locale}/>
+      <LongformArticle destination={destination} locale={locale}/>
+    </>; }
     case "destinationMonth": { const destination=getDestination(page.slug); if(!destination) notFound(); return <MonthPage destination={destination} month={page.month} locale={locale}/>; }
     case "ranking": return <RankingPage ranking={getRanking(page.month)} locale={locale}/>;
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
