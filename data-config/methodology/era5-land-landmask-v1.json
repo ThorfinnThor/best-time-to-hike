@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "sourceProduct": "ERA5-Land auxiliary invariant land-sea mask",
+  "sourceDocumentUrl": "https://confluence.ecmwf.int/spaces/CKB/pages/140385202/ERA5-Land+data+documentation",
+  "downloadUrl": "https://confluence.ecmwf.int/download/attachments/140385202/lsm_1279l4_0.1x0.1.grb_v4_unpack.nc",
+  "downloadBytes": 51898361,
+  "downloadSha256": "9df65151d1608990851e2aa8d0e1e4ca063b5181b0568493c42676d2572b202c",
+  "parameter": {
+    "name": "land-sea mask",
+    "shortName": "lsm",
+    "paramId": 172,
+    "unit": "0-1 land fraction"
+  },
+  "grid": {
+    "latitudeDegrees": 0.1,
+    "longitudeDegrees": 0.1,
+    "selection": "NEAREST_GRID_COORDINATE"
+  },
+  "gate": {
+    "minimumLandFraction": 0.45,
+    "reviewBelowLandFraction": 0.8,
+    "rationale": "ERA5-Land is a land-surface reanalysis: over a cell with little land the time-series variables come back masked and the destination has no usable climate. The invariant geopotential still carries a value over such cells, which is why the orography preflight passed them and aggregation failed hours later. Measured against the catalogue, land fraction separates the egregious cases but not the marginal ones: amalfi-coast 0.141, cinque-terre 0.288 and freycinet 0.406 all returned masked series, while the published lofotodden works at 0.532 and a relocated cinque-terre still failed at 0.501. A hard floor of 0.45 therefore blocks only what is unambiguously sea-dominated, and 0.45-0.80 is a review band rather than a second gate. The definitive test remains the masked-variable check in fetch-era5.ts; a short-window time-series probe would move that check before the 30-year download.",
+    "measuredAt": "2026-09-05"
+  }
+}

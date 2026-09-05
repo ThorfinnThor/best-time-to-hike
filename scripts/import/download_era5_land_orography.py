@@ -26,6 +26,8 @@ import numpy as np
 
 DEFAULT_CONFIG = Path("data-config/methodology/era5-land-orography-v1.json")
 DEFAULT_CACHE = Path("generated/intermediate/era5-invariants/era5-land-geopotential.nc")
+DEFAULT_LANDMASK_CONFIG = Path("data-config/methodology/era5-land-landmask-v1.json")
+DEFAULT_LANDMASK_CACHE = Path("generated/intermediate/era5-invariants/era5-land-lsm.nc")
 # The pinned NetCDF stores coordinates as float32; a theoretical half-cell
 # offset of 0.05° can therefore decode a few 1e-7 degrees above 0.05.
 GRID_TOLERANCE_DEGREES = 0.05001
@@ -37,6 +39,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--cache", type=Path, default=DEFAULT_CACHE)
+    parser.add_argument("--landmask-config", type=Path, default=DEFAULT_LANDMASK_CONFIG)
+    parser.add_argument("--landmask-cache", type=Path, default=DEFAULT_LANDMASK_CACHE)
     parser.add_argument("--refresh", action="store_true")
     return parser.parse_args()
 
@@ -118,7 +122,24 @@ def nearest_index(values: np.ndarray, requested: float, circular: bool = False) 
     return int(tied[int(np.argmin(numeric[tied]))])
 
 
-def extract_points(source: Path, entries: list[dict[str, Any]], gravity: float) -> list[dict[str, Any]]:
+def extract_points(
+    source: Path,
+    entries: list[dict[str, Any]],
+    gravity: float,
+    landmask_source: Path | None = None,
+) -> list[dict[str, Any]]:
+    # The land fraction must be read at the SAME resolved grid indices as the
+    # geopotential, using the same tie-breaking rule. Looking it up separately
+    # can land on the neighbouring cell whenever a request sits on a midpoint.
+    land_fraction = None
+    if landmask_source is not None:
+        with netCDF4.Dataset(landmask_source) as mask_dataset:
+            if "lsm" not in mask_dataset.variables:
+                raise RuntimeError("ERA5_LANDMASK002 invariant file lacks land-sea mask variable lsm")
+            mask_latitude = np.asarray(mask_dataset.variables["latitude"][:], dtype=np.float64).reshape(-1)
+            mask_longitude = np.asarray(mask_dataset.variables["longitude"][:], dtype=np.float64).reshape(-1)
+            values = mask_dataset.variables["lsm"]
+            land_fraction = np.asarray(values[0] if len(values.dimensions) == 3 else values[:], dtype=np.float64)
     with netCDF4.Dataset(source) as dataset:
         for coordinate in ("latitude", "longitude"):
             if coordinate not in dataset.variables:
@@ -163,18 +184,24 @@ def extract_points(source: Path, entries: list[dict[str, Any]], gravity: float) 
             value = float(np.ma.filled(geopotential[indexes], np.nan))
             if not math.isfinite(value):
                 raise RuntimeError(f"ERA5_OROGRAPHY003 non-finite geopotential for {key}")
-            result.append(
-                {
-                    "key": key,
-                    "requestedLocation": {"latitude": requested_latitude, "longitude": requested_longitude},
-                    "resolvedLocation": {
-                        "latitude": round(resolved_latitude, 10),
-                        "longitude": round(display_longitude(resolved_longitude_raw), 10),
-                    },
-                    "geopotentialM2S2": round(value, 6),
-                    "era5LandGridElevationM": round(value / gravity, 3),
-                }
-            )
+            record = {
+                "key": key,
+                "requestedLocation": {"latitude": requested_latitude, "longitude": requested_longitude},
+                "resolvedLocation": {
+                    "latitude": round(resolved_latitude, 10),
+                    "longitude": round(display_longitude(resolved_longitude_raw), 10),
+                },
+                "geopotentialM2S2": round(value, 6),
+                "era5LandGridElevationM": round(value / gravity, 3),
+            }
+            if land_fraction is not None:
+                if land_fraction.shape != (latitude.size, longitude.size):
+                    raise RuntimeError("ERA5_LANDMASK002 land-sea mask grid does not match the geopotential grid")
+                fraction = float(np.ma.filled(land_fraction[latitude_index, longitude_index], np.nan))
+                if not math.isfinite(fraction) or fraction < 0 or fraction > 1:
+                    raise RuntimeError(f"ERA5_LANDMASK003 land-sea mask value outside 0..1 for {key}")
+                record["landSeaFraction"] = round(fraction, 6)
+            result.append(record)
     return result
 
 
@@ -191,7 +218,15 @@ def main() -> None:
     gravity = float(config["conversion"]["standardGravityMS2"])
     if gravity != 9.80665:
         raise RuntimeError("ERA5_OROGRAPHY003 standard-gravity convention changed")
-    points = extract_points(args.cache, entries, gravity)
+    landmask_config = json.loads(args.landmask_config.read_text(encoding="utf-8"))
+    download_verified(
+        str(landmask_config["downloadUrl"]),
+        args.landmask_cache,
+        int(landmask_config["downloadBytes"]),
+        str(landmask_config["downloadSha256"]),
+        args.refresh,
+    )
+    points = extract_points(args.cache, entries, gravity, args.landmask_cache)
     output = {
         "schemaVersion": 1,
         "sourceProduct": config["sourceProduct"],
@@ -203,6 +238,13 @@ def main() -> None:
         "parameter": config["parameter"],
         "grid": config["grid"],
         "conversion": config["conversion"],
+        "landMask": {
+            "sourceProduct": landmask_config["sourceProduct"],
+            "downloadUrl": landmask_config["downloadUrl"],
+            "downloadBytes": landmask_config["downloadBytes"],
+            "downloadSha256": landmask_config["downloadSha256"],
+            "parameter": landmask_config["parameter"],
+        },
         "pointCount": len(points),
         "points": points,
     }

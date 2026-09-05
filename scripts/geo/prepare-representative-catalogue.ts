@@ -20,6 +20,9 @@ import { existsSync } from "node:fs";
 import type { DestinationConfig } from "../../lib/data/types";
 import { readJson, round, writeJson } from "../lib/io";
 
+const landmaskGate = readJson<{gate: {minimumLandFraction: number; reviewBelowLandFraction: number}}>(
+  "data-config/methodology/era5-land-landmask-v1.json").gate;
+
 interface Candidate {
   id: string; name: string; countryCode: string; countryName: string;
   continent: string; region: string; timezone: string;
@@ -31,6 +34,7 @@ interface OrographyPoint {
   requestedLocation: {latitude: number; longitude: number};
   resolvedLocation: {latitude: number; longitude: number};
   era5LandGridElevationM: number;
+  landSeaFraction?: number;
 }
 interface RepresentativeOverride { lat: number; lon: number; label: string; reason: string }
 
@@ -141,6 +145,19 @@ async function main() {
     return !point || !Number.isFinite(point.era5LandGridElevationM);
   });
 
+  // ERA5-Land only carries usable variables where the cell is land. The
+  // invariant geopotential has values over sea-dominated cells too, so without
+  // this the failure surfaces hours later during aggregation instead of here.
+  const landFractionOf = (id: string) => byKey.get(coordinateKey(id))?.landSeaFraction;
+  const seaDominated = selected.filter((entry) => {
+    const fraction = landFractionOf(entry.id);
+    return fraction !== undefined && fraction < landmaskGate.minimumLandFraction;
+  });
+  const needsReview = selected.filter((entry) => {
+    const fraction = landFractionOf(entry.id);
+    return fraction !== undefined && fraction >= landmaskGate.minimumLandFraction && fraction < landmaskGate.reviewBelowLandFraction;
+  });
+
   if (checkOnly) {
     const resolved = selected.filter((entry) => !unresolved.includes(entry));
     const elevations = resolved.map((entry) => round(byKey.get(coordinateKey(entry.id))!.era5LandGridElevationM, 1));
@@ -149,6 +166,14 @@ async function main() {
     if (unresolved.length) {
       console.log(`\n${unresolved.length} point(s) did NOT resolve (ocean, ice sheet or outside the land mask):`);
       for (const entry of unresolved) console.log(`  ${entry.id}  ${entry.representativeCoordinates.lat}, ${entry.representativeCoordinates.lon}`);
+    }
+    if (seaDominated.length) {
+      console.log(`\n${seaDominated.length} point(s) BELOW the ${landmaskGate.minimumLandFraction} land-fraction floor; the time series will come back masked:`);
+      for (const entry of seaDominated) console.log(`  ${landFractionOf(entry.id)!.toFixed(4)} land  ${entry.id}`);
+    }
+    if (needsReview.length) {
+      console.log(`\n${needsReview.length} point(s) in the ${landmaskGate.minimumLandFraction}-${landmaskGate.reviewBelowLandFraction} review band (coastal or lake-dominated; land fraction alone cannot prove these work):`);
+      for (const entry of needsReview) console.log(`  ${landFractionOf(entry.id)!.toFixed(4)} land  ${entry.id}`);
     }
     const newlyResolved = resolved.filter((entry) => entry.isNew);
     if (newlyResolved.length) {
@@ -165,6 +190,9 @@ async function main() {
 
   if (unresolved.length) {
     throw new Error(`CATALOGUE001 ${unresolved.length} point(s) have no ERA5-Land model elevation: ${unresolved.map((entry) => entry.id).join(", ")}`);
+  }
+  if (seaDominated.length) {
+    throw new Error(`CATALOGUE002 ${seaDominated.length} point(s) are below the ${landmaskGate.minimumLandFraction} ERA5-Land land-fraction floor: ${seaDominated.map((entry) => `${entry.id} (${landFractionOf(entry.id)!.toFixed(3)})`).join(", ")}`);
   }
 
   const prepared: DestinationConfig[] = activated.map((entry) => {
