@@ -137,6 +137,7 @@ export interface CompactSearchDestination {
   continent: string;
   region: string;
   tags: string[];
+  elevationM: number;
   monthly: CompactMonth[];
 }
 
@@ -148,6 +149,7 @@ export interface SearchDestination {
   continent: string;
   region: string;
   tags: string[];
+  elevationM: number;
   recommendationEligible: boolean;
   monthly: Array<{m: number; score: number; temp: number; wet: number; snow: number; hot: number; wind: number; daylight: number; confidence: number; recommendationEligible: boolean}>;
 }

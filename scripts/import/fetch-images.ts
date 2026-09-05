@@ -56,7 +56,14 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const REJECT_TITLE = /\b(map|diagram|chart|coat of arms|flag|logo|seal|painting|engraving|lithograph|drawing|sketch|poster|stamp|banknote|satellite|landsat|sentinel|nasa)\b|art project|\b(museum|gallery|canvas|watercolou?r|etching|woodcut|aquatint|mezzotint|illustration|portrait|fresco|sculpture)\b/i;
 
 /** Commons category names that mark a file as artwork or a reproduction. */
-const REJECT_CATEGORY = /paintings|drawings|engravings|prints|artworks|watercolou?r|lithographs|maps of|old photographs|google art project/i;
+const REJECT_CATEGORY = /paintings|drawings|engravings|prints|artworks|watercolou?r|lithographs|maps of|old photographs|google art project|specimens|herbarium|insects of|type specimens/i;
+
+/**
+ * Museum and herbarium plates. Commons holds millions, and their titles carry
+ * the collection locality, so a search for a mountain region returns pinned
+ * moths collected there. Chiapas got "Adhemarius donysa MHNT ... female dorsal".
+ */
+const REJECT_SPECIMEN = /\b(specimen|holotype|paratype|herbarium|dorsal|ventral|MHNT|MNHN|collection of the)\b/i;
 
 /**
  * Landmark-anchored queries for destinations where the generic search returned
@@ -71,7 +78,13 @@ const REJECT_CATEGORY = /paintings|drawings|engravings|prints|artworks|watercolo
  *  altai-tavan-bogd: every Mongolian Altai query returns Ukok Plateau, which
  *  is across the border in Russia.
  */
-const NO_IMAGE = new Set<string>(["altai-tavan-bogd"]);
+const NO_IMAGE = new Set<string>([
+  // Every Mongolian Altai query returns Ukok Plateau, across the border in Russia.
+  "altai-tavan-bogd",
+  // Every Acatenango query returns Volcán de Fuego, the neighbouring volcano.
+  // It is what you watch from Acatenango, but it is not Acatenango.
+  "acatenango",
+]);
 
 const QUERY_OVERRIDE: Record<string, string[]> = {
   "arches": ["Delicate Arch Arches National Park Utah", "Arches National Park Utah red rock fins", "Landscape Arch Devils Garden Utah"],
@@ -95,6 +108,33 @@ const QUERY_OVERRIDE: Record<string, string[]> = {
   "tiger-leaping-gorge": ["Tiger Leaping Gorge Yunnan China", "Hutiao Gorge Yunnan", "Tiger Leaping Gorge Jinsha river"],
   "routeburn": ["Routeburn Track New Zealand", "Harris Saddle Routeburn", "Routeburn Falls New Zealand"],
   "mount-wilhelm": ["Mount Wilhelm Papua New Guinea", "Mount Wilhelm Chimbu Papua", "Mount Wilhelm summit lakes"],
+  // Batch 3. Wrong-place matches found by filename review: Mount Buffalo
+  // returned an Indonesian savannah, Rara a beach in France, Manning Park the
+  // Quebec Monts Valin, Mount Emei the unrelated Putuoshan, Gila an Arizona
+  // trail, and Rhodope a botanical close-up. The rest had no place name at all.
+  "mount-buffalo": ["Mount Buffalo Victoria Australia", "Mount Buffalo chalet gorge", "Cathedral Mount Buffalo Victoria"],
+  "rara": ["Rara Lake Nepal", "Rara National Park Nepal", "Rara Daha Mugu Nepal"],
+  "manning-park": ["Manning Provincial Park British Columbia", "Lightning Lake British Columbia Manning", "Manning Park Cascades British Columbia"],
+  "rhodope": ["Rhodope Mountains Bulgaria", "Trigrad Gorge Bulgaria", "Rhodope forest Bulgaria"],
+  "mount-emei": ["Emeishan golden summit Sichuan", "Mount Emei Sichuan temple", "Emei Shan Sichuan"],
+  "gila-wilderness": ["Gila Wilderness New Mexico", "Gila Cliff Dwellings New Mexico", "Gila National Forest New Mexico"],
+  "chimborazo": ["Chimborazo volcano Ecuador", "Chimborazo refuge Ecuador", "Chimborazo vicuna reserve"],
+  "mount-apo": ["Mount Apo Davao Philippines", "Mount Apo summit Philippines", "Mount Apo national park"],
+  "uinta-mountains": ["High Uintas Wilderness Utah", "Uinta Mountains Utah lakes", "Kings Peak Utah Uinta"],
+  "cape-breton-highlands": ["Skyline Trail Cape Breton Highlands", "Cape Breton Highlands National Park", "Cabot Trail Cape Breton Nova Scotia"],
+  "sangre-de-cristo": ["Sangre de Cristo Mountains Colorado", "Crestone Peak Colorado", "Great Sand Dunes Colorado mountains"],
+  "acatenango": ["Volcan Acatenango Guatemala", "Acatenango crater Guatemala", "Acatenango hike Guatemala"],
+  "cajas": ["Cajas National Park Ecuador", "Parque Nacional Cajas lagunas", "Cajas paramo Ecuador"],
+  "revelstoke": ["Mount Revelstoke National Park", "Meadows in the Sky Revelstoke", "Revelstoke British Columbia mountains"],
+  // Batch 3, no acceptable image on the generic query.
+  "absaroka-beartooth": ["Beartooth Highway Montana", "Absaroka Beartooth Wilderness Montana", "Beartooth Mountains Montana lakes"],
+  "katahdin": ["Mount Katahdin Baxter State Park Maine", "Katahdin Knife Edge Maine", "Baxter State Park Katahdin"],
+  "chiapas-highlands": ["Sumidero Canyon Chiapas Mexico", "Chiapas mountains Mexico landscape", "Lagunas de Montebello Chiapas"],
+  "chirripo": ["Cerro Chirripo Costa Rica", "Chirripo National Park Costa Rica", "Chirripo paramo Costa Rica"],
+  "bumthang": ["Bumthang valley Bhutan", "Jakar Bhutan valley", "Bumthang Bhutan monastery valley"],
+  "changbaishan": ["Changbai Mountain Heaven Lake", "Changbaishan Tianchi crater lake", "Changbai Mountain Jilin"],
+  "mulanje": ["Mount Mulanje Malawi", "Mulanje massif Malawi", "Mulanje Malawi plateau"],
+  "mgoun": ["Ait Bougmez valley Morocco", "Mgoun massif Morocco", "Mgoun valley High Atlas"],
 };
 
 function queriesFor(destination: DestinationConfig): string[] {
@@ -133,6 +173,7 @@ function acceptable(page: any): Candidate | null {
   // crop that throws most of the subject away.
   if (info.width <= info.height * 1.2) return null;
   if (REJECT_TITLE.test(page.title ?? "")) return null;
+  if (REJECT_SPECIMEN.test(page.title ?? "")) return null;
 
   const meta = info.extmetadata ?? {};
   if (REJECT_CATEGORY.test(strip(meta.Categories?.value ?? ""))) return null;
@@ -185,8 +226,31 @@ async function fetchFor(destination: DestinationConfig, taken: Set<string>): Pro
   return null;
 }
 
+interface CandidateRecord { id: string; name: string; countryCode: string; countryName: string; continent: string; region: string; candidateCentroid: {lat: number; lon: number}; tags: string[] }
+
+/**
+ * Images can be fetched for a candidate batch before it is activated, so the
+ * photographs are ready when the climate data lands rather than a run later.
+ *
+ *   BTH_IMAGE_CANDIDATES=data-config/sources/destination-candidates-3.json pnpm data:images
+ *
+ * The manifest entries this produces name destinations that are not yet
+ * published, so tests/images.test.ts will fail until the batch is activated.
+ * Fetch ahead, commit after.
+ */
+function candidateDestinations(path: string): DestinationConfig[] {
+  const file = JSON.parse(readFileSync(path, "utf8")) as {candidates: CandidateRecord[]};
+  return file.candidates.map((candidate) => ({
+    ...candidate, slug: candidate.id, active: true, priority: 0, affiliateQuery: candidate.name,
+    timezone: "UTC", coordinates: candidate.candidateCentroid, elevationBands: [],
+  }) as unknown as DestinationConfig);
+}
+
 async function main() {
-  const destinations = JSON.parse(readFileSync("data-config/sources/destinations.json", "utf8")) as DestinationConfig[];
+  const candidatesPath = process.env.BTH_IMAGE_CANDIDATES;
+  const destinations = candidatesPath
+    ? candidateDestinations(candidatesPath)
+    : JSON.parse(readFileSync("data-config/sources/destinations.json", "utf8")) as DestinationConfig[];
   const manifest = existsSync(MANIFEST)
     ? JSON.parse(readFileSync(MANIFEST, "utf8")) as {images: ImageRecord[]; fallback: string}
     : {images: [], fallback: "generated-topographic-placeholder"};

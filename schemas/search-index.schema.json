@@ -3,8 +3,9 @@
   "title":"Compact finder search index",
   "description":"Serialised into the RSC payload of every page rendering the finder, so months are positional tuples rather than objects: [month, score, temperature, wetDays, snowDays, hotDays, daylight]. Only recommendation-eligible destinations and months appear, so eligibility is not carried as a field.",
   "type":"array",
-  "items":{"type":"object","required":["slug","name","countryCode","continent","region","tags","monthly"],"properties":{
+  "items":{"type":"object","required":["slug","name","countryCode","continent","region","tags","elevationM","monthly"],"properties":{
     "slug":{"$ref":"#/$defs/slug"},"name":{"type":"string","minLength":1},"countryCode":{"type":"string","pattern":"^[A-Z]{2}$"},"continent":{"$ref":"#/$defs/slug"},"region":{"$ref":"#/$defs/slug"},"tags":{"type":"array","uniqueItems":true,"items":{"$ref":"#/$defs/slug"}},
+    "elevationM":{"type":"integer","minimum":-500,"maximum":9000},
     "monthly":{"type":"array","minItems":1,"maxItems":12,"items":{
       "type":"array","minItems":7,"maxItems":7,
       "prefixItems":[

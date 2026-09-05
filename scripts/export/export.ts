@@ -44,6 +44,9 @@ const search: CompactSearchDestination[] = publicDestinations
     continent: destination.continent,
     region: destination.region,
     tags: destination.tags,
+    // Altitude is a first-class hiking criterion and costs one number per
+    // destination, so the finder can filter on it without another request.
+    elevationM: Math.round(destination.representativeCell.modelElevationM),
     monthly: destination.months
       .filter((month) => month.recommendationEligible && month.overallScore !== null)
       .map((month) => [
