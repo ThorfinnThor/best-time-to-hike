@@ -43,6 +43,7 @@ jobs:
       # destinations that are already published are never re-fetched and their
       # committed snapshots are never rewritten.
       BTH_DESTINATIONS: ${{ inputs.destinations }}
+      CANDIDATES_FILE: ${{ inputs.candidates_file }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -60,24 +61,28 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm data:setup-python
 
-      - name: Preflight the model orography before any climate download
+      # A cache key cannot exceed 512 characters and a selection can name a
+      # hundred destinations, so the key carries a digest of the selection
+      # rather than the selection itself.
+      - name: Derive a cache id for this selection
+        id: selection
         run: |
-          pnpm data:catalogue-preflight \
-            --candidates=${{ inputs.candidates_file }} \
-            ${{ inputs.destinations && format('--only={0}', inputs.destinations) || '' }}
+          digest=$(printf '%s' "${BTH_DESTINATIONS:-full-batch}" | sha256sum | cut -c1-16)
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "Selection digest: $digest"
+
+      - name: Preflight the model orography before any climate download
+        run: pnpm data:catalogue-preflight --candidates="$CANDIDATES_FILE" ${BTH_DESTINATIONS:+--only="$BTH_DESTINATIONS"}
 
       - name: Activate the selected candidates
-        run: |
-          pnpm data:catalogue-prepare \
-            --candidates=${{ inputs.candidates_file }} \
-            ${{ inputs.destinations && format('--only={0}', inputs.destinations) || '' }}
+        run: pnpm data:catalogue-prepare --candidates="$CANDIDATES_FILE" ${BTH_DESTINATIONS:+--only="$BTH_DESTINATIONS"}
 
       - name: Cache canonical ERA5-Land point series between fail-closed retries
         id: era5-cache
         uses: actions/cache/restore@v4
         with:
           path: generated/intermediate/era5-raw
-          key: era5-land-point-series-v2-${{ inputs.destinations || 'full-batch' }}
+          key: era5-land-point-series-v2-${{ steps.selection.outputs.digest }}
           restore-keys: |
             era5-land-point-series-v2-
 
@@ -89,7 +94,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: generated/intermediate/era5-raw
-          key: era5-land-point-series-v2-${{ inputs.destinations || 'full-batch' }}-${{ github.run_id }}
+          key: era5-land-point-series-v2-${{ steps.selection.outputs.digest }}-${{ github.run_id }}
 
       - name: Aggregate the point series into committed snapshots
         run: pnpm data:era5 -- --provisional
@@ -135,5 +140,6 @@ jobs:
           git config user.name "best-time-to-hike-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data-config/sources/destinations.json data-config/geography/destination-areas.geojson data-snapshots public/data/hiking
-          git diff --cached --quiet || git commit -m "data: activate ${{ inputs.destinations || 'candidate batch' }}"
+          count=$(printf '%s' "${BTH_DESTINATIONS}" | awk -F, '{print NF}')
+          git diff --cached --quiet || git commit -m "data: activate ${count:-all} candidate destinations"
           git push
