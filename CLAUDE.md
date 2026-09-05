@@ -178,6 +178,27 @@ The whole product's value is that it does not overclaim. Every one of these came
 - German copy avoids the em/en dash (reads as AI). Use commas or "bis" for ranges; compound hyphens
   are fine. English uses "to" for ranges.
 
+## The finder
+
+The finder is the product surface, not a widget. `lib/finder/match.ts` is a pure client-side
+computation over `public/data/hiking/search/destination-index.json` (~75 KB); it can never change a
+published score, only produce a separate match value.
+
+- **Filter options come from the data.** `facetsFor()` derives continents, regions and tags from the
+  index and skips withheld destinations. Never hand-list options (mistakes.md #17).
+- **The science gate is absolute.** A destination with `recommendationEligible: false`, and any month
+  with `recommendationEligible: false`, is never a candidate, whatever the preferences say. This
+  holds for "any month" search too: it picks the best *eligible* month, not the best month.
+- **Hard filters vs penalties.** Continent, region, tags and the daylight floor exclude. Temperature,
+  rain, snow and heat are penalties, so a near-miss still surfaces with an explanation.
+- **Never pad, never fake.** An empty result list says so and names which constraint to relax. There
+  is deliberately no confidence filter: every published month is capped at 64/low, so the control
+  would do nothing while implying variation the data does not have.
+
+Catalogue reality as of `v1-provisional`: 46 destinations are recommendable, 34 have three or more
+eligible months, 30 have four or more, 4 are year-round. Many filter combinations legitimately return
+a handful of results. That is the gate working, not a bug to design around.
+
 ## Guards — keep them, don't route around them
 
 - `pnpm guard:architecture` — scans runtime code for network clients, databases and imports across

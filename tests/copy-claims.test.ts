@@ -83,3 +83,28 @@ test("a withheld destination publishes no score or best-month claim", () => {
     }
   }
 });
+
+test("every published taxonomy id has a real label in both locales", () => {
+  const search = read<SearchDestination[]>("search/destination-index.json");
+  const used = {
+    continents: new Set(search.map((entry) => entry.continent)),
+    regions: new Set(search.map((entry) => entry.region)),
+    tags: new Set(search.flatMap((entry) => entry.tags)),
+  } as const;
+  const missing: string[] = [];
+  for (const locale of locales) {
+    for (const kind of ["continents", "regions", "tags"] as const) {
+      const table = DICT[locale].taxonomy[kind] as Record<string, string>;
+      for (const id of used[kind]) if (table[id] === undefined) missing.push(`${locale}.taxonomy.${kind}.${id}`);
+    }
+  }
+  assert.deepEqual(missing, [], `a published id falls back to a titleized slug instead of a translation: ${missing.join(", ")}`);
+});
+
+test("the finder can reach every destination the science layer publishes", () => {
+  const search = read<SearchDestination[]>("search/destination-index.json");
+  const continents = new Set(Object.keys(DICT.en.taxonomy.continents));
+  const unreachable = search.filter((entry) => !continents.has(entry.continent));
+  assert.deepEqual(unreachable.map((entry) => entry.slug), [],
+    "a destination sits in a continent the finder cannot offer as a filter option");
+});

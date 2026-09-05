@@ -254,6 +254,28 @@ round-trip, because the rebuild had no idea where `europe` came from.
 ignores is not a route, it is a duplicate. When a filter or facet appears in a URL, either it changes
 what the page shows or it does not belong in the URL.
 
+## 17. A filter that could not reach half the catalogue
+
+**shipped, fixed 2026-09-05.**
+
+The finder's region dropdown offered four options: `all`, `europe`, `alps`, `macaronesia`. The
+published catalogue holds 6 continents and 25 regions. Banff, Yosemite, the Himalaya, New Zealand
+and Kilimanjaro, 24 of 46 recommendable destinations, had no option that selected them. The list was
+written by hand when the fixture set was five Mediterranean destinations and never revisited as the
+catalogue grew to 50.
+
+Nothing failed, because a hardcoded option list cannot disagree with data it never reads.
+
+**Rule.** Filter options are derived from the catalogue, never hand-listed: `facetsFor()` builds
+continents, regions and tags from the search index and skips withheld destinations, so a filter can
+never offer a destination the science layer holds back, nor hide one it publishes.
+`tests/copy-claims.test.ts` fails when a published destination sits in a continent the finder cannot
+offer, and when a published taxonomy id has no translation in both locales.
+
+A related trap avoided in the same pass: the finder exposes no confidence filter, because every
+published month is capped at exactly 64/low. A control whose every setting returns the same result is
+a fake affordance, and it would imply the catalogue contains confidence variation it does not have.
+
 ---
 
 ## Inherited lessons — sibling project
