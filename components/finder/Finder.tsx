@@ -1,8 +1,9 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Locale, SearchDestination } from "@/lib/data/types";
-import { defaultPreferences, facetsFor, matchDestinations, type FinderPreferences, type MonthSelection, type SortKey } from "@/lib/finder/match";
+import { useRouter } from "next/navigation";
+import type { CompactSearchDestination, Locale, SearchDestination } from "@/lib/data/types";
+import { defaultPreferences, facetsFor, matchDestinations, preferencesFromQuery, preferencesToQuery, type FinderPreferences, type MonthSelection, type SortKey } from "@/lib/finder/match";
 import { monthName } from "@/lib/i18n/config";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, links } from "@/lib/i18n/links";
@@ -14,29 +15,84 @@ const PRESETS = [
 ] as const;
 
 const DAYLIGHT_FLOORS = [0, 8, 10, 12, 14] as const;
+/** The compact finder has no catalogue to derive facets from. */
+const CONTINENTS = ["africa", "asia", "europe", "north-america", "oceania", "south-america"];
 const SORTS: SortKey[] = ["match", "score", "warmest", "name"];
 
-export function Finder({destinations, locale, compact = false}: {destinations: SearchDestination[]; locale: Locale; compact?: boolean}) {
+/**
+ * `destinations` is omitted in compact mode on purpose.
+ *
+ * Props to a client component are serialised into the page's RSC payload, so
+ * passing the search index put 453 KB of JSON into every page that rendered a
+ * finder: the home page was 891 KB of HTML. That is the sibling project's
+ * mistakes.md #15, a failure that only shows up on a phone. The compact finder
+ * is therefore a form that navigates to the finder page carrying its search in
+ * the URL, and only the finder page loads the data.
+ */
+export function Finder({destinations, locale, compact = false}: {destinations?: CompactSearchDestination[]; locale: Locale; compact?: boolean}) {
   const copy = t(locale);
+  const router = useRouter();
   const [preferences, setPreferences] = useState<FinderPreferences>(defaultPreferences);
   const [submitted, setSubmitted] = useState(false);
+  // 139 matches rendered at once is a 22,000px page on a phone. The count stays
+  // honest; the DOM does not have to.
+  const PAGE = 25;
+  const [visible, setVisible] = useState(PAGE);
+  const navigates = !destinations;
 
-  const facets = useMemo(() => facetsFor(destinations), [destinations]);
+  // Search state travels in the URL. Read it after mount rather than during
+  // render: the page is prerendered without a query string, so parsing it in
+  // the initial state would cause a hydration mismatch.
+  useEffect(() => {
+    if (navigates || typeof window === "undefined" || !window.location.search) return;
+    setPreferences(preferencesFromQuery(window.location.search));
+    setSubmitted(true);
+  }, [navigates]);
+
+  useEffect(() => {
+    if (navigates || typeof window === "undefined") return;
+    const query = preferencesToQuery(preferences);
+    const next = `${window.location.pathname}${query ? `?${query}` : ""}`;
+    window.history.replaceState(null, "", next);
+  }, [navigates, preferences]);
+
+  // Expanding on the client costs nothing measurable and keeps the matcher
+  // readable; the saving that matters is in the bytes that crossed the wire.
+  const catalogue = useMemo<SearchDestination[]>(() => (destinations ?? []).map((destination) => ({
+    id: destination.slug,
+    slug: destination.slug,
+    name: destination.name,
+    countryCode: destination.countryCode,
+    continent: destination.continent,
+    region: destination.region,
+    tags: destination.tags,
+    recommendationEligible: true,
+    monthly: destination.monthly.map(([m, score, temp, wet, snow, hot, daylight]) => ({
+      m, score, temp, wet, snow, hot, daylight, wind: 0, confidence: 64, recommendationEligible: true,
+    })),
+  })), [destinations]);
+  const facets = useMemo(() => facetsFor(catalogue), [catalogue]);
   const regions = preferences.continent === "all" ? [] : facets.regionsByContinent[preferences.continent] ?? [];
-  const matches = useMemo(() => matchDestinations(destinations, preferences), [destinations, preferences]);
-  const shown = compact ? matches.slice(0, 3) : matches;
-  const showResults = compact ? submitted : true;
+  const matches = useMemo(() => navigates ? [] : matchDestinations(catalogue, preferences), [navigates, catalogue, preferences]);
+  const shown = compact ? matches.slice(0, 3) : matches.slice(0, visible);
+  const showResults = navigates ? false : compact ? submitted : true;
+  const goToFinder = (next: FinderPreferences) => {
+    const query = preferencesToQuery(next);
+    router.push(`${links.finder(locale)}${query ? `?${query}` : ""}`);
+  };
 
-  const update = (patch: Partial<FinderPreferences>) => setPreferences((current) => ({...current, ...patch}));
+  const update = (patch: Partial<FinderPreferences>) => { setVisible(PAGE); setPreferences((current) => ({...current, ...patch})); };
   const toggleTag = (tag: string) => update({tags: preferences.tags.includes(tag) ? preferences.tags.filter((item) => item !== tag) : [...preferences.tags, tag]});
 
   function applyPreset(preset: (typeof PRESETS)[number]) {
-    setPreferences({...defaultPreferences, month: preset.month, minTemp: preset.min, maxTemp: preset.max, avoidRain: preset.rain, avoidSnow: preset.snow});
+    const next = {...defaultPreferences, month: preset.month, minTemp: preset.min, maxTemp: preset.max, avoidRain: preset.rain, avoidSnow: preset.snow};
+    setPreferences(next);
+    if (navigates) { goToFinder(next); return; }
     setSubmitted(true);
   }
 
   return <section className={`finder ${compact ? "finder-compact" : ""}`} aria-label={copy.finder.aria}>
-    <form onSubmit={(event) => {event.preventDefault(); setSubmitted(true);}}>
+    <form onSubmit={(event) => {event.preventDefault(); if (navigates) { goToFinder(preferences); return; } setSubmitted(true);}}>
       <div className="finder-controls">
         <label><span>{copy.finder.month}</span>
           <select value={String(preferences.month)} onChange={(event) => update({month: (event.target.value === "any" ? "any" : Number(event.target.value)) as MonthSelection})}>
@@ -47,7 +103,7 @@ export function Finder({destinations, locale, compact = false}: {destinations: S
         <label><span>{copy.finder.continent}</span>
           <select value={preferences.continent} onChange={(event) => update({continent: event.target.value, region: "all"})}>
             <option value="all">{copy.finder.allContinents}</option>
-            {facets.continents.map((continent) => <option key={continent} value={continent}>{taxonomyLabel(locale, "continents", continent)}</option>)}
+            {(facets.continents.length ? facets.continents : CONTINENTS).map((continent) => <option key={continent} value={continent}>{taxonomyLabel(locale, "continents", continent)}</option>)}
           </select>
         </label>
         {!compact && regions.length > 1 ? <label><span>{copy.finder.region}</span>
@@ -112,6 +168,11 @@ export function Finder({destinations, locale, compact = false}: {destinations: S
         <p>{copy.finder.noResultsBody}</p>
       </div>}
 
+      {!compact && matches.length > shown.length
+        ? <button type="button" className="finder-more" onClick={() => setVisible((count) => count + PAGE)}>
+            {copy.finder.showMore(matches.length - shown.length)}
+          </button>
+        : null}
       {compact && matches.length ? <Link className="text-link" href={links.finder(locale)}>{copy.finder.allResults}</Link> : null}
     </> : null}
   </section>;

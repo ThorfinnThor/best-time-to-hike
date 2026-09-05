@@ -185,7 +185,16 @@ for (const file of files(join(root,"comparisons")).filter((path)=>!path.endsWith
 const search=readJson<any[]>("public/data/hiking/search/destination-index.json");
 assert(validateSearch(search),`Search schema: ${ajv.errorsText(validateSearch.errors)}`);
 assert(JSON.stringify(search.map((item)=>item.slug).sort())===JSON.stringify([...destinationBySlug.values()].filter((destination)=>destination.recommendationEligible).map((destination)=>destination.slug).sort()),"Search destination set mismatch");
-assert(search.every((item)=>item.monthly.length>=1&&item.monthly.every((month:any)=>month.recommendationEligible===true&&month.m>=1&&month.m<=12)&&new Set(item.monthly.map((month:any)=>month.m)).size===item.monthly.length&&item.monthly.every((month:any,index:number,array:any[])=>index===0||array[index-1].m<month.m)),"Search months must contain only eligible months in ascending order");
+// Months are positional tuples: [month, score, temp, wet, snow, hot, daylight].
+// Only eligible months are exported, so membership is the eligibility claim and
+// it is checked against the published destination rather than a carried flag.
+assert(search.every((item)=>item.monthly.length>=1&&item.monthly.every((month:any[])=>month[0]>=1&&month[0]<=12)&&new Set(item.monthly.map((month:any[])=>month[0])).size===item.monthly.length&&item.monthly.every((month:any[],index:number,array:any[][])=>index===0||array[index-1][0]<month[0])),"Search months must be unique and ascending");
+assert(search.every((item)=>{
+  const destination=destinationBySlug.get(item.slug);
+  if(!destination) return false;
+  const eligible=destination.months.filter((month:any)=>month.recommendationEligible).map((month:any)=>month.month);
+  return JSON.stringify(item.monthly.map((month:any[])=>month[0]))===JSON.stringify(eligible);
+}),"Search index must expose exactly the months the recommendation gate passed");
 for (const [path,expected] of Object.entries(manifest.fileChecksums as Record<string,string>)) assert(sha256(readFileSync(join(root,path)))===expected,`Checksum mismatch: ${path}`);
 const allPublicFiles = files(root);
 const checksummedFiles=allPublicFiles.filter((file)=>!file.endsWith("manifest.json")).map((file)=>relative(root,file)).sort();

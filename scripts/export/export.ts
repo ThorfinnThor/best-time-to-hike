@@ -1,6 +1,6 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { Comparison, DatasetStatus, DestinationConfig, PublicDestination, Ranking, SearchDestination } from "../../lib/data/types";
+import type { CompactMonth, CompactSearchDestination, Comparison, DatasetStatus, DestinationConfig, PublicDestination, Ranking } from "../../lib/data/types";
 import pageDefinitions from "../../data-config/seo/page-definitions.json";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
@@ -27,29 +27,34 @@ for (const destination of publicDestinations) {
 }
 writeJson("public/data/hiking/destinations/index.json", publicDestinations.map(({id,slug,name,countryCode,countryName,continent,region,tags,recommendationEligible,bestMonths})=>({id,slug,name,countryCode,countryName,continent,region,tags,recommendationEligible,bestMonths})));
 
-const search: SearchDestination[] = publicDestinations
+// The finder is a client component, so this file is serialised into the RSC
+// payload of every page that renders one. Keys repeated across 1,500 month
+// entries dominate the size, so months are tuples rather than objects, and
+// three fields are dropped: wind and confidence are unused by the finder, and
+// confidence is a constant 64 under the provisional cap. Eligibility is not
+// carried either, because only eligible months are exported here at all.
+// Field order is [month, score, temperature, wetDays, snowDays, hotDays, daylight].
+const round2 = (value: number) => Math.round(value * 100) / 100;
+const search: CompactSearchDestination[] = publicDestinations
   .filter((destination) => destination.recommendationEligible)
   .map((destination) => ({
-    id: destination.id,
     slug: destination.slug,
     name: destination.name,
     countryCode: destination.countryCode,
     continent: destination.continent,
     region: destination.region,
     tags: destination.tags,
-    recommendationEligible: destination.recommendationEligible,
-    monthly: destination.months.filter((month) => month.recommendationEligible && month.overallScore !== null).map((month) => ({
-      m: month.month,
-      score: month.overallScore!,
-      temp: month.metrics.temperatureHikingMeanC,
-      wet: month.metrics.wetDayProbability,
-      snow: month.metrics.snowDayProbability,
-      hot: month.metrics.hotDayProbability,
-      wind: month.metrics.windHikingMeanKmh,
-      daylight: month.metrics.daylightHoursMean,
-      confidence: month.confidenceScore!,
-      recommendationEligible: month.recommendationEligible,
-    })),
+    monthly: destination.months
+      .filter((month) => month.recommendationEligible && month.overallScore !== null)
+      .map((month) => [
+        month.month,
+        month.overallScore!,
+        round2(month.metrics.temperatureHikingMeanC),
+        round2(month.metrics.wetDayProbability),
+        round2(month.metrics.snowDayProbability),
+        round2(month.metrics.hotDayProbability),
+        round2(month.metrics.daylightHoursMean),
+      ] as CompactMonth),
   }));
 writeJson("public/data/hiking/search/destination-index.json", search);
 

@@ -6,7 +6,7 @@ import weights from "../data-config/scoring/weights.json";
 import overrides from "../data-config/sources/representative-cell-overrides.json";
 import { DICT } from "../lib/i18n/dict";
 import { locales } from "../lib/i18n/config";
-import type { PublicDestination, SearchDestination } from "../lib/data/types";
+import type { CompactSearchDestination, PublicDestination } from "../lib/data/types";
 
 /**
  * mistakes.md #9: copy is a claim, and it ages with the data. The live build
@@ -66,15 +66,23 @@ test("the methodology copy quotes the configured weights", () => {
 });
 
 test("the search index never exposes a destination that cannot be recommended", () => {
-  const search = read<SearchDestination[]>("search/destination-index.json");
-  const ineligible = search.filter((entry) => !entry.recommendationEligible);
-  assert.deepEqual(ineligible.map((entry) => entry.slug), [], "the finder would offer a destination the science layer withholds");
+  // The compact wire format carries no eligibility flag: only eligible
+  // destinations and months are exported, so membership IS the claim. That
+  // makes this stronger, not weaker, because a withheld destination cannot be
+  // present-but-flagged.
+  const search = read<CompactSearchDestination[]>("search/destination-index.json");
   const held = destinations.filter((destination) => !destination.recommendationEligible).map((destination) => destination.slug);
   for (const slug of held) {
     assert.ok(!search.some((entry) => entry.slug === slug), `${slug} is withheld from recommendations but present in the search index`);
   }
+  for (const entry of search) {
+    const destination = destinations.find((item) => item.slug === entry.slug);
+    assert.ok(destination, `${entry.slug} is in the search index but not in the catalogue`);
+    const eligible = destination!.months.filter((month) => month.recommendationEligible).map((month) => month.month);
+    assert.deepEqual(entry.monthly.map((month) => month[0]), eligible,
+      `${entry.slug} exposes months the recommendation gate did not pass`);
+  }
 });
-
 test("a withheld destination publishes no score or best-month claim", () => {
   for (const destination of destinations.filter((item) => !item.recommendationEligible)) {
     assert.deepEqual(destination.bestMonths, [], `${destination.slug} is withheld but still publishes best months`);
@@ -85,7 +93,7 @@ test("a withheld destination publishes no score or best-month claim", () => {
 });
 
 test("every published taxonomy id has a real label in both locales", () => {
-  const search = read<SearchDestination[]>("search/destination-index.json");
+  const search = read<CompactSearchDestination[]>("search/destination-index.json");
   const used = {
     continents: new Set(search.map((entry) => entry.continent)),
     regions: new Set(search.map((entry) => entry.region)),
@@ -102,7 +110,7 @@ test("every published taxonomy id has a real label in both locales", () => {
 });
 
 test("the finder can reach every destination the science layer publishes", () => {
-  const search = read<SearchDestination[]>("search/destination-index.json");
+  const search = read<CompactSearchDestination[]>("search/destination-index.json");
   const continents = new Set(Object.keys(DICT.en.taxonomy.continents));
   const unreachable = search.filter((entry) => !continents.has(entry.continent));
   assert.deepEqual(unreachable.map((entry) => entry.slug), [],

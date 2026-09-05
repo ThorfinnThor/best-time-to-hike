@@ -3,7 +3,7 @@ import { Finder } from "@/components/finder/Finder";
 import { FixtureNotice, MethodNote } from "@/components/hiking/Pages";
 import { TrustSection } from "@/components/home/TrustSection";
 import { DestinationImage } from "@/components/media/DestinationImage";
-import { getAllDestinations, getSearchIndex } from "@/lib/data/load";
+import { getAllDestinations } from "@/lib/data/load";
 import { monthName } from "@/lib/i18n/config";
 import { t } from "@/lib/i18n/dict";
 import { destinationPath, links } from "@/lib/i18n/links";
@@ -12,7 +12,19 @@ import type { Locale } from "@/lib/data/types";
 export function HomePage({ locale }: { locale: Locale }) {
   const content = t(locale).home;
   const common = t(locale).common;
-  const destinations = getAllDestinations().filter((destination) => destination.recommendationEligible);
+  // The home page showed every recommendable destination: 245 cards, and most
+  // of a 593 KB document. It is a front door, not the catalogue. The finder and
+  // the monthly rankings are where the full set belongs.
+  const HOME_CARDS = 12;
+  const destinations = getAllDestinations()
+    .filter((destination) => destination.recommendationEligible && destination.bestMonths.length > 0)
+    .map((destination) => ({
+      destination,
+      peak: Math.max(0, ...destination.months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore])),
+    }))
+    .sort((a, b) => b.peak - a.peak || a.destination.slug.localeCompare(b.destination.slug))
+    .slice(0, HOME_CARDS)
+    .map((entry) => entry.destination);
 
   return (
     <>
@@ -27,7 +39,7 @@ export function HomePage({ locale }: { locale: Locale }) {
       </section>
 
       <section className="finder-wrap">
-        <Finder destinations={getSearchIndex()} locale={locale} compact />
+        <Finder locale={locale} compact />
       </section>
 
       <section className="content-section home-destinations">

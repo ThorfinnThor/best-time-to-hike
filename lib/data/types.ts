@@ -122,6 +122,24 @@ export interface PublicDestination {
   updatedAt: string;
 }
 
+/**
+ * The wire format of the search index. Compact on purpose: it is serialised
+ * into the RSC payload of every page that renders the finder, so repeated key
+ * names across ~1,500 month entries are the dominant cost.
+ * Order: [month, score, temperature, wetDays, snowDays, hotDays, daylight].
+ */
+export type CompactMonth = [number, number, number, number, number, number, number];
+
+export interface CompactSearchDestination {
+  slug: string;
+  name: string;
+  countryCode: string;
+  continent: string;
+  region: string;
+  tags: string[];
+  monthly: CompactMonth[];
+}
+
 export interface SearchDestination {
   id: string;
   slug: string;
