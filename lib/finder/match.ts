@@ -7,6 +7,8 @@ export type MonthSelection = number | "any";
 export type SortKey = "match" | "score" | "warmest" | "name";
 
 export interface FinderPreferences {
+  /** Free-text destination name filter. Empty means no name constraint. */
+  query: string;
   month: MonthSelection;
   continent: string;
   region: string;
@@ -23,6 +25,7 @@ export interface FinderPreferences {
 }
 
 export const defaultPreferences: FinderPreferences = {
+  query: "",
   month: 5,
   continent: "all",
   region: "all",
@@ -101,8 +104,10 @@ function matchScore(month: SearchMonth, preferences: FinderPreferences): number 
 export function matchDestinations(destinations: SearchDestination[], preferences: FinderPreferences): FinderResult[] {
   const results: FinderResult[] = [];
 
+  const needle = preferences.query.trim().toLowerCase();
   for (const destination of destinations) {
     if (!destination.recommendationEligible) continue;
+    if (needle && !destination.name.toLowerCase().includes(needle) && !destination.slug.includes(needle)) continue;
     if (preferences.continent !== "all" && destination.continent !== preferences.continent) continue;
     if (preferences.region !== "all" && destination.region !== preferences.region) continue;
     if (preferences.tags.length && !preferences.tags.every((tag) => destination.tags.includes(tag))) continue;
@@ -136,4 +141,62 @@ export function sortResults(results: FinderResult[], sort: SortKey): FinderResul
     name: (a, b) => byName(a, b) || tiebreak(a, b),
   };
   return [...results].sort(comparators[sort]);
+}
+
+/**
+ * Search state travels in the URL so a result can be bookmarked or sent to
+ * someone. Only values that differ from the defaults are written, which keeps
+ * a shared link readable and means the default search has a clean URL.
+ */
+const SORT_KEYS: SortKey[] = ["match", "score", "warmest", "name"];
+
+export function preferencesToQuery(preferences: FinderPreferences): string {
+  const params = new URLSearchParams();
+  const d = defaultPreferences;
+  if (preferences.query.trim()) params.set("q", preferences.query.trim());
+  if (preferences.month !== d.month) params.set("m", String(preferences.month));
+  if (preferences.continent !== d.continent) params.set("c", preferences.continent);
+  if (preferences.region !== d.region) params.set("r", preferences.region);
+  if (preferences.minTemp !== d.minTemp) params.set("tmin", String(preferences.minTemp));
+  if (preferences.maxTemp !== d.maxTemp) params.set("tmax", String(preferences.maxTemp));
+  if (preferences.avoidRain !== d.avoidRain) params.set("rain", preferences.avoidRain ? "1" : "0");
+  if (preferences.avoidSnow !== d.avoidSnow) params.set("snow", preferences.avoidSnow ? "1" : "0");
+  if (preferences.avoidHeat !== d.avoidHeat) params.set("heat", preferences.avoidHeat ? "1" : "0");
+  if (preferences.minDaylight !== d.minDaylight) params.set("day", String(preferences.minDaylight));
+  if (preferences.tags.length) params.set("tags", [...preferences.tags].sort().join(","));
+  if (preferences.sort !== d.sort) params.set("sort", preferences.sort);
+  return params.toString();
+}
+
+export function preferencesFromQuery(search: string): FinderPreferences {
+  const params = new URLSearchParams(search);
+  const d = defaultPreferences;
+  const number = (key: string, fallback: number) => {
+    const raw = params.get(key);
+    const value = raw === null ? Number.NaN : Number(raw);
+    return Number.isFinite(value) ? value : fallback;
+  };
+  const flag = (key: string, fallback: boolean) => {
+    const raw = params.get(key);
+    return raw === "1" ? true : raw === "0" ? false : fallback;
+  };
+  const rawMonth = params.get("m");
+  const month: MonthSelection = rawMonth === "any" ? "any"
+    : rawMonth !== null && Number.isInteger(Number(rawMonth)) && Number(rawMonth) >= 1 && Number(rawMonth) <= 12 ? Number(rawMonth)
+    : d.month;
+  const sort = params.get("sort");
+  return {
+    query: params.get("q") ?? d.query,
+    month,
+    continent: params.get("c") ?? d.continent,
+    region: params.get("r") ?? d.region,
+    minTemp: number("tmin", d.minTemp),
+    maxTemp: number("tmax", d.maxTemp),
+    avoidRain: flag("rain", d.avoidRain),
+    avoidSnow: flag("snow", d.avoidSnow),
+    avoidHeat: flag("heat", d.avoidHeat),
+    minDaylight: number("day", d.minDaylight),
+    tags: (params.get("tags") ?? "").split(",").map((tag) => tag.trim()).filter(Boolean),
+    sort: SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : d.sort,
+  };
 }
