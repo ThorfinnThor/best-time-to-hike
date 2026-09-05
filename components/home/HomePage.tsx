@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Finder } from "@/components/finder/Finder";
 import { FixtureNotice, MethodNote } from "@/components/hiking/Pages";
 import { TrustSection } from "@/components/home/TrustSection";
+import { DestinationImage } from "@/components/media/DestinationImage";
 import { getAllDestinations, getSearchIndex } from "@/lib/data/load";
 import { monthName } from "@/lib/i18n/config";
 import { t } from "@/lib/i18n/dict";
@@ -45,11 +46,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             const month = destination.months[bestMonth - 1];
             return (
               <article className="destination-summary-card" key={destination.slug}>
-                <div className="destination-card-art" aria-hidden="true">
-                  <span>{destination.region}</span>
-                  <div className="mini-mountain mini-mountain-back" />
-                  <div className="mini-mountain mini-mountain-front" />
-                </div>
+                <DestinationImage slug={destination.slug} name={destination.name} region={destination.region} />
                 <div className="destination-card-body">
                   <div className="destination-card-heading">
                     <div>

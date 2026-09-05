@@ -42,7 +42,8 @@
     "data:ingest": "pnpm data:dem && pnpm data:sampling && pnpm data:era5 && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:ingest-catalogue": "pnpm data:catalogue-prepare && pnpm data:era5 -- --provisional --refresh && pnpm data:rebuild",
     "verify": "pnpm data:rebuild && pnpm guard:architecture && pnpm guard:determinism && pnpm test && pnpm build && pnpm typecheck && pnpm release:report",
-    "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main"
+    "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main",
+    "data:image-qa": "tsx scripts/validate/image-qa.ts"
   },
   "dependencies": {
     "ajv": "^8.17.1",
@@ -57,6 +58,7 @@
     "autoprefixer": "^10.4.21",
     "geotiff": "3.0.5",
     "postcss": "^8.5.6",
+    "sharp": "^0.35.4",
     "tailwindcss": "^3.4.17",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0",

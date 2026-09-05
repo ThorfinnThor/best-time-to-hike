@@ -329,7 +329,7 @@ export const DICT = {
       credits: {
         title: "Image credits",
         paragraphs: [
-          "This site uses CSS-generated topographic artwork and no third-party photography.",
+          "Destination photographs come from Wikimedia Commons and are used only under licences that permit commercial use: public domain, CC0, CC BY and CC BY-SA. Non-commercial and no-derivatives licences are refused, because this site carries affiliate links and its cards crop. Where no acceptably licensed photograph exists, a generated topographic placeholder is shown instead. Every photograph is credited below with its author, licence and source file.",
         ],
       },
     },
@@ -650,7 +650,7 @@ export const DICT = {
       credits: {
         title: "Bildnachweis",
         paragraphs: [
-          "Diese Website verwendet CSS-generierte topografische Gestaltung und keine Fotos Dritter.",
+          "Die Zielfotos stammen von Wikimedia Commons und werden nur unter Lizenzen verwendet, die kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Nicht-kommerzielle Lizenzen und Lizenzen ohne Bearbeitung werden abgelehnt, weil diese Website Affiliate-Links enthält und die Karten beschneidet. Wo kein passend lizenziertes Foto existiert, erscheint stattdessen eine generierte topografische Grafik. Jedes Foto ist unten mit Urheber, Lizenz und Quelldatei nachgewiesen.",
         ],
       },
     },
