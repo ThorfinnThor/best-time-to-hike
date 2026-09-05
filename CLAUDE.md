@@ -137,6 +137,15 @@ policy*, not an ECMWF threshold — say so wherever it is documented.
 well known. Such a cell is **excluded** when the destination scope excludes glacier ice — never
 scored as "very poor hiking".
 
+**Land fraction.** ERA5-Land only carries usable variables where the cell is land. The invariant
+geopotential has values over sea-dominated cells too, so a coastal centroid resolves fine in the
+preflight and then returns a fully masked time series. `era5-land-landmask-v1.json` pins ECMWF's
+invariant land-sea mask and sets a **floor of 0.45** land fraction, with 0.45–0.80 as a review band.
+It is deliberately a floor rather than a separator: measured across the catalogue, 0.501 failed while
+the published lofotodden works at 0.532, so land fraction cannot tell marginal cases apart. The
+definitive test is still the masked-variable check during aggregation. The mask must be read at the
+**same resolved grid indices** as the geopotential (mistakes.md #19).
+
 **Persistent snow.** Twelve months at `snowDayProbability === 1` (below the 10 m sentinel) triggers a
 manual route-representativeness hold, read from `glacier.persistentSnowReviewMonthCount`.
 
@@ -240,6 +249,27 @@ Three rules, all enforced by `tests/i18n.test.ts`:
 
 The postbuild step `scripts/export/fix-static-languages.ts` deterministically sets `lang="de"` on
 every exported German document and **fails if even one page cannot be localized**.
+
+## Growing the catalogue
+
+Adding destinations is data authoring, not a science project: the published path needs ten fields and
+one ERA5-Land download per destination. No polygon, no DEM profile, no elevation-band decision — the
+band is derived as the resolved model elevation plus or minus 50 m.
+
+1. Add candidates to a `data-config/sources/destination-candidates-*.json` file.
+2. `pnpm data:catalogue-preflight --candidates=<file>` — resolves model elevation and land fraction for
+   every point and writes nothing. **Read both numbers.** A cell far above the hiking corridor, or below
+   the land-fraction floor, is a coordinate to fix before spending a download (mistakes.md #18).
+3. Dispatch the `Expand destination catalogue` workflow with `destinations=<ids>`, `publish` unchecked
+   for a dry run and checked to commit. CI holds `CDSAPI_KEY`; nothing runs locally.
+
+`--only` selects which candidates to activate. Preparation is **additive**: live destinations pass
+through untouched, so a trial batch can never truncate the catalogue. `BTH_DESTINATIONS` scopes both
+the download and the aggregation, so published destinations are never re-fetched or rewritten.
+
+Expect the gates to withhold some of every batch, and expect that to be correct: monsoon destinations
+fail the rain component, 4,000 m+ cells fail snow and temperature, and equatorial glacier terrain trips
+the sentinel. A withheld destination keeps a provenance page and publishes no score.
 
 ## Deploy
 

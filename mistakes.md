@@ -276,6 +276,71 @@ A related trap avoided in the same pass: the finder exposes no confidence filter
 published month is capped at exactly 64/low. A control whose every setting returns the same result is
 a fake affordance, and it would imply the catalogue contains confidence variation it does not have.
 
+## 18. Centroids placed where the place is, not where the model has data
+
+**found during the batch-2 expansion, 2026-09-05.**
+
+A destination is a coordinate handed to a 0.1-degree land-surface reanalysis. Naming the place
+correctly is not the same as choosing a cell the model can describe, and four separate ways of getting
+that wrong showed up in one batch of 217:
+
+| Failure | Examples | Caught by |
+| --- | --- | --- |
+| Cell is permanent glacier | gran-paradiso, 262,992/262,992 hours at snow depth >= 10 m | glacier sentinel, during aggregation |
+| Cell is sea-dominated, variables masked | amalfi-coast 0.141 land, cinque-terre 0.288, freycinet 0.406 | metadata validator, during aggregation |
+| Cell is water-dominated inland | lake-tahoe 0.455, and my first relocation of it at 0.341 | land-mask preflight |
+| Cell is far above the hiking corridor | manaslu 5151 m, langtang 5008 m, sierra-nevada-santa-marta 4405 m, kanchenjunga 4270 m | orography preflight |
+
+Every one of these was mine, and all but the last cost a download before surfacing.
+
+**Rule.** Place the centroid where the model has usable land at the elevation people walk, not on the
+summit, the icecap or the shoreline that gives the place its name. The preflight now resolves model
+elevation and land fraction before any climate request; run it and read both numbers. A destination
+whose defining feature is water or ice usually has no representative cell at all, and dropping it is
+the honest outcome (freycinet).
+
+## 19. A derived value looked up with different logic than the value it describes
+
+**found while building the land-mask gate, 2026-09-05.**
+
+Measuring land fraction with an independent nearest-neighbour lookup reported 0.998 for a relocated
+cinque-terre while the cell actually requested measured 0.501. Both lookups were "nearest grid point";
+they disagreed because the request sat on a grid midpoint and the tie broke the other way.
+
+The orography importer already carries a documented tie-breaking rule written so the geopotential and
+the time series resolve to the same cell. The new lookup quietly did not use it.
+
+**Rule.** An auxiliary field describing a cell must be read at the same resolved indices, by the same
+selection code, as the value it describes. Never re-derive "which cell is this" a second time. Had the
+gate shipped on the independent lookup it would have cleared a cell that cannot be downloaded.
+
+## 20. Tests that forbade the operation they were written to protect
+
+**shipped in the same session, fixed 2026-09-05.**
+
+The candidate tests asserted that no candidate id is live and that no candidate shares a grid cell
+with a live destination. Both are true before activation and necessarily false after it, so the first
+successful expansion failed `pnpm verify` on its own guard rails, after the science had passed.
+
+The assertions described the state at the moment they were written rather than the invariant. Rewritten,
+they are stronger than the originals: a published candidate's coordinates must still match the candidate
+file, which catches drift the old test could not see, and grid-cell uniqueness compares places rather
+than files by deduplicating on id.
+
+**Rule.** Assert the invariant, not the current state. Before writing a guard, ask what the system looks
+like after the operation it is guarding succeeds, and make sure the assertion still holds there.
+
+## 21. Operator inputs pasted into CI shell and cache keys
+
+**found during the expansion, 2026-09-05.**
+
+A hundred-destination selection is 1139 characters. It was interpolated straight into a GitHub cache
+key, which caps at 512, so the first run failed key validation. The same value was being interpolated
+into `run:` strings, which is a script-injection surface even when the input comes from an operator.
+
+**Rule.** Workflow inputs reach the shell through the job environment, never through `${{ }}` inside a
+`run:` string. Anything unbounded that has to appear in a key is digested first.
+
 ---
 
 ## Inherited lessons — sibling project
@@ -310,5 +375,10 @@ come from Sol.
   agree" was true of the build that recommended hiking Sikkim in a 1,024 mm monsoon month.
 - Implementation may not grant approval. Luna can build the gate; only Sol can decide the number, and
   no automated step may write a release-approval flag.
+- Read the producer before patching the consumer. Cinque Terre's rejection looked like an
+  over-strict validator, and the fix would have been to relax a finiteness check. Reading the Python
+  first showed that the field is the maximum over every finite snow-depth value, so a null means the
+  variable is masked and the validator was right. One file read separated a correct diagnosis from
+  disabling a real gate.
 - Write the audit down and date it. The `docs/` reports are why every item above could be recorded
   with its evidence instead of rediscovered.
