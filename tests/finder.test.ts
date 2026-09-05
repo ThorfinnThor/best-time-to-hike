@@ -21,7 +21,9 @@ const destination = (slug: string, temp: number, wet: number, snow: number, scor
 });
 
 test("finder keeps hiking score distinct from user match", () => {
-  const results = matchDestinations([destination("dry", 18, .05, 0, 80), destination("wet", 18, .6, 0, 90)], inMonth(1));
+  // Sort explicitly by match: the default is now the hiking score, and this
+  // asserts the separate match ranking, which is why there are two numbers.
+  const results = matchDestinations([destination("dry", 18, .05, 0, 80), destination("wet", 18, .6, 0, 90)], inMonth(1, {sort: "match"}));
   assert.equal(results[0].destination.slug, "dry");
   assert.equal(results[0].month.score, 80);
   assert.notEqual(results[0].match, results[0].month.score);

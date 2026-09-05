@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import weights from "@/data-config/scoring/weights.json";
 import { allImages } from "@/lib/media/images";
@@ -8,7 +9,7 @@ import { ComparisonPage, DestinationPage, FixtureNotice, MethodNote, MonthPage, 
 import { LongformArticle } from "@/components/seo/LongformArticle";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
-import { getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
+import { getAllDestinations, getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
 import { locales, monthName, themes } from "@/lib/i18n/config";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { altLanguages } from "@/lib/i18n/links";
@@ -67,6 +68,21 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
   const componentLabels = copy.components;
   return <>
     <section className="page-intro prose-intro"><span className="eyebrow">{copy.brand}</span><h1>{data.title}</h1>{paragraphs.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}</section>
+    {pageKey==="methodology" && (() => {
+      const withheld = getAllDestinations().filter((destination) => !destination.recommendationEligible);
+      return <section className="content-section withheld-list">
+        <div className="section-heading"><div>
+          <span className="eyebrow">{copy.withheld.eyebrow}</span>
+          <h2>{copy.withheld.heading(withheld.length)}</h2>
+          <p>{copy.withheld.intro}</p>
+        </div></div>
+        <ul>{withheld.map((destination) => <li key={destination.slug}>
+          <Link href={pathFor({kind: "destination", slug: destination.slug}, locale)}>{destination.name}</Link>
+          <span>{destination.countryName}</span>
+          <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.withheld.reasonSnow : copy.withheld.reasonNoMonth}</span>
+        </li>)}</ul>
+      </section>;
+    })()}
     {pageKey==="credits" && <section className="credit-list">
       <p className="credit-count">{allImages().length}</p>
       <ul>{allImages().map((image)=><li key={image.slug}>

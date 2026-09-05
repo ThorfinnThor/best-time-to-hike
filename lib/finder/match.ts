@@ -50,7 +50,9 @@ export const defaultPreferences: FinderPreferences = {
   minElevation: 0,
   maxElevation: ELEVATION_CEILING,
   tags: [],
-  sort: "match",
+  // The hiking score is the measured quantity; match is how close a month is
+  // to what this reader asked for. Lead with the former.
+  sort: "score",
 };
 
 export type ReasonKey = "comfortable" | "cool" | "warm" | "dry" | "wet" | "snowFree" | "longDays";

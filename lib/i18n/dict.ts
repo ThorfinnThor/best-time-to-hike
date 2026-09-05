@@ -276,7 +276,7 @@ export const DICT = {
       },
     },
     notices: {
-      realDataTitle: "Real-data beta",
+      realDataTitle: "How to read these numbers",
       realDataBody: "ERA5-Land 1991-2020 climate normal for one representative model-grid cell. Not a forecast or a substitute for current trail and safety information.",
       fixtureTitle: "Demo dataset",
       fixtureBody: "This build uses clearly labeled synthetic fixtures. Do not use it for travel or safety decisions.",
@@ -322,6 +322,13 @@ export const DICT = {
       selectedCellHeading: "Selected representative cell",
       bandsHeading: "From low ground to the mountains",
       adjacentAria: "Adjacent months",
+    },
+    withheld: {
+      eyebrow: "What we do not recommend",
+      heading: (count: number) => `${count} destinations carry no recommendation`,
+      intro: "These places are in the catalogue and their climate record is complete. No month clears every critical component, so we publish no hiking score and no best months for them rather than a weak one.",
+      reasonSnow: "snow in all twelve months at the selected cell",
+      reasonNoMonth: "no month clears every critical component",
     },
     area: {
       eyebrow: "Area guide",
@@ -661,7 +668,7 @@ export const DICT = {
       },
     },
     notices: {
-      realDataTitle: "Real-Data-Beta",
+      realDataTitle: "So sind diese Zahlen zu lesen",
       realDataBody: "ERA5-Land-Klimanormal 1991-2020 für einen repräsentativen Modell-Gitterpunkt. Keine Vorhersage und kein Ersatz für aktuelle Weg- oder Sicherheitsinformationen.",
       fixtureTitle: "Demo-Datensatz",
       fixtureBody: "Diese Version nutzt klar gekennzeichnete synthetische Fixtures. Nicht für Reise- oder Sicherheitsentscheidungen.",
@@ -707,6 +714,13 @@ export const DICT = {
       selectedCellHeading: "Ausgewählte repräsentative Zelle",
       bandsHeading: "Vom Tal bis ins Gebirge",
       adjacentAria: "Benachbarte Monate",
+    },
+    withheld: {
+      eyebrow: "Was wir nicht empfehlen",
+      heading: (count: number) => `${count} Ziele ohne Empfehlung`,
+      intro: "Diese Orte stehen im Katalog und ihre Messreihe ist vollständig. Kein Monat erfüllt alle kritischen Komponenten, deshalb veröffentlichen wir für sie weder einen Wanderwert noch beste Monate statt eines schwachen Werts.",
+      reasonSnow: "ganzjährig Schnee an der ausgewählten Zelle",
+      reasonNoMonth: "kein Monat erfüllt alle kritischen Komponenten",
     },
     area: {
       eyebrow: "Regionsführer",
