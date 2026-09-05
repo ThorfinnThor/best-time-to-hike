@@ -38,7 +38,7 @@ jobs:
       - run: pnpm data:setup-python
 
       - name: Prepare exactly 50 representative model-grid destinations
-        run: pnpm data:representative-prepare
+        run: pnpm data:catalogue-prepare --candidates=data-config/sources/destination-candidates-batch-2.json
 
       - name: Verify the generated 50-destination structure before climate computation
         run: pnpm exec tsx --test tests/destination-candidates.test.ts
