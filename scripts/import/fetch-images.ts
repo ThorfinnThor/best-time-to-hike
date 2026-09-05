@@ -63,12 +63,38 @@ const REJECT_CATEGORY = /paintings|drawings|engravings|prints|artworks|watercolo
  * a photograph of somewhere else. Found by scripts/validate/image-qa.ts, which
  * is the check to run after every batch.
  */
+/**
+ * Destinations where Commons has no photograph that is actually of the place.
+ * The placeholder is the honest answer; a near-miss from the next valley or
+ * the next country is not.
+ *
+ *  altai-tavan-bogd: every Mongolian Altai query returns Ukok Plateau, which
+ *  is across the border in Russia.
+ */
+const NO_IMAGE = new Set<string>(["altai-tavan-bogd"]);
+
 const QUERY_OVERRIDE: Record<string, string[]> = {
   "arches": ["Delicate Arch Arches National Park Utah", "Arches National Park Utah red rock fins", "Landscape Arch Devils Garden Utah"],
   "cordillera-real": ["Illimani Cordillera Real Bolivia", "Huayna Potosi Bolivia mountain", "Cordillera Real Bolivia andes peaks"],
   "kitzbuhel": ["Kitzbuheler Horn Tyrol Austria", "Kitzbuheler Alpen summer meadows Austria", "Kitzbuhel Austria alpine pasture"],
   "rocky-mountain": ["Rocky Mountain National Park Colorado Bear Lake", "Rocky Mountain National Park Colorado tundra trail", "Longs Peak Colorado Rocky Mountain National Park"],
   "yoho": ["Emerald Lake Yoho National Park British Columbia", "Takakkaw Falls Yoho National Park", "Yoho National Park British Columbia mountains"],
+  // Destinations where the generic query found nothing acceptable: non-ASCII
+  // names, compound names, or places with little freely licensed photography.
+  "aconcagua": ["Aconcagua Argentina mountain", "Cerro Aconcagua Andes Mendoza", "Aconcagua Provincial Park"],
+  "sikkim": ["Yumthang Valley Sikkim India", "Kanchenjunga from Sikkim", "Sikkim mountains India"],
+  "kamikochi": ["Kamikochi Kappa Bridge Azusa river", "Kamikochi Nagano Hotaka", "Kamikochi Japan valley"],
+  "corsica-gr20": ["GR20 Corsica mountain trail", "Monte Cinto Corsica", "Restonica valley Corsica"],
+  "copper-canyon": ["Barranca del Cobre Chihuahua Mexico", "Copper Canyon Chihuahua", "Sierra Tarahumara canyon Mexico"],
+  "garhwal": ["Valley of Flowers Uttarakhand India", "Nanda Devi Uttarakhand", "Garhwal Himalaya Uttarakhand"],
+  "altai-tavan-bogd": ["Khuiten Peak Mongolia", "Tsagaan Gol Mongolia Altai", "Altai Tavan Bogd National Park Mongolia"],
+  "andringitra": ["Andringitra National Park Madagascar", "Pic Boby Madagascar", "Tsaranoro Madagascar"],
+  "fouta-djallon": ["Fouta Djallon Guinea plateau", "Fouta Djallon waterfall Guinea", "Doucki Guinea canyon"],
+  "elqui-valley": ["Valle del Elqui Chile", "Elqui Valley Chile vineyards", "Elqui river valley Chile"],
+  "kumano-kodo": ["Daimonzaka Kumano Kodo", "Nachi Taisha pagoda waterfall Wakayama", "Kumano Kodo stone path Wakayama"],
+  "tiger-leaping-gorge": ["Tiger Leaping Gorge Yunnan China", "Hutiao Gorge Yunnan", "Tiger Leaping Gorge Jinsha river"],
+  "routeburn": ["Routeburn Track New Zealand", "Harris Saddle Routeburn", "Routeburn Falls New Zealand"],
+  "mount-wilhelm": ["Mount Wilhelm Papua New Guinea", "Mount Wilhelm Chimbu Papua", "Mount Wilhelm summit lakes"],
 };
 
 function queriesFor(destination: DestinationConfig): string[] {
@@ -173,6 +199,7 @@ async function main() {
   let added = 0, missed = 0;
   for (const destination of destinations) {
     if (added >= limit) break;
+    if (NO_IMAGE.has(destination.slug)) continue;
     if (have.has(destination.slug) && !forced.has(destination.slug)) continue;
     if (forced.size && !forced.has(destination.slug)) continue;
     const record = await fetchFor(destination, taken);
