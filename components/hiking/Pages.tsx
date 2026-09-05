@@ -7,6 +7,7 @@ import { getDestination, getManifest } from "@/lib/data/load";
 import { ScoreRing } from "./ScoreRing";
 import { ScoreChart } from "./ScoreChart";
 import { ComponentGrid } from "./ComponentGrid";
+import { DestinationImage } from "@/components/media/DestinationImage";
 
 export function FixtureNotice({locale}:{locale:Locale}) {
   const copy = t(locale).notices;
@@ -30,7 +31,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const cell = destination.representativeCell;
   return <>
     <FixtureNotice locale={locale}/>
-    <section className="destination-hero"><div className="eyebrow">{destination.countryName} · {destination.region}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(cell.modelElevationM)}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
+    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {destination.region}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(cell.modelElevationM)}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
     {!unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
     {unavailable && !hasEligibleMonth && !held ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.noEligibleMonthTitle}</strong><p>{copy.notices.noEligibleMonthBody}</p></div></aside> : null}

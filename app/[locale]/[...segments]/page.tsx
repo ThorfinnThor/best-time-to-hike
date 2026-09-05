@@ -82,7 +82,7 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
 
 function FinderPage({locale}:{locale:Locale}) {
   const copy = t(locale).finder;
-  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{copy.pageEyebrow}</span><h1>{copy.pageHeading}</h1><p>{copy.pageSub}</p></section><div className="finder-page"><Finder destinations={getSearchIndex()} locale={locale}/></div></>;
+  return <><FixtureNotice locale={locale}/><section className="page-intro tool-intro"><span className="eyebrow">{copy.pageEyebrow}</span><h1>{copy.pageHeading}</h1><p>{copy.pageSub}</p></section><div className="finder-page"><Finder destinations={getSearchIndex()} locale={locale}/></div></>;
 }
 
 function renderPage(locale:Locale,page:PageId):React.ReactNode {
@@ -109,7 +109,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
         <Breadcrumbs trail={trail} locale={locale}/><FixtureNotice locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
     case "compare": { if(!getComparisonIndex().some((item)=>item.slug===page.slug)) notFound(); return <ComparisonPage comparison={getComparison(page.slug)} locale={locale}/>; }
-    case "compareTool": { const copy=t(locale); return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.pickTwo}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
+    case "compareTool": { const copy=t(locale); return <><FixtureNotice locale={locale}/><section className="page-intro tool-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.pickTwo}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
     case "info": return <InformationPage locale={locale} pageKey={page.key}/>;
   }
 }

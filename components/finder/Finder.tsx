@@ -190,6 +190,9 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
     {showResults ? <>
       {!compact ? <div className="finder-summary">
         <strong aria-live="polite">{copy.finder.resultCount(filtered.length)}</strong>
+        {savedReady && saved.length > 1 ? <Link className="compare-saved-link" href={`${links.compareIndex(locale)}?d=${saved.slice(0, 4).join(",")}`}>
+          {copy.finder.compareSaved(Math.min(saved.length, 4))}
+        </Link> : null}
         {savedReady && saved.length ? <button type="button" className={savedOnly ? "toggle active saved-toggle" : "toggle saved-toggle"}
           aria-pressed={savedOnly} onClick={() => {setSavedOnly(!savedOnly); setVisible(PAGE);}}>
           ★ {copy.finder.savedOnly} <span>{saved.length}</span>
@@ -200,6 +203,8 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
           </select>
         </label> : null}
       </div> : null}
+
+      {!compact && filtered.length ? <p className="finder-legend">{copy.finder.legend}</p> : null}
 
       {savedOnly && !filtered.length ? <div className="finder-empty" role="status"><strong>{copy.finder.savedEmpty}</strong></div>
       : filtered.length ? <div className="result-grid">
