@@ -89,7 +89,10 @@ async function main() {
   for (const path of candidatePaths) {
     const file = readJson<{candidates: Candidate[]}>(path);
     for (const candidate of file.candidates) {
-      if (liveIds.has(candidate.id)) throw new Error(`CATALOGUE001 candidate ${candidate.id} is already live`);
+      // An activated candidate stays in its candidate file, so a partially
+      // activated batch is the normal state: skip what is already published
+      // rather than treating it as a clash (mistakes.md #20).
+      if (liveIds.has(candidate.id)) continue;
       intake.push({
         id: candidate.id, name: candidate.name, countryCode: candidate.countryCode,
         countryName: candidate.countryName, continent: candidate.continent, region: candidate.region,
