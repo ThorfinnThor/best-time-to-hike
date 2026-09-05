@@ -1,39 +1,88 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import Link from "next/link";
+import weights from "@/data-config/scoring/weights.json";
 import { Finder } from "@/components/finder/Finder";
 import { HomePage } from "@/components/home/HomePage";
 import { ComparisonPage, DestinationPage, FixtureNotice, MethodNote, MonthPage, RankingPage } from "@/components/hiking/Pages";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
-import { locales, monthName, monthNumber, rankingPath, routes } from "@/lib/i18n/config";
+import { locales, monthName, themes } from "@/lib/i18n/config";
+import { t } from "@/lib/i18n/dict";
+import { altLanguages } from "@/lib/i18n/links";
+import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { routeCatalog } from "@/lib/seo/route-catalog";
-import type { Locale } from "@/lib/data/types";
+import type { ComponentScores, Locale } from "@/lib/data/types";
 
 type Params = Promise<{locale:string;segments?:string[]}>;
 export const dynamicParams = false;
 export const dynamic = "force-static";
 export function generateStaticParams(){return routeCatalog().filter((route)=>route.segments.length>0);}
 
-function pageTitle(locale:Locale,segments:string[]) {
-  if(!segments.length) return locale === "de" ? "Finde deine beste Wanderzeit" : "Find your best hiking season";
-  if(segments[0]===routes.destination[locale]) { const destination=getDestination(segments[1]); const month=segments[2]&&monthNumber(segments[2],locale); return destination ? month ? `${destination.name} · ${monthName(month,locale)}` : destination.name : "BestTimeToHike"; }
-  if(segments[0]===routes.compare[locale]) return segments[1]?.replaceAll("-"," ") ?? "Compare";
-  return segments.at(-1)?.replaceAll("-"," ") ?? "BestTimeToHike";
+function pageTitle(locale:Locale,page:PageId):string {
+  const copy = t(locale);
+  switch (page.kind) {
+    case "home": return copy.info.homeTitle;
+    case "finder": return copy.finder.pageHeading;
+    case "destination": { const destination=getDestination(page.slug); return destination ? destination.name : copy.brand; }
+    case "destinationMonth": { const destination=getDestination(page.slug); return destination ? `${destination.name} · ${monthName(page.month,locale)}` : copy.brand; }
+    case "ranking": return copy.ranking.headingIn(monthName(page.month,locale));
+    case "themeRanking": return copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale));
+    case "compare": return page.slug.replaceAll("-"," ");
+    case "info": return copy.info[page.key].title;
+  }
 }
 
-export async function generateMetadata({params}:{params:Params}):Promise<Metadata>{const {locale:raw,segments=[]}=await params; if(!locales.includes(raw as Locale)) return {}; const locale=raw as Locale; const base=process.env.NEXT_PUBLIC_APP_URL ?? "https://best-time-to-hike.pages.dev"; const path=`/${locale}/${segments.join("/")}`; const other=locale==="en"?"de":"en"; return {title:pageTitle(locale,segments),alternates:{canonical:`${base}${path}`,languages:{[locale]:`${base}${path}`,[other]:`${base}/${other}`}},robots:{index:process.env.NEXT_PUBLIC_DATA_STATUS==="production",follow:true}};}
+export async function generateMetadata({params}:{params:Params}):Promise<Metadata> {
+  const {locale:raw,segments=[]}=await params;
+  if(!locales.includes(raw as Locale)) return {};
+  const locale=raw as Locale;
+  const page=resolvePageId(locale,segments);
+  if(!page) return {};
+  return {
+    title: pageTitle(locale,page),
+    alternates: altLanguages((target)=>pathFor(page,target), locale),
+    robots: {index: process.env.NEXT_PUBLIC_DATA_STATUS==="production", follow: true},
+  };
+}
 
-function InformationPage({locale,kind}:{locale:Locale;kind:string}) { const content:Record<string,{en:[string,string[]];de:[string,string[]]}>= {methodology:{en:["How the hiking score works",["We combine temperature comfort (30%), precipitation (20%), snow (20%), heat stress (10%), wind (10%) and daylight (10%).","The real-data beta uses official ERA5-Land hourly time series for the 1991–2020 climate normal. Each destination currently represents one selected representative model-grid cell at its official model elevation.","Scores describe historical suitability at that selected cell. Grid-cell wind is coarse 10 m wind, not validated exposed-trail or gust information. They are not forecasts, whole-region trail conditions or safety advice."]],de:["So funktioniert der Wanderwert",["Wir kombinieren Temperaturkomfort (30 %), Niederschlag (20 %), Schnee (20 %), Hitzestress (10 %), Wind (10 %) und Tageslicht (10 %).","Die Real-Data-Beta nutzt offizielle stündliche ERA5-Land-Zeitreihen für das Klimanormal 1991–2020. Jedes Ziel steht derzeit für eine ausgewählte repräsentative Modell-Gitterzelle auf seiner offiziellen Modellhöhe.","Die Werte beschreiben die historische Eignung an dieser ausgewählten Zelle. Gitterwind ist grober 10-m-Wind und keine validierte Aussage über exponierte Wege oder Böen. Die Werte sind keine Vorhersage, kein regionaler Wegzustand und keine Sicherheitsberatung."]]},about:{en:["A clearer way to choose a hiking season",["BestTimeToHike is a static, transparent decision engine—not a navigation app. Every recommendation is designed to be traceable to versioned data and scoring rules."]],de:["Wandersaisons klarer auswählen",["BestTimeToHike ist eine statische, transparente Entscheidungshilfe – keine Navigations-App. Jede Empfehlung soll auf versionierte Daten und Regeln zurückführbar sein."]]},privacy:{en:["Privacy",["This static beta has no accounts, analytics, cookies or runtime database. Cloudflare may process standard request metadata when serving files."]],de:["Datenschutz",["Diese statische Beta hat keine Konten, Analysen, Cookies oder Laufzeitdatenbank. Cloudflare kann beim Ausliefern der Dateien übliche Request-Metadaten verarbeiten."]]},imprint:{en:["Imprint",["Project prototype. Operator contact details must be added before a commercial production launch."]],de:["Impressum",["Projektprototyp. Vor einem kommerziellen Produktionsstart müssen die Kontaktdaten des Betreibers ergänzt werden."]]},credits:{en:["Image credits",["This site uses CSS-generated topographic artwork and no third-party photography."]],de:["Bildnachweis",["Diese Website verwendet CSS-generierte topografische Gestaltung und keine Fotos Dritter."]]}}; const data=content[kind]?.[locale]; if(!data) notFound(); return <><section className="page-intro prose-intro"><span className="eyebrow">BestTimeToHike</span><h1>{data[0]}</h1>{data[1].map((paragraph)=><p key={paragraph}>{paragraph}</p>)}</section>{kind==="methodology"&&<section className="weight-diagram">{[["Temperature","30%"],["Precipitation","20%"],["Snow","20%"],["Heat","10%"],["Wind","10%"],["Daylight","10%"]].map(([label,value])=><div key={label}><span>{label}</span><strong>{value}</strong></div>)}</section>}<MethodNote locale={locale}/></> }
+function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"about"|"privacy"|"imprint"|"credits"}) {
+  const copy = t(locale);
+  const data = copy.info[pageKey];
+  // Widen away from the `as const` literal tuple: mapping over a union of
+  // differently shaped readonly tuples is not callable in TypeScript.
+  const paragraphs: readonly string[] = data.paragraphs;
+  const componentLabels = copy.components;
+  return <>
+    <section className="page-intro prose-intro"><span className="eyebrow">{copy.brand}</span><h1>{data.title}</h1>{paragraphs.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}</section>
+    {pageKey==="methodology" && <section className="weight-diagram">{(Object.entries(weights.overall) as Array<[keyof ComponentScores,number]>).map(([key,weight])=><div key={key}><span>{componentLabels[key]}</span><strong>{Math.round(weight*100)}%</strong></div>)}</section>}
+    <MethodNote locale={locale}/>
+  </>;
+}
 
-export default async function LocalizedPage({params}:{params:Params}) { const {locale:raw,segments=[]}=await params; if(!locales.includes(raw as Locale)) notFound(); const locale=raw as Locale; let content:React.ReactNode;
-  if(!segments.length) content=<HomePage locale={locale}/>;
-  else if(segments[0]==="finder"&&segments.length===1) content=<><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{locale === "de" ? "Persönlicher Match" : "Personal match"}</span><h1>{locale === "de" ? "Finde deine Wandersaison" : "Find your hiking season"}</h1><p>{locale === "de" ? "Deine Präferenzen verändern den veröffentlichten Wanderwert nicht – sie erzeugen einen separaten Match-Wert." : "Your preferences never overwrite the published hiking score—they produce a separate match score."}</p></section><div className="finder-page"><Finder destinations={getSearchIndex()} locale={locale}/></div></>;
-  else if(segments[0]===routes.destination[locale]&&segments[1]) { const destination=getDestination(segments[1]); if(!destination) notFound(); const month=segments[2]&&monthNumber(segments[2],locale); content=month?<MonthPage destination={destination} month={month} locale={locale}/>:<DestinationPage destination={destination} locale={locale}/>; }
-  else if(segments[0]===routes.rankings[locale]) { const slug=segments.at(-1)!; const month=monthNumber(slug,locale); if(!month) notFound(); content=<RankingPage ranking={getRanking(month)} locale={locale}/>; }
-  else if([routes.warm[locale],routes.snowFree[locale],routes.lowRain[locale]].includes(segments[0] as any)) { const month=monthNumber(segments[1],locale); if(!month) notFound(); const theme=segments[0]===routes.warm[locale]?"warm":segments[0]===routes.snowFree[locale]?"snow-free":"low-rain"; const title=locale==="de"?`${theme==="warm"?"Warm wandern":theme==="snow-free"?"Schneefrei wandern":"Wenig Regen"} im ${monthName(month,locale)}`:`${theme==="warm"?"Warm hiking":theme==="snow-free"?"Snow-free hiking":"Low-rain hiking"} in ${monthName(month,locale)}`; content=<RankingPage ranking={getRanking(month,theme)} locale={locale} title={title}/>; }
-  else if(segments[0]===routes.compare[locale]&&getComparisonIndex().some((item)=>item.slug===segments[1])) content=<ComparisonPage comparison={getComparison(segments[1])} locale={locale}/>;
-  else { const infoEntry=(Object.keys(routes) as Array<keyof typeof routes>).find((key)=>["methodology","about","privacy","imprint","credits"].includes(key)&&routes[key][locale]===segments[0]); if(!infoEntry) notFound(); content=<InformationPage locale={locale} kind={infoEntry}/>; }
-  return <><SiteHeader locale={locale}/><main id="main">{content}</main><SiteFooter locale={locale}/></>;
+function FinderPage({locale}:{locale:Locale}) {
+  const copy = t(locale).finder;
+  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{copy.pageEyebrow}</span><h1>{copy.pageHeading}</h1><p>{copy.pageSub}</p></section><div className="finder-page"><Finder destinations={getSearchIndex()} locale={locale}/></div></>;
+}
+
+function renderPage(locale:Locale,page:PageId):React.ReactNode {
+  switch (page.kind) {
+    case "home": return <HomePage locale={locale}/>;
+    case "finder": return <FinderPage locale={locale}/>;
+    case "destination": { const destination=getDestination(page.slug); if(!destination) notFound(); return <DestinationPage destination={destination} locale={locale}/>; }
+    case "destinationMonth": { const destination=getDestination(page.slug); if(!destination) notFound(); return <MonthPage destination={destination} month={page.month} locale={locale}/>; }
+    case "ranking": return <RankingPage ranking={getRanking(page.month)} locale={locale}/>;
+    case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
+    case "compare": { if(!getComparisonIndex().some((item)=>item.slug===page.slug)) notFound(); return <ComparisonPage comparison={getComparison(page.slug)} locale={locale}/>; }
+    case "info": return <InformationPage locale={locale} pageKey={page.key}/>;
+  }
+}
+
+export default async function LocalizedPage({params}:{params:Params}) {
+  const {locale:raw,segments=[]}=await params;
+  if(!locales.includes(raw as Locale)) notFound();
+  const locale=raw as Locale;
+  const page=resolvePageId(locale,segments);
+  if(!page) notFound();
+  return <><SiteHeader locale={locale} page={page}/><main id="main">{renderPage(locale,page)}</main><SiteFooter locale={locale}/></>;
 }

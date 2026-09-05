@@ -1,11 +1,11 @@
 import { getComparisonIndex, getDestinationIndex } from "@/lib/data/load";
-import { monthSlug, routes } from "@/lib/i18n/config";
+import { locales, monthSlug, routes } from "@/lib/i18n/config";
 import type { Locale } from "@/lib/data/types";
 
 export interface StaticRoute { locale: Locale; segments: string[] }
 export function routeCatalog(): StaticRoute[] {
   const output: StaticRoute[] = [];
-  for (const locale of ["en","de"] as Locale[]) {
+  for (const locale of locales) {
     output.push({locale,segments:[]},{locale,segments:["finder"]});
     for (const key of ["methodology","about","privacy","imprint","credits"] as const) output.push({locale,segments:[routes[key][locale]]});
     for (const destination of getDestinationIndex()) {

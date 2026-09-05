@@ -192,10 +192,33 @@ The whole product's value is that it does not overclaim. Every one of these came
 
 ## i18n
 
-EN and DE, both path-prefixed, with translated route slugs in the `routes` map in
-`lib/i18n/config.ts`. Never hardcode a locale path — go through `destinationPath` / `rankingPath` /
-`comparePath`. The postbuild step `scripts/export/fix-static-languages.ts` deterministically sets
-`lang="de"` on every exported German document and **fails if even one page cannot be localized**.
+EN and DE, both path-prefixed. English is the default: `/` permanently redirects to `/en`, and `en`
+is the hreflang `x-default`. Four files, four jobs:
+
+- `lib/i18n/config.ts` — **what the slugs are**: locales, the translated `routes` segment map, month
+  slug/name helpers, theme and info route keys.
+- `lib/i18n/links.ts` — **how URLs are built**: `links.*(locale, …)` plus `altLanguages()` for
+  hreflang. Every internal href goes through here.
+- `lib/i18n/dict.ts` — **what the interface says**: every user-visible string, per locale.
+- `lib/i18n/resolve.ts` — **which page this is**: `resolvePageId()` turns locale-specific segments
+  into a locale-independent `PageId`, and `pathFor()` rebuilds that page's URL in any locale. This is
+  what makes correct hreflang and a page-preserving language switch possible.
+
+Three rules, all enforced by `tests/i18n.test.ts`:
+
+1. **Never hardcode a locale path.** A hand-written `/de/...` survives every later refactor and
+   quietly sends readers to the wrong language. The test scans `components/` and `app/` for
+   `href="/de` and `` `/${locale}` `` and fails the build.
+2. **Never inline `locale === "de" ? "…" : "…"` in a component.** Add a key to `dict.ts`. The test
+   compares the two locale trees structurally and fails if a key exists in one and not the other.
+3. **German prose carries no Gedankenstrich.** A spaced en/em dash reads as machine-written; use a
+   comma, a semicolon or "bis". Numeric ranges (`1991-2020`, `1500-2200 m`) are data and keep their
+   dash. The test enforces the spaced-dash rule on the whole German tree.
+
+`lib/site.ts` is the single source of the base URL for robots, sitemap and page metadata.
+
+The postbuild step `scripts/export/fix-static-languages.ts` deterministically sets `lang="de"` on
+every exported German document and **fails if even one page cannot be localized**.
 
 ## Deploy
 
