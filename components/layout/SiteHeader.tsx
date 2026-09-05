@@ -15,6 +15,7 @@ export function SiteHeader({locale,page}:{locale:Locale;page?:PageId}) {
   const navLinks = [
     {href:links.finder(locale),label:copy.nav.finder},
     {href:links.ranking(locale,6),label:copy.nav.rankings},
+    {href:links.compareIndex(locale),label:copy.nav.compare},
     {href:links.themeRanking(locale,"warm",5),label:copy.nav.warm},
     {href:links.themeRanking(locale,"lowRain",9),label:copy.nav.lowRain},
     {href:links.methodology(locale),label:copy.nav.methodology},

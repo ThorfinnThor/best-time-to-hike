@@ -142,6 +142,13 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         : "Compare hiking destinations by month, temperature, rain and snow, using the ERA5-Land 1991-2020 climate normal."),
       index: getManifest().datasetStatus === "production",
       reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+    case "compareTool": return {
+      title: de ? "Wanderziele vergleichen" : "Compare hiking destinations",
+      description: clamp(de
+        ? "Stelle Ziele nebeneinander und sieh Monat für Monat, wann sie empfehlenswert sind."
+        : "Put destinations side by side and see month by month when each one is recommendable."),
+      // A tool whose output depends on what the reader picks, like the finder.
+      index: false, reasons: ["interactive-tool-not-a-document"]};
     case "finder": return {
       title: de ? "Wanderziel-Finder" : "Hiking destination finder",
       description: clamp(de ? "Filtere Wanderziele nach Monat, Region, Temperatur und Gelände." : "Filter hiking destinations by month, region, temperature and terrain."),

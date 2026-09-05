@@ -6,7 +6,7 @@ export interface StaticRoute { locale: Locale; segments: string[] }
 export function routeCatalog(): StaticRoute[] {
   const output: StaticRoute[] = [];
   for (const locale of locales) {
-    output.push({locale,segments:[]},{locale,segments:["finder"]});
+    output.push({locale,segments:[]},{locale,segments:["finder"]},{locale,segments:[routes.compare[locale]]});
     for (const key of ["methodology","about","privacy","imprint","credits"] as const) output.push({locale,segments:[routes[key][locale]]});
     for (const destination of getDestinationIndex()) {
       output.push({locale,segments:[routes.destination[locale],destination.slug]});

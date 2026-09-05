@@ -13,6 +13,7 @@ export function SiteFooter({locale}:{locale:Locale}) {
       [links.destination(locale,"mallorca"),copy.allMonthsFor("Mallorca")],
     ]},
     {title:copy.comparisons,links:[
+      [links.compareIndex(locale),copy.compareTool],
       [links.compare(locale,"mallorca-vs-madeira"),"Mallorca vs Madeira"],
       [links.compare(locale,"madeira-vs-tenerife"),"Madeira vs Tenerife"],
       [links.compare(locale,"dolomites-vs-chamonix"),"Dolomites vs Chamonix"],

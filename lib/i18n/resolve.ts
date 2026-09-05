@@ -17,6 +17,7 @@ export type PageId =
   | { kind: "ranking"; month: number }
   | { kind: "themeRanking"; theme: ThemeKey; month: number }
   | { kind: "compare"; slug: string }
+  | { kind: "compareTool" }
   | { kind: "info"; key: InfoRouteKey };
 
 /** Parse locale-specific URL segments into a locale-independent page identity. */
@@ -47,7 +48,11 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
     }
   }
 
-  if (head === routes.compare[locale] && rest.length === 1) return { kind: "compare", slug: rest[0] };
+  if (head === routes.compare[locale]) {
+    if (rest.length === 0) return { kind: "compareTool" };
+    if (rest.length === 1) return { kind: "compare", slug: rest[0] };
+    return null;
+  }
 
   const info = infoRouteKeys.find((key) => routes[key][locale] === head);
   if (info && rest.length === 0) return { kind: "info", key: info };
@@ -65,6 +70,7 @@ export function pathFor(page: PageId, locale: Locale): string {
     case "ranking": return links.ranking(locale, page.month);
     case "themeRanking": return links.themeRanking(locale, page.theme, page.month);
     case "compare": return links.compare(locale, page.slug);
+    case "compareTool": return links.compareIndex(locale);
     case "info": return links[page.key](locale);
   }
 }
