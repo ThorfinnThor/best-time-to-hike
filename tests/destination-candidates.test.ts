@@ -40,19 +40,19 @@ const representativeness = JSON.parse(readFileSync("data-config/methodology/era5
 
 test("destination intake remains a structurally valid planning-only set", () => {
   assert.equal(plan.status, "planning-only");
-  assert.equal(plan.candidates.length, 45);
-  assert.equal(new Set(plan.candidates.map((candidate) => candidate.id)).size, 45);
+  assert.equal(plan.candidates.length, 44);
+  assert.equal(new Set(plan.candidates.map((candidate) => candidate.id)).size, 44);
   const activeIds = new Set(active.map((destination) => destination.id));
   const activatedCandidates = plan.candidates.filter((candidate) => activeIds.has(candidate.id));
   // The checked-in baseline keeps candidates separate. The representative-50
   // workflow is allowed to activate only the entire deterministic batch.
-  assert.ok(activatedCandidates.length === 0 || (active.length === 50 && activatedCandidates.length === 45));
+  assert.ok(activatedCandidates.length === 0 || (active.length === 49 && activatedCandidates.length === 44));
   assert.match(plan.commonDataRequirements.sampling, /1-3 valid points per band/);
 
-  assert.deepEqual(plan.plannedBatches.map((batch) => batch.targetDestinationCount), [20, 50]);
-  assert.deepEqual(plan.plannedBatches.map((batch) => batch.add.length), [15, 30]);
+  assert.deepEqual(plan.plannedBatches.map((batch) => batch.targetDestinationCount), [20, 49]);
+  assert.deepEqual(plan.plannedBatches.map((batch) => batch.add.length), [15, 29]);
   const plannedIds = plan.plannedBatches.flatMap((batch) => batch.add);
-  assert.equal(new Set(plannedIds).size, 45);
+  assert.equal(new Set(plannedIds).size, 44);
   assert.deepEqual(
     [...plannedIds].sort(),
     plan.candidates.map((candidate) => candidate.id).sort()
