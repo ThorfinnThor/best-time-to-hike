@@ -9,7 +9,7 @@
  *  - NonCommercial (NC): the site carries affiliate links, so its use is commercial.
  *  - NoDerivatives (ND): destination cards crop and resize, which is a derivative.
  *    The sibling project allows ND under a strict no-crop rule; refusing it
- *    outright is simpler and cannot be got wrong later by a layout change.
+ *    outright is simpler and cannot be broken later by a layout change.
  *  - "Fair use", "used with permission" and unknown or absent licences.
  */
 export interface LicenceRule {

@@ -29,6 +29,7 @@ const GENERIC = new Set(["mountain", "mountains", "canyon", "canyons", "national
   "hills", "plateau", "reserve", "region", "state", "county", "north", "south", "east", "west", "upper", "lower", "great",
   "view", "views", "landscape", "nature", "natural", "scenic", "summit", "ridge", "pass", "glacier", "beach", "highlands"]);
 const distinctiveWords = (value: string) => words(value).filter((word) => !GENERIC.has(word));
+const normalise = (value: string) => value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 const findings: string[] = [];
 // Advisory: a filename can legitimately name a local landmark rather than the
@@ -58,8 +59,14 @@ for (const image of manifest.images) {
   const haystack = words(image.sourceFile);
   for (const other of destinations) {
     if (other.slug === image.slug) continue;
-    const distinctive = distinctiveWords(other.name);
-    if (distinctive.length && distinctive.every((token) => haystack.includes(token))) {
+    // Require the other destination's full name as a contiguous phrase. Token
+    // matching flags any filename containing "rocky", "green" or "district",
+    // because those are ordinary English words that happen to sit inside a
+    // destination name.
+    // Whole words only, or a four-letter destination like Ella matches inside
+    // Majella, Momella and castellanos.
+    const phrase = normalise(other.name);
+    if (phrase.length > 3 && ` ${normalise(image.sourceFile)} `.includes(` ${phrase} `)) {
       findings.push(`WRONGPLACE ${image.slug} <- "${image.sourceFile}" names ${other.slug}`);
       break;
     }

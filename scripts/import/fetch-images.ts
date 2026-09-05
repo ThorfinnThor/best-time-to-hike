@@ -67,6 +67,8 @@ const QUERY_OVERRIDE: Record<string, string[]> = {
   "arches": ["Delicate Arch Arches National Park Utah", "Arches National Park Utah red rock fins", "Landscape Arch Devils Garden Utah"],
   "cordillera-real": ["Illimani Cordillera Real Bolivia", "Huayna Potosi Bolivia mountain", "Cordillera Real Bolivia andes peaks"],
   "kitzbuhel": ["Kitzbuheler Horn Tyrol Austria", "Kitzbuheler Alpen summer meadows Austria", "Kitzbuhel Austria alpine pasture"],
+  "rocky-mountain": ["Rocky Mountain National Park Colorado Bear Lake", "Rocky Mountain National Park Colorado tundra trail", "Longs Peak Colorado Rocky Mountain National Park"],
+  "yoho": ["Emerald Lake Yoho National Park British Columbia", "Takakkaw Falls Yoho National Park", "Yoho National Park British Columbia mountains"],
 };
 
 function queriesFor(destination: DestinationConfig): string[] {
