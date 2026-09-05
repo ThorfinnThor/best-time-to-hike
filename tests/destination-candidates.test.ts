@@ -46,7 +46,9 @@ test("destination intake remains a structurally valid planning-only set", () => 
   const activatedCandidates = plan.candidates.filter((candidate) => activeIds.has(candidate.id));
   // The checked-in baseline keeps candidates separate. The representative-50
   // workflow is allowed to activate only the entire deterministic batch.
-  assert.ok(activatedCandidates.length === 0 || (active.length === 49 && activatedCandidates.length === 44));
+  // A batch activates as a whole or not at all; the catalogue size around it
+  // is free to grow as later batches are published.
+  assert.ok(activatedCandidates.length === 0 || activatedCandidates.length === plan.candidates.length);
   assert.match(plan.commonDataRequirements.sampling, /1-3 valid points per band/);
 
   assert.deepEqual(plan.plannedBatches.map((batch) => batch.targetDestinationCount), [20, 49]);

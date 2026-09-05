@@ -16,11 +16,18 @@ test("the batch stays planning-only until it is prepared", () => {
   assert.ok(candidates.length > 0);
 });
 
-test("candidate ids are unique and do not collide with live destinations", () => {
+test("candidate ids are unique, and an activated candidate still describes the same place", () => {
   const ids = candidates.map((candidate) => candidate.id);
   assert.equal(new Set(ids).size, ids.length, "duplicate id inside the batch");
-  const clashes = ids.filter((id) => liveIds.has(id));
-  assert.deepEqual(clashes, [], "candidate reuses a live destination id");
+  // Activation is the expected end state: once a candidate is published, the
+  // candidate file and the destination master describe the same destination.
+  // What must not happen is the two drifting apart.
+  for (const candidate of candidates) {
+    const published = live.find((destination) => destination.id === candidate.id);
+    if (!published) continue;
+    assert.equal(published.coordinates.lat, candidate.candidateCentroid.lat, `${candidate.id}: published latitude drifted from the candidate file`);
+    assert.equal(published.coordinates.lon, candidate.candidateCentroid.lon, `${candidate.id}: published longitude drifted from the candidate file`);
+  }
 });
 
 test("every candidate carries a resolvable IANA time zone", () => {
@@ -40,15 +47,19 @@ test("every candidate centroid is a plausible coordinate", () => {
   }
 });
 
-test("no candidate shares an ERA5-Land grid cell with another candidate or a live destination", () => {
+test("no two distinct destinations share an ERA5-Land grid cell", () => {
+  // Compare places, not files: an activated candidate appears in both the
+  // candidate file and the destination master, and that is one destination.
+  const byId = new Map<string, {lat: number; lon: number}>();
+  for (const destination of live) byId.set(destination.id, destination.coordinates);
+  for (const candidate of candidates) if (!byId.has(candidate.id)) byId.set(candidate.id, candidate.candidateCentroid);
   const taken = new Map<string, string>();
-  for (const destination of live) taken.set(cell(destination.coordinates.lat, destination.coordinates.lon), destination.id);
   const collisions: string[] = [];
-  for (const candidate of candidates) {
-    const key = cell(candidate.candidateCentroid.lat, candidate.candidateCentroid.lon);
+  for (const [id, coordinates] of byId) {
+    const key = cell(coordinates.lat, coordinates.lon);
     const owner = taken.get(key);
-    if (owner) collisions.push(`${candidate.id} shares a cell with ${owner}`);
-    else taken.set(key, candidate.id);
+    if (owner) collisions.push(`${id} shares a cell with ${owner}`);
+    else taken.set(key, id);
   }
   assert.deepEqual(collisions, [], "two destinations in one grid cell would publish identical climate under different names");
 });
