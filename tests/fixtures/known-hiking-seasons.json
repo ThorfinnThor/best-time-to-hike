@@ -1,5 +1,514 @@
 {
-  "status": "BLOCKED_GOLDEN_LABEL",
-  "cases": [],
-  "note": "Golden season labels must be supplied and approved by a human operator; the coding agent does not invent them."
+  "status": "DRAFT_AWAITING_OPERATOR_APPROVAL",
+  "note": "Golden season labels are the independent check on the engine: the months a person who knows the place would name, written down without consulting the engine's answer, so that a scoring change which quietly breaks a well-known destination has something to fail against. These 32 were drafted by the coding agent from general knowledge and are NOT approved. An operator must check each one, fill in approvedBy and approvedAt, and set status to APPROVED before the release gate opens. Reject freely: a label nobody stands behind is worse than no label. Never edit a label to make a test pass — that is the one change that destroys the whole point of the file.",
+  "labelSchema": {
+    "slug": "destination slug in the published catalogue",
+    "expectedMonths": "months a knowledgeable walker would name; wrap-around and two-window seasons are just sets",
+    "label": "the season in words, as it would be said out loud",
+    "basis": "why those months and not others, and what closes the season",
+    "confidence": "high where the season is a settled fact, medium where reasonable people would draw the line differently"
+  },
+  "cases": [
+    {
+      "slug": "dolomites",
+      "name": "Dolomites, Italy",
+      "expectedMonths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "mid-June to late September",
+      "basis": "The rifugio network opens around the third week of June and closes in the last days of September; before and after that the high traverses hold snow and there is nowhere to sleep.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "chamonix",
+      "name": "Chamonix, France",
+      "expectedMonths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "late June to September",
+      "basis": "High balcony trails and cols clear of snow from late June; refuges close through September.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "zermatt",
+      "name": "Zermatt, Switzerland",
+      "expectedMonths": [
+        7,
+        8,
+        9
+      ],
+      "label": "July to September",
+      "basis": "The walking season here is short and firmly mid-summer; trails clear later than in the Dolomites.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "triglav",
+      "name": "Triglav, Slovenia",
+      "expectedMonths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "June to September",
+      "basis": "Julian Alps huts run mid-June to late September; the via ferrata routes hold snow either side.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "high-tatras",
+      "name": "High Tatras, Slovakia",
+      "expectedMonths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "mid-June to September",
+      "basis": "The higher marked trails are formally closed from 1 November to 15 June, so regulation sets the season as much as weather does.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "picos-de-europa",
+      "name": "Picos de Europa, Spain",
+      "expectedMonths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "June to September",
+      "basis": "Snow lies late on the limestone massifs and the refuges run through summer; autumn brings Atlantic cloud onto the tops.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "banff",
+      "name": "Banff, Canada",
+      "expectedMonths": [
+        7,
+        8,
+        9
+      ],
+      "label": "July to late September",
+      "basis": "Higher passes hold snow into early July; the larch turn in late September is the recognised end of the season.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "rocky-mountain",
+      "name": "Rocky Mountain National Park, United States",
+      "expectedMonths": [
+        7,
+        8,
+        9
+      ],
+      "label": "July to September",
+      "basis": "The alpine trails clear around the start of July; afternoon thunderstorms govern the day rather than the season.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "glacier-national-park",
+      "name": "Glacier National Park, United States",
+      "expectedMonths": [
+        7,
+        8,
+        9
+      ],
+      "label": "July to mid-September",
+      "basis": "Going-to-the-Sun Road usually opens late June or early July, and that opening is what makes the high trails reachable at all.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "cairngorms",
+      "name": "Cairngorms, Scotland",
+      "expectedMonths": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "May to September",
+      "basis": "Walkable year-round by the experienced, but the plateau holds snow into May and the recognised hillwalking season is late spring to early autumn.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "lake-district",
+      "name": "Lake District, England",
+      "expectedMonths": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "May to September",
+      "basis": "No snow gate at these heights; the season is set by daylight and by how much rain a walker will accept.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "snowdonia",
+      "name": "Snowdonia, Wales",
+      "expectedMonths": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "May to September",
+      "basis": "As the Lake District: rain and daylight rather than snow, with winter conditions on the ridges a specialist matter.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "mallorca",
+      "name": "Mallorca, Spain",
+      "expectedMonths": [
+        3,
+        4,
+        5,
+        10,
+        11
+      ],
+      "label": "spring and autumn, avoiding high summer",
+      "basis": "The Serra de Tramuntana is walked either side of summer; July and August are too hot on exposed limestone.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "amalfi-coast",
+      "name": "Amalfi Coast, Italy",
+      "expectedMonths": [
+        4,
+        5,
+        6,
+        9,
+        10
+      ],
+      "label": "April to June and September to October",
+      "basis": "The coastal paths are exposed and unshaded; midsummer is uncomfortably hot.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "lycian-way",
+      "name": "Lycian Way, Turkiye",
+      "expectedMonths": [
+        3,
+        4,
+        5,
+        10,
+        11
+      ],
+      "label": "March to May and October to November",
+      "basis": "The long-distance route is walked in spring and autumn; summer on the Mediterranean coast is too hot for consecutive days of it.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "cappadocia",
+      "name": "Cappadocia, Turkiye",
+      "expectedMonths": [
+        4,
+        5,
+        6,
+        9,
+        10
+      ],
+      "label": "April to June and September to October",
+      "basis": "Continental plateau: hot summers, cold winters, and two comfortable shoulder windows in the valleys.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "madeira",
+      "name": "Madeira, Portugal",
+      "expectedMonths": [
+        4,
+        5,
+        6,
+        9,
+        10
+      ],
+      "label": "walkable all year, best in spring and early autumn",
+      "basis": "The levada network runs year-round; the labelled months are the driest and clearest.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "atlas-mountains",
+      "name": "Atlas Mountains, Morocco",
+      "expectedMonths": [
+        4,
+        5,
+        6,
+        9,
+        10
+      ],
+      "label": "April to June and September to October",
+      "basis": "Snow on the high passes into spring, fierce heat in midsummer lower down; the season is the gap between the two.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "kilimanjaro",
+      "name": "Kilimanjaro, Tanzania",
+      "expectedMonths": [
+        1,
+        2,
+        7,
+        8,
+        9,
+        10
+      ],
+      "label": "January to February and July to October",
+      "basis": "Two dry windows between the long rains of March to May and the short rains of November.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "mount-kenya",
+      "name": "Mount Kenya, Kenya",
+      "expectedMonths": [
+        1,
+        2,
+        7,
+        8,
+        9
+      ],
+      "label": "January to February and July to September",
+      "basis": "The same two-rains pattern as Kilimanjaro, with the drier windows a little narrower.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "simien",
+      "name": "Simien Mountains, Ethiopia",
+      "expectedMonths": [
+        10,
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
+      "label": "October to March",
+      "basis": "The Ethiopian highland rains run roughly June to September; the trekking season is the dry half of the year after them.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "drakensberg",
+      "name": "Drakensberg, South Africa",
+      "expectedMonths": [
+        3,
+        4,
+        5,
+        9,
+        10,
+        11
+      ],
+      "label": "autumn and spring",
+      "basis": "Summer brings violent afternoon thunderstorms on the escarpment and winter brings snow and cold nights; the shoulders are the settled walking.",
+      "confidence": "medium",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "torres-del-paine",
+      "name": "Torres del Paine, Chile",
+      "expectedMonths": [
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
+      "label": "November to March",
+      "basis": "The austral summer is the only period the W and O circuits are fully serviced; outside it wind and cold close the passes.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "el-chalten",
+      "name": "El Chalten, Argentina",
+      "expectedMonths": [
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
+      "label": "November to March",
+      "basis": "The same Patagonian summer as Torres del Paine, with wind rather than temperature as the limiting factor.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "salkantay",
+      "name": "Salkantay, Peru",
+      "expectedMonths": [
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "May to September",
+      "basis": "The Andean dry season. The wet season from December to March makes the high pass and the cloud-forest descent genuinely unpleasant.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "annapurna",
+      "name": "Annapurna, Nepal",
+      "expectedMonths": [
+        3,
+        4,
+        10,
+        11
+      ],
+      "label": "October to November, and March to April",
+      "basis": "The monsoon closes the circuit June to September and winter closes the high pass; October and November are the settled window, spring the secondary one.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "langtang",
+      "name": "Langtang, Nepal",
+      "expectedMonths": [
+        3,
+        4,
+        10,
+        11
+      ],
+      "label": "October to November, and March to April",
+      "basis": "The same monsoon and winter bracket as Annapurna, at slightly lower altitude.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "ladakh",
+      "name": "Ladakh, India",
+      "expectedMonths": [
+        6,
+        7,
+        8,
+        9
+      ],
+      "label": "June to September",
+      "basis": "A high desert in the monsoon's rain shadow; the season is set by the passes being open and the nights being survivable, not by rain.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "kumano-kodo",
+      "name": "Kumano Kodo, Japan",
+      "expectedMonths": [
+        3,
+        4,
+        5,
+        10,
+        11
+      ],
+      "label": "March to May and October to November",
+      "basis": "The June to July rainy season and the humid typhoon-prone late summer bracket the two comfortable windows.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "rinjani",
+      "name": "Mount Rinjani, Indonesia",
+      "expectedMonths": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "label": "May to October",
+      "basis": "The route is formally closed for much of the wet season, roughly January to March; the dry months are the trekking season.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "tongariro",
+      "name": "Tongariro, New Zealand",
+      "expectedMonths": [
+        11,
+        12,
+        1,
+        2,
+        3,
+        4
+      ],
+      "label": "November to April",
+      "basis": "Outside the austral summer the Alpine Crossing becomes an alpine undertaking requiring axe and crampons, which is a different activity.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    },
+    {
+      "slug": "routeburn",
+      "name": "Routeburn, New Zealand",
+      "expectedMonths": [
+        11,
+        12,
+        1,
+        2,
+        3
+      ],
+      "label": "late October to April, the Great Walk season",
+      "basis": "The Department of Conservation Great Walk season runs late October to April; outside it the huts are unserviced and avalanche risk is real.",
+      "confidence": "high",
+      "approvedBy": null,
+      "approvedAt": null
+    }
+  ]
 }
