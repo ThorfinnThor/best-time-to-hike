@@ -40,12 +40,24 @@ test("missing score inputs fail instead of silently renormalizing",()=>{
   assert.throws(()=>overallScore({temperature:90,precipitation:90,snow:90,heatStress:90,wind:Number.NaN,daylight:90}),/SCORE001/);
 });
 
-test("provisional recommendation guard blocks Sikkim July precipitation failure",()=>{
+// Sikkim in July: every component in the nineties except rain, which is zero.
+// Through 1.1.0 this was withheld outright and capped at 49/poor. Rain is no
+// longer critical, so the month stands on its score and carries the reason.
+test("Sikkim July is published on its score now that rain does not veto",()=>{
   const decision=recommendationDecision({temperature:90,precipitation:0,snow:100,heatStress:100,wind:100,daylight:90},79);
+  assert.equal(decision.recommendationEligible,true);
+  assert.equal(decision.overallScore,79);
+  assert.equal(decision.scoreLevel,"good");
+  assert.deepEqual(decision.failingComponents,[]);
+  assert.deepEqual(decision.belowFloorComponents,["precipitation"]);
+});
+
+test("a critical component at the floor still withholds the month",()=>{
+  const decision=recommendationDecision({temperature:90,precipitation:90,snow:20,heatStress:100,wind:100,daylight:90},79);
   assert.equal(decision.recommendationEligible,false);
   assert.equal(decision.overallScore,49);
   assert.equal(decision.scoreLevel,"poor");
-  assert.deepEqual(decision.failingComponents,["precipitation"]);
+  assert.deepEqual(decision.failingComponents,["snow"]);
 });
 
 test("persistent snow hold uses the configured exact month count",()=>{

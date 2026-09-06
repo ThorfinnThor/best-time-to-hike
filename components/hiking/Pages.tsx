@@ -1,9 +1,10 @@
 import Link from "next/link";
-import type { Comparison, Locale, PublicDestination, Ranking } from "@/lib/data/types";
+import type { Comparison, ComponentScores, Locale, PublicDestination, Ranking } from "@/lib/data/types";
 import { monthName, monthNameShort } from "@/lib/i18n/config";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, rankingPath } from "@/lib/i18n/links";
 import { getDestination, getManifest } from "@/lib/data/load";
+import { COMPONENT_KEYS, CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type ComponentKey } from "@/lib/scoring/recommendations";
 import { dayShapeDomain } from "@/lib/hiking/day-shape";
 import { ScoreRing } from "./ScoreRing";
 import { ScoreChart } from "./ScoreChart";
@@ -43,6 +44,17 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   </>;
 }
 
+/**
+ * The components dragging a month's score down without withholding it.
+ *
+ * Recomputed here from the published components rather than exported as a list:
+ * the caveat says a component is below the floor, this says which, and both
+ * read the same threshold.
+ */
+function belowFloor(components: ComponentScores): ComponentKey[] {
+  return COMPONENT_KEYS.filter((key) => !CRITICAL_COMPONENT_KEYS.includes(key) && components[key] <= CRITICAL_COMPONENT_FLOOR);
+}
+
 export function MonthPage({destination,month,locale}:{destination:PublicDestination;month:number;locale:Locale}) {
   const copy = t(locale); const c = copy.destination; const m = copy.month;
   const data = destination.months[month-1];
@@ -53,6 +65,9 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
   return <>
     <FixtureNotice locale={locale}/>
     {!data.recommendationEligible ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.ineligibleMonthTitle}</strong><p>{copy.notices.ineligibleMonthBody}</p></div></aside> : null}
+    {data.recommendationEligible && data.caveats.includes("non-critical-component-floor")
+      ? <aside className="method-note below-floor" role="status"><span>ⓘ</span><div><strong>{copy.notices.belowFloorTitle}</strong><p>{copy.notices.belowFloorBody(belowFloor(data.components).map((key)=>copy.components[key]).join(", "))}</p></div></aside>
+      : null}
     <section className="month-hero"><div><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.heading(destination.name, monthName(month,locale))}</h1><p>{c.method}</p></div><ScoreRing score={data.overallScore} locale={locale}/></section>
     <section className="stats-strip"><div><span>{c.confidence}</span><strong>{data.confidenceScore}%</strong></div><div><span>{copy.common.meanTemperature}</span><strong>{data.metrics.temperatureHikingMeanC}°C</strong></div><div><span>{copy.common.wetDays}</span><strong>{Math.round(data.metrics.wetDayProbability*100)}%</strong></div><div><span>{copy.common.daylight}</span><strong>{data.metrics.daylightHoursMean}h</strong></div></section>
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.why}</span><h2>{m.componentsHeading}</h2></div></div><ComponentGrid components={data.components} locale={locale}/></section>

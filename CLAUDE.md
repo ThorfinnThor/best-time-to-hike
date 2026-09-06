@@ -21,7 +21,7 @@ to communicate it honestly, never to flatter it.
 | Destinations | 50 published, 46 exposed in the finder |
 | Destination-months | 600 — **244 recommendation-eligible, 356 deliberately excluded** |
 | Holds | `zermatt`, `el-chalten` (persistent snow); `torres-del-paine`, `sikkim` (no eligible month) |
-| Algorithm | `1.1.0` |
+| Algorithm | `1.2.0` |
 | Status | `provisional`, `noindex`, robots disallow all, sitemap empty |
 | Approvals | **all six flags in `release-approvals.json` are `false`** |
 
@@ -153,13 +153,23 @@ manual route-representativeness hold, read from `glacier.persistentSnowReviewMon
 including 23- and 25-hour DST days and historical two-hour shifts. Missing observations are never
 replaced by zero, and completeness denominators come from the normal period.
 
-## Recommendation policy (v1.1.0)
+## Recommendation policy (v1.2.0)
 
 Versioned in `data-config/methodology/recommendation-eligibility-v1.json`, implemented in
 `lib/scoring/recommendations.ts`. Every layer that shows a score must route through it.
 
-- A month is eligible only when **every unrounded** critical component (`temperature`,
-  `precipitation`, `snow`, `heatStress`, `wind`, `daylight`) is **> 20**.
+- A month is eligible only when **every unrounded** critical component is **> 20**. The critical set
+  lives in `criticalComponents` in that config: `temperature`, `snow`, `heatStress`, `wind`,
+  `daylight`.
+- **`precipitation` is scored but not critical**, since 1.2.0. It was critical through 1.1.0 and did
+  nearly all the vetoing: 15 of the 22 destinations carrying no recommendation were refused on rain
+  alone, in every month of the year, several with every other component in the nineties. The test is
+  whether a component makes the walk a bad idea, not whether it makes it unpleasant. It keeps its
+  20% weight, so a wet destination ranks low rather than disappearing.
+- A component below the floor that is **not** critical adds the `non-critical-component-floor`
+  caveat, and the month page names it. At 20% weight a precipitation score of 1 still leaves a
+  ceiling near 80, and "very good hiking" printed over a place that rains most days would be exactly
+  the overclaim the honesty rules exist to stop.
 - An ineligible month is capped at **49 / `poor`** and excluded from best-months, every ranking,
   every theme and the finder.
 - **Best-month lists are never padded.** Zero, one or two best months is a valid answer.

@@ -294,6 +294,8 @@ export const DICT = {
       noEligibleMonthBody: "No month for this destination clears all critical component thresholds. Best months and ranking recommendations are therefore withheld.",
       ineligibleMonthTitle: "Not eligible for recommendation",
       ineligibleMonthBody: "At least one critical climate component is 20 or below. The score is therefore conservatively capped at 49/poor, and this month is excluded from rankings and best-month lists.",
+      belowFloorTitle: "One component is very low here",
+      belowFloorBody: (components: string) => `${components} scores 20 or below in this month. It does not withhold the recommendation, but it is the largest single limit on the score above, and it is worth planning around.`,
     },
     destination: {
       score: "Hiking score",
@@ -718,6 +720,8 @@ export const DICT = {
       noEligibleMonthBody: "Für dieses Ziel liegt in keinem Monat ein vollständig ausreichender kritischer Komponentenwert vor. Deshalb werden keine besten Monate oder Ranglistenempfehlungen angezeigt.",
       ineligibleMonthTitle: "Für Empfehlungen ungeeigneter Monat",
       ineligibleMonthBody: "Mindestens eine kritische Klima-Komponente liegt bei 20 oder darunter. Der Wert ist deshalb konservativ auf 49/poor begrenzt und dieser Monat erscheint nicht in Ranglisten oder besten Monaten.",
+      belowFloorTitle: "Eine Komponente ist hier sehr niedrig",
+      belowFloorBody: (components: string) => `${components} erreicht in diesem Monat 20 oder weniger. Das hält die Empfehlung nicht zurück, begrenzt den Wert oben aber am stärksten und sollte in die Planung einfließen.`,
     },
     destination: {
       score: "Wanderwert",

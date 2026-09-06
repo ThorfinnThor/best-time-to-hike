@@ -73,7 +73,9 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
       ? [...month.caveats, "persistent-snow-review"]
       : decision.failingComponents.length
         ? [...month.caveats, "critical-component-floor"]
-        : month.caveats;
+        : decision.belowFloorComponents.length
+          ? [...month.caveats, "non-critical-component-floor"]
+          : month.caveats;
     const {rawComponents: _rawComponents, rawOverallScore: _rawOverallScore, ...publicMonth} = month;
     if (destinationHold) {
       return {

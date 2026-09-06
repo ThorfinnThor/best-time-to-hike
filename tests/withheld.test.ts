@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { blockingComponents } from "../lib/scoring/recommendations";
+import { blockingComponents, recommendationDecision } from "../lib/scoring/recommendations";
 import type { ComponentScores } from "../lib/data/types";
 
 const month = (patch: Partial<ComponentScores> = {}) => ({
@@ -8,11 +8,22 @@ const month = (patch: Partial<ComponentScores> = {}) => ({
 });
 
 test("a component is only named when it fails in every scored month", () => {
-  const alwaysWet = Array.from({length: 12}, () => month({precipitation: 4}));
-  assert.deepEqual(blockingComponents(alwaysWet), ["precipitation"]);
+  const alwaysFreezing = Array.from({length: 12}, () => month({temperature: 4}));
+  assert.deepEqual(blockingComponents(alwaysFreezing), ["temperature"]);
 
-  const wetForHalfTheYear = [...Array.from({length: 6}, () => month({precipitation: 4})), ...Array.from({length: 6}, () => month())];
-  assert.deepEqual(blockingComponents(wetForHalfTheYear), [], "a month elsewhere in the year would fix this, so nothing is named");
+  const coldForHalfTheYear = [...Array.from({length: 6}, () => month({temperature: 4})), ...Array.from({length: 6}, () => month())];
+  assert.deepEqual(blockingComponents(coldForHalfTheYear), [], "a month elsewhere in the year would fix this, so nothing is named");
+});
+
+test("rain never withholds a destination on its own", () => {
+  // Demoted from critical in 1.2.0: it vetoed 15 of 22 withheld destinations,
+  // in every month, several with every other component in the nineties.
+  const soaked = Array.from({length: 12}, () => month({precipitation: 0}));
+  assert.deepEqual(blockingComponents(soaked), []);
+  const decision = recommendationDecision(month({precipitation: 0}).components, 79);
+  assert.equal(decision.recommendationEligible, true);
+  assert.deepEqual(decision.belowFloorComponents, ["precipitation"], "it still has to be named");
+  assert.equal(decision.overallScore, 79, "and the score is not capped");
 });
 
 test("the threshold is the recommendation floor, not a fresh number", () => {
