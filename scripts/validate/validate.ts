@@ -6,6 +6,7 @@ import { overallScore, roundHalfAwayFromZero } from "../../lib/scoring";
 import { hasPersistentSnowHold } from "../../lib/scoring/recommendations";
 import { greatCircleDistanceKm } from "../../lib/hiking/sampling";
 import { readJson, ROOT, sha256 } from "../lib/io";
+import { bestMonthsFor } from "@/lib/scoring/recommendations";
 
 const ajv = new Ajv2020({ allErrors: true, strict: false });
 const destinationSchema = readJson<any>("schemas/destination.schema.json");
@@ -124,7 +125,7 @@ for (const file of detailFiles) {
     assert(destination.months.every((month)=>month.overallScore===null&&month.scoreLevel===null&&month.confidenceScore===null&&month.confidenceLevel===null&&month.components===null),`${destination.slug}: held destination publishes score claims`);
     assert(destination.months.every((month)=>month.bands.every((band)=>band.overallScore===null&&band.scoreLevel===null&&band.confidenceScore===null&&band.confidenceLevel===null&&band.components===null)),`${destination.slug}: held destination band publishes score claims`);
   }
-  const expectedBestMonths=[...destination.months].filter((month)=>month.recommendationEligible&&month.overallScore!==null).sort((a,b)=>b.overallScore!-a.overallScore!||a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
+  const expectedBestMonths=bestMonthsFor(destination.months);
   assert(JSON.stringify(destination.bestMonths)===JSON.stringify(expectedBestMonths),`${destination.slug}: best months are not reproducible`);
   for (const month of destination.months) {
     if (!expectedHold) {

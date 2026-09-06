@@ -1,8 +1,9 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
-import type { CompactMonth, CompactSearchDestination, Comparison, DatasetStatus, DestinationConfig, PublicDestination, Ranking } from "../../lib/data/types";
+import type { CompactMonth, CompactSearchDestination, Comparison, ComponentScores, DatasetStatus, DestinationConfig, PublicDestination, Ranking } from "../../lib/data/types";
 import pageDefinitions from "../../data-config/seo/page-definitions.json";
 import scoringWeights from "../../data-config/scoring/weights.json";
+import { bestMonthsFor } from "../../lib/scoring/recommendations";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
 type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]; recommendationEligible:boolean; recommendationHoldReason?:"persistent-snow"; representativeCell:{lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string}; datasetStatus:DatasetStatus; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; retrievedAt:string};
@@ -13,7 +14,7 @@ const datasetStatus = [...statuses][0];
 const updatedAt = scored.map((item) => item.retrievedAt).sort().at(-1) ?? "2026-08-31T00:00:00.000Z";
 const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months, recommendationEligible, recommendationHoldReason, representativeCell, climateSource, climateSourceDataset, climateSourceDoi}) => {
   const eligibleMonths = months.filter((item) => item.recommendationEligible && item.overallScore !== null);
-  const bestMonths = [...eligibleMonths].sort((a,b) => b.overallScore!-a.overallScore! || a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
+  const bestMonths = bestMonthsFor(months);
   const alternatives = scored.filter((item)=>item.destination.slug!==destination.slug && item.recommendationEligible).sort((a,b)=>b.months.filter((m)=>m.recommendationEligible && m.overallScore !== null).reduce((s,m)=>s+m.overallScore!,0)-a.months.filter((m)=>m.recommendationEligible && m.overallScore !== null).reduce((s,m)=>s+m.overallScore!,0)).slice(0,3).map((item)=>item.destination.slug);
   const fixture = datasetStatus === "fixture";
   const sourceLabel = fixture ? "synthetic fixture shaped like ERA5-Land" : `${climateSourceDataset ?? climateSource}${climateSourceDoi ? ` (DOI ${climateSourceDoi})` : ""}`;

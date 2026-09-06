@@ -107,6 +107,36 @@ export function blockingComponents(months: Array<{components: ComponentScores | 
   }));
 }
 
+/**
+ * The months a destination is published as best for.
+ *
+ * One definition, called by the exporter that writes the list and by the
+ * validator that checks it; they held separate copies of this and drifted the
+ * moment the rule changed.
+ *
+ * A month with a component at the very bottom of its scale is not a candidate,
+ * whatever it adds up to. Demoting precipitation in 1.2.0 stopped rain hiding a
+ * destination and left it able to win instead: Annapurna in July scores 0 out
+ * of 100 on rain, rains on every day of the month, and was the highest-scoring
+ * month of the year — the middle of the monsoon. Such a month keeps its page,
+ * its score and its place in the rankings; it just cannot be the answer to
+ * "when should I go".
+ *
+ * The threshold is its own number, not the recommendation floor of 20, because
+ * the two ask different questions. Reusing 20 also took July and August off the
+ * Dolomites, whose rain component is 14 because of afternoon storms nobody
+ * stays home for, and left Torres del Paine with no season at all.
+ */
+export function bestMonthsFor(months: Array<{month: number; recommendationEligible: boolean; overallScore: number | null; components: ComponentScores | null}>): number[] {
+  return months
+    .filter((month) => month.recommendationEligible && month.overallScore !== null && month.components !== null
+      && !COMPONENT_KEYS.some((key) => month.components![key] <= recommendationConfig.bestMonthComponentMinimumExclusive))
+    .sort((a, b) => b.overallScore! - a.overallScore! || a.month - b.month)
+    .slice(0, 3)
+    .map((month) => month.month)
+    .sort((a, b) => a - b);
+}
+
 export function hasPersistentSnowHold(months: Array<Pick<PublicMonth, "metrics">>): boolean {
   const reviewMonthCount = representativenessConfig.glacier.persistentSnowReviewMonthCount;
   return months.filter((month) => month.metrics.snowDayProbability === 1).length === reviewMonthCount;
