@@ -57,12 +57,26 @@ test("the golden set is large enough and every case names a real destination", (
   }
 });
 
-test("approved labels carry an approver and a date", () => {
-  if (!approved) return;
+test("a signed label carries an approver and a date, and APPROVED means all of them", () => {
   for (const item of golden.cases) {
-    assert.ok(item.approvedBy, `${item.slug} has no approver`);
-    assert.ok(item.approvedAt && Number.isFinite(new Date(item.approvedAt).getTime()), `${item.slug} has no approval date`);
+    if (!item.approvedBy && !item.approvedAt) continue;
+    assert.ok(item.approvedBy, `${item.slug} has an approval date but no approver`);
+    assert.ok(item.approvedAt && Number.isFinite(new Date(item.approvedAt).getTime()), `${item.slug} has an approver but no date`);
   }
+  if (!approved) return;
+  const unsigned = golden.cases.filter((item) => !item.approvedBy).map((item) => item.slug);
+  assert.deepEqual(unsigned, [], `status is APPROVED while these are unsigned: ${unsigned.join(", ")}`);
+});
+
+test("the signed labels are not only the ones the engine already agrees with", () => {
+  // A set filtered to the passing cases cannot fail, and a check that cannot
+  // fail is decoration. This does not forbid the state — signing the easy ones
+  // first is reasonable — it forbids finishing there and calling it approved.
+  const signed = golden.cases.filter((item) => item.approvedBy);
+  if (!approved || !signed.length) return;
+  const disagreeing = signed.filter((item) => compare(item).verdict !== "agrees");
+  assert.ok(disagreeing.length > 0,
+    "every signed label agrees with the engine, so the golden set is a mirror of it; sign at least one case where they differ, having decided which of the two is wrong");
 });
 
 test("the engine's best months fall inside the labelled season", {skip: !approved && "labels are not approved yet; see the report below"}, () => {
