@@ -45,6 +45,30 @@ const SORTS: SortKey[] = ["match", "score", "warmest", "name"];
  * is therefore a form that navigates to the finder page carrying its search in
  * the URL, and only the finder page loads the data.
  */
+/**
+ * A number field the reader can actually empty.
+ *
+ * Binding `Number(event.target.value)` straight to state turns a cleared field
+ * into 0 and a lone "-" into 0 as well, so anyone clearing "10" to type "-5"
+ * ends up fighting the input. The draft holds exactly what was typed; the
+ * preference only moves when that draft parses, and an external change to the
+ * preference (a preset, a reset) drops the draft again.
+ */
+function TemperatureInput({value, onCommit, label, min, max}:
+  {value: number; onCommit: (value: number) => void; label: string; min: number; max: number}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  useEffect(() => { setDraft(null); }, [value]);
+  return <input aria-label={label} type="number" min={min} max={max} inputMode="numeric"
+    value={draft ?? String(value)}
+    onChange={(event) => {
+      const raw = event.target.value;
+      setDraft(raw);
+      const parsed = Number(raw);
+      if (raw.trim() !== "" && Number.isFinite(parsed)) onCommit(parsed);
+    }}
+    onBlur={() => setDraft(null)}/>;
+}
+
 export function Finder({destinations, locale, compact = false}: {destinations?: CompactSearchDestination[]; locale: Locale; compact?: boolean}) {
   const copy = t(locale);
   const router = useRouter();
@@ -95,6 +119,9 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
   const matches = useMemo(() => navigates ? [] : matchDestinations(catalogue, preferences), [navigates, catalogue, preferences]);
   const filtered = savedOnly ? matches.filter((result) => saved.includes(result.destination.slug)) : matches;
   const shown = compact ? filtered.slice(0, 3) : filtered.slice(0, visible);
+  // No month can be both below the minimum and above the maximum, so this pair
+  // silently scores every destination badly rather than filtering anything.
+  const inverted = preferences.minTemp > preferences.maxTemp;
   // Only computed when there is nothing to show, so the cost lands where it helps.
   const offers = useMemo(() => (navigates || matches.length ? [] : relaxations(catalogue, preferences)), [navigates, matches.length, catalogue, preferences]);
   const showResults = navigates ? false : compact ? submitted : true;
@@ -138,12 +165,16 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
         </label> : null}
         <label className="range-label"><span>{copy.finder.temperature}</span>
           <div>
-            <input aria-label={copy.finder.minAria} type="number" min="-10" max="35" value={preferences.minTemp} onChange={(event) => update({minTemp: Number(event.target.value)})}/>
+            <TemperatureInput label={copy.finder.minAria} min={-10} max={35} value={preferences.minTemp} onCommit={(minTemp) => update({minTemp})}/>
             <span>–</span>
-            <input aria-label={copy.finder.maxAria} type="number" min="-5" max="40" value={preferences.maxTemp} onChange={(event) => update({maxTemp: Number(event.target.value)})}/>
+            <TemperatureInput label={copy.finder.maxAria} min={-5} max={40} value={preferences.maxTemp} onCommit={(maxTemp) => update({maxTemp})}/>
             <span>°C</span>
           </div>
         </label>
+        {/* Outside the label: a button inside one activates the label too. */}
+        {inverted ? <p className="finder-warning" role="status">{copy.finder.invertedRange}{" "}
+          <button type="button" onClick={() => update({minTemp: preferences.maxTemp, maxTemp: preferences.minTemp})}>{copy.finder.swapRange}</button>
+        </p> : null}
         <button type="button" className={preferences.avoidRain ? "toggle active" : "toggle"} onClick={() => update({avoidRain: !preferences.avoidRain})} aria-pressed={preferences.avoidRain}>☂ {copy.finder.avoidRain}</button>
         <button type="button" className={preferences.avoidSnow ? "toggle active" : "toggle"} onClick={() => update({avoidSnow: !preferences.avoidSnow})} aria-pressed={preferences.avoidSnow}>❄ {copy.finder.avoidSnow}</button>
         {!compact ? <button type="button" className={preferences.avoidHeat ? "toggle active" : "toggle"} onClick={() => update({avoidHeat: !preferences.avoidHeat})} aria-pressed={preferences.avoidHeat}>☀ {copy.finder.avoidHeat}</button> : null}
@@ -234,6 +265,12 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
       </div> : <div className="finder-empty" role="status">
         <strong>{copy.finder.noResultsTitle}</strong>
         <p>{copy.finder.noResultsBody}</p>
+        {offers.length ? <ul className="finder-offers">
+          {offers.map((offer) => <li key={offer.key}>
+            <button type="button" onClick={() => update(offer.patch)}>{copy.finder.relax[offer.key]}</button>
+            <span>{copy.finder.offerResults(offer.results)}</span>
+          </li>)}
+        </ul> : null}
       </div>}
 
       {!compact && filtered.length > shown.length

@@ -6,6 +6,7 @@ import { destinationPath, links } from "@/lib/i18n/links";
 import { areaProfile, type Area } from "@/lib/seo/areas";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { ScoreRing } from "@/components/hiking/ScoreRing";
+import { blockingComponents } from "@/lib/scoring/recommendations";
 
 /**
  * An area page answers "where should I hike in the Alps", and the useful part
@@ -83,7 +84,10 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
       <ul>
         {area.withheld.map((destination) => <li key={destination.slug}>
           <Link href={destinationPath(locale, destination.slug)}>{destination.name}</Link>
-          <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.area.reasonSnow : copy.area.reasonNoMonth}</span>
+          <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.area.reasonSnow
+            : blockingComponents(destination.months).length
+              ? copy.area.reasonComponent(blockingComponents(destination.months).map((key) => copy.components[key]).join(", "))
+              : copy.area.reasonNoMonth}</span>
         </li>)}
       </ul>
     </section> : null}

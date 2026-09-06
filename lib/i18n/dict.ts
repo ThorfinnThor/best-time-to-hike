@@ -128,6 +128,7 @@ export const DICT = {
         elevation: "Any altitude",
         region: "Search everywhere",
         tags: "Drop the terrain filters",
+        everything: "Keep only the month and clear the rest",
       },
       continent: "Continent",
       allContinents: "All continents",
@@ -141,6 +142,9 @@ export const DICT = {
       resultCount: (count: number) => (count === 1 ? "1 destination matches" : `${count} destinations match`),
       inMonth: (month: string) => `in ${month}`,
       bestMonthFound: (month: string) => `Best match: ${month}`,
+      offerResults: (count: number) => (count === 1 ? "1 destination" : `${count} destinations`),
+      invertedRange: "The minimum is above the maximum, so no month can sit inside this range.",
+      swapRange: "Swap them",
       noResultsTitle: "No destination clears the gate for these preferences",
       noResultsBody: "Nothing is padded to fill this list. Widen the temperature range, allow rain or snow, lower the daylight floor, or choose a different month or region.",
       reset: "Reset filters",
@@ -271,6 +275,7 @@ export const DICT = {
         "volcanic": "Volcanic",
         "waterfalls": "Waterfalls",
         "wildlife": "Wildlife",
+        "windy": "Exposed and windy",
         "winter-hiking": "Winter hiking",
         "year-round": "Year-round",
       },
@@ -341,12 +346,18 @@ export const DICT = {
         steady: (cold: number, warm: number) => `The walking day holds between ${cold}°C and ${warm}°C. One layer covers it from start to finish.`,
       },
     },
+    notFound: {
+      title: "Trail not found",
+      body: "This path is outside our published map.",
+      home: "Back to basecamp",
+    },
     withheld: {
       eyebrow: "What we do not recommend",
       heading: (count: number) => `${count} destinations carry no recommendation`,
       intro: "These places are in the catalogue and their climate record is complete. No month clears every critical component, so we publish no hiking score and no best months for them rather than a weak one.",
       reasonSnow: "snow in all twelve months at the selected cell",
       reasonNoMonth: "no month clears every critical component",
+      reasonComponent: (component: string) => `${component.toLowerCase()} falls below the critical floor in all twelve months`,
     },
     area: {
       eyebrow: "Area guide",
@@ -362,6 +373,7 @@ export const DICT = {
       withheldHeading: (count: number) => `${count} ${count === 1 ? "destination is" : "destinations are"} not recommended here`,
       reasonSnow: "snow in all twelve months at the selected cell",
       reasonNoMonth: "no month clears every critical component",
+      reasonComponent: (component: string) => `${component.toLowerCase()} falls below the critical floor in all twelve months`,
     },
     ranking: {
       heading: "Best hiking destinations",
@@ -369,6 +381,7 @@ export const DICT = {
       intro: "Pre-ranked by hiking suitability, then confidence. Affiliate economics never influence the order.",
       themeTitle: (theme: string, month: string) => `${theme} in ${month}`,
       themes: { warm: "Warm hiking", snowFree: "Snow-free hiking", lowRain: "Low-rain hiking" },
+      themeAll: "All destinations",
     },
     compareToolHeading: "Compare hiking destinations",
     compare: {
@@ -376,6 +389,7 @@ export const DICT = {
       addLabel: "Add a destination",
       placeholder: "Search by name",
       pickTwo: "Choose at least two destinations to compare.",
+      toolIntro: "Put up to four destinations side by side, month by month. The grid leaves a month blank wherever the recommendation gate withholds it.",
       removeLabel: (name: string) => `Remove ${name} from the comparison`,
       fromShortlist: (count: number) => `Compare my ${count} saved destinations`,
       recommendableMonths: "Recommendable months",
@@ -393,7 +407,7 @@ export const DICT = {
         title: "How the hiking score works",
         paragraphs: [
           "We combine temperature comfort (30%), precipitation (20%), snow (20%), heat stress (10%), wind (10%) and daylight (10%).",
-          "The real-data beta uses official ERA5-Land hourly time series for the 1991-2020 climate normal. Each destination currently represents one selected representative model-grid cell at its official model elevation.",
+          "We use official ERA5-Land hourly time series for the 1991-2020 climate normal. Each destination currently represents one selected representative model-grid cell at its official model elevation.",
           "Scores describe historical suitability at that selected cell. Grid-cell wind is coarse 10 m wind, not validated exposed-trail or gust information. They are not forecasts, whole-region trail conditions or safety advice.",
         ],
       },
@@ -406,7 +420,7 @@ export const DICT = {
       privacy: {
         title: "Privacy",
         paragraphs: [
-          "This static beta has no accounts, analytics, cookies or runtime database. Cloudflare may process standard request metadata when serving files.",
+          "This static site has no accounts, analytics, cookies or runtime database. Cloudflare may process standard request metadata when serving files.",
         ],
       },
       imprint: {
@@ -538,6 +552,7 @@ export const DICT = {
         elevation: "Jede Höhenlage",
         region: "Überall suchen",
         tags: "Geländefilter entfernen",
+        everything: "Nur den Monat behalten, alles andere zurücksetzen",
       },
       continent: "Kontinent",
       allContinents: "Alle Kontinente",
@@ -551,6 +566,9 @@ export const DICT = {
       resultCount: (count: number) => (count === 1 ? "1 Ziel passt" : `${count} Ziele passen`),
       inMonth: (month: string) => `im ${month}`,
       bestMonthFound: (month: string) => `Beste Übereinstimmung: ${month}`,
+      offerResults: (count: number) => (count === 1 ? "1 Ziel" : `${count} Ziele`),
+      invertedRange: "Der Mindestwert liegt über dem Höchstwert, kein Monat kann in diesem Bereich liegen.",
+      swapRange: "Werte tauschen",
       noResultsTitle: "Kein Ziel erfüllt diese Vorgaben",
       noResultsBody: "Diese Liste wird nicht künstlich aufgefüllt. Erweitere den Temperaturbereich, erlaube Regen oder Schnee, senke das Mindest-Tageslicht oder wähle einen anderen Monat oder eine andere Region.",
       reset: "Filter zurücksetzen",
@@ -681,6 +699,7 @@ export const DICT = {
         "volcanic": "Vulkanisch",
         "waterfalls": "Wasserfälle",
         "wildlife": "Tierwelt",
+        "windy": "Exponiert und windig",
         "winter-hiking": "Winterwandern",
         "year-round": "Ganzjährig",
       },
@@ -751,12 +770,18 @@ export const DICT = {
         steady: (cold: number, warm: number) => `Der Wandertag bleibt zwischen ${cold}°C und ${warm}°C. Eine Schicht genügt von Anfang bis Ende.`,
       },
     },
+    notFound: {
+      title: "Weg nicht gefunden",
+      body: "Dieser Pfad liegt außerhalb unserer veröffentlichten Karte.",
+      home: "Zurück zum Basislager",
+    },
     withheld: {
       eyebrow: "Was wir nicht empfehlen",
       heading: (count: number) => `${count} Ziele ohne Empfehlung`,
       intro: "Diese Orte stehen im Katalog und ihre Messreihe ist vollständig. Kein Monat erfüllt alle kritischen Komponenten, deshalb veröffentlichen wir für sie weder einen Wanderwert noch beste Monate statt eines schwachen Werts.",
       reasonSnow: "ganzjährig Schnee an der ausgewählten Zelle",
       reasonNoMonth: "kein Monat erfüllt alle kritischen Komponenten",
+      reasonComponent: (component: string) => `${component} liegt in allen zwölf Monaten unter der kritischen Schwelle`,
     },
     area: {
       eyebrow: "Regionsführer",
@@ -772,6 +797,7 @@ export const DICT = {
       withheldHeading: (count: number) => `${count} ${count === 1 ? "Ziel wird" : "Ziele werden"} hier nicht empfohlen`,
       reasonSnow: "ganzjährig Schnee an der ausgewählten Zelle",
       reasonNoMonth: "kein Monat erfüllt alle kritischen Komponenten",
+      reasonComponent: (component: string) => `${component} liegt in allen zwölf Monaten unter der kritischen Schwelle`,
     },
     ranking: {
       heading: "Beste Wanderziele",
@@ -779,6 +805,7 @@ export const DICT = {
       intro: "Vorsortiert nach Wanderwert, dann Datenvertrauen. Affiliate-Provisionen spielen keine Rolle.",
       themeTitle: (theme: string, month: string) => `${theme} im ${month}`,
       themes: { warm: "Warm wandern", snowFree: "Schneefrei wandern", lowRain: "Wenig Regen" },
+      themeAll: "Alle Ziele",
     },
     compareToolHeading: "Wanderziele vergleichen",
     compare: {
@@ -786,6 +813,7 @@ export const DICT = {
       addLabel: "Ziel hinzufügen",
       placeholder: "Nach Namen suchen",
       pickTwo: "Wähle mindestens zwei Ziele für den Vergleich.",
+      toolIntro: "Stelle bis zu vier Ziele Monat für Monat nebeneinander. Wo die Empfehlungsschwelle einen Monat zurückhält, bleibt das Feld leer.",
       removeLabel: (name: string) => `${name} aus dem Vergleich entfernen`,
       fromShortlist: (count: number) => `Meine ${count} gemerkten Ziele vergleichen`,
       recommendableMonths: "Empfehlenswerte Monate",
@@ -803,7 +831,7 @@ export const DICT = {
         title: "So funktioniert der Wanderwert",
         paragraphs: [
           "Wir kombinieren Temperaturkomfort (30 %), Niederschlag (20 %), Schnee (20 %), Hitzestress (10 %), Wind (10 %) und Tageslicht (10 %).",
-          "Die Real-Data-Beta nutzt offizielle stündliche ERA5-Land-Zeitreihen für das Klimanormal 1991-2020. Jedes Ziel steht derzeit für eine ausgewählte repräsentative Modell-Gitterzelle auf seiner offiziellen Modellhöhe.",
+          "Wir nutzen offizielle stündliche ERA5-Land-Zeitreihen für das Klimanormal 1991-2020. Jedes Ziel steht derzeit für eine ausgewählte repräsentative Modell-Gitterzelle auf seiner offiziellen Modellhöhe.",
           "Die Werte beschreiben die historische Eignung an dieser ausgewählten Zelle. Gitterwind ist grober 10-m-Wind und keine validierte Aussage über exponierte Wege oder Böen. Die Werte sind keine Vorhersage, kein regionaler Wegzustand und keine Sicherheitsberatung.",
         ],
       },
@@ -816,7 +844,7 @@ export const DICT = {
       privacy: {
         title: "Datenschutz",
         paragraphs: [
-          "Diese statische Beta hat keine Konten, Analysen, Cookies oder Laufzeitdatenbank. Cloudflare kann beim Ausliefern der Dateien übliche Request-Metadaten verarbeiten.",
+          "Diese statische Seite hat keine Konten, Analysen, Cookies oder Laufzeitdatenbank. Cloudflare kann beim Ausliefern der Dateien übliche Request-Metadaten verarbeiten.",
         ],
       },
       imprint: {

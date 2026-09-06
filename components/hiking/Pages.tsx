@@ -1,7 +1,7 @@
 import Link from "next/link";
 import type { Comparison, Locale, PublicDestination, Ranking } from "@/lib/data/types";
 import { monthName, monthNameShort } from "@/lib/i18n/config";
-import { t } from "@/lib/i18n/dict";
+import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, rankingPath } from "@/lib/i18n/links";
 import { getDestination, getManifest } from "@/lib/data/load";
 import { dayShapeDomain } from "@/lib/hiking/day-shape";
@@ -33,7 +33,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const cell = destination.representativeCell;
   return <>
     <FixtureNotice locale={locale}/>
-    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {destination.region}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(cell.modelElevationM)}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
+    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(cell.modelElevationM)}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
     {!unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
     {unavailable && !hasEligibleMonth && !held ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.noEligibleMonthTitle}</strong><p>{copy.notices.noEligibleMonthBody}</p></div></aside> : null}
@@ -63,9 +63,18 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
   </>;
 }
 
+/** Ranking themes travel as data ids; readers should never see one. */
+function rankingThemeLabel(theme: string, locale: Locale): string {
+  const themes = t(locale).ranking.themes;
+  if (theme === "warm") return themes.warm;
+  if (theme === "snow-free" || theme === "snowFree") return themes.snowFree;
+  if (theme === "low-rain" || theme === "lowRain") return themes.lowRain;
+  return t(locale).ranking.themeAll;
+}
+
 export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
   const copy = t(locale);
-  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {ranking.theme}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {entry.tempC}°C · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
+  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {entry.tempC}°C · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {

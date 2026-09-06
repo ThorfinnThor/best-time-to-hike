@@ -50,9 +50,13 @@ export const defaultPreferences: FinderPreferences = {
   minElevation: 0,
   maxElevation: ELEVATION_CEILING,
   tags: [],
-  // The hiking score is the measured quantity; match is how close a month is
-  // to what this reader asked for. Lead with the former.
-  sort: "score",
+  // Match, not the hiking score. Temperature is a scoring input here rather
+  // than a filter, so ranking by score alone silently ignores the reader's own
+  // range: asking for 0 to 8 degrees in July returned Mount Meru at 16 and
+  // Tenerife at 21, with the match column reading 67% and 55% beside them. The
+  // controls have to steer the order or they are decoration. The hiking score
+  // is on every tile and is still a sort option.
+  sort: "match",
 };
 
 export type ReasonKey = "comfortable" | "cool" | "warm" | "dry" | "wet" | "snowFree" | "longDays";
@@ -238,7 +242,7 @@ export function preferencesFromQuery(search: string): FinderPreferences {
 }
 
 /** A constraint that could be relaxed, and what relaxing it would yield. */
-export interface Relaxation { key: "months" | "temperature" | "rain" | "snow" | "heat" | "daylight" | "elevation" | "region" | "tags"; patch: Partial<FinderPreferences>; results: number }
+export interface Relaxation { key: "months" | "temperature" | "rain" | "snow" | "heat" | "daylight" | "elevation" | "region" | "tags" | "everything"; patch: Partial<FinderPreferences>; results: number }
 
 /**
  * When nothing matches, say what would help rather than only that nothing did.
@@ -264,10 +268,19 @@ export function relaxations(destinations: SearchDestination[], preferences: Find
   const applies = (entry: (typeof candidates)[number]) =>
     Object.entries(entry.patch).some(([key, value]) =>
       JSON.stringify(preferences[key as keyof FinderPreferences]) !== JSON.stringify(value));
-  return candidates
-    .filter(applies)
-    .map((entry) => ({...entry, results: matchDestinations(destinations, {...preferences, ...entry.patch}).length}))
-    .filter((entry) => entry.results > 0)
-    .sort((a, b) => b.results - a.results)
-    .slice(0, 3);
+  const measured = (entry: {key: Relaxation["key"]; patch: Partial<FinderPreferences>}): Relaxation =>
+    ({...entry, results: matchDestinations(destinations, {...preferences, ...entry.patch}).length});
+  const offers = candidates.filter(applies).map(measured).filter((entry) => entry.results > 0);
+  if (offers.length) return offers.sort((a, b) => b.results - a.results).slice(0, 3);
+
+  // Two constraints can block each other, and then dropping either one alone
+  // still returns nothing: the reader is offered no way out of a state they
+  // built one control at a time. Keeping only the month they chose is the last
+  // resort, and it is still measured rather than promised.
+  const everything = measured({key: "everything", patch: {
+    minTemp: d.minTemp, maxTemp: d.maxTemp, avoidRain: d.avoidRain, avoidSnow: d.avoidSnow, avoidHeat: d.avoidHeat,
+    minDaylight: d.minDaylight, maxWetDays: d.maxWetDays, minElevation: d.minElevation, maxElevation: d.maxElevation,
+    continent: d.continent, region: d.region, tags: [],
+  }});
+  return everything.results > 0 ? [everything] : [];
 }

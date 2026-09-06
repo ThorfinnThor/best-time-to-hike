@@ -20,10 +20,29 @@ const destination = (slug: string, temp: number, wet: number, snow: number, scor
   })),
 });
 
+test("the default sort answers what the reader asked for, not what scores highest", () => {
+  // Temperature is a scoring input, not a filter, so ranking by hiking score
+  // alone silently ignored the reader's own range: a cool-weather search
+  // returned the warmest, highest-scoring destinations with the match column
+  // reading 55% beside them.
+  assert.equal(defaultPreferences.sort, "match");
+  const warmAndGood = destination("warm-and-good", 21, .1, 0, 96);
+  const coolAsAsked = destination("cool-as-asked", 6, .2, 0, 78);
+  const results = matchDestinations([warmAndGood, coolAsAsked], inMonth(7, {minTemp: 0, maxTemp: 8}));
+  assert.equal(results[0].destination.slug, "cool-as-asked");
+});
+
+test("an over-constrained search always has a measured way out", () => {
+  const only = destination("only", 18, .5, 0, 85);
+  const preferences = inMonth(3, {minTemp: 25, maxTemp: 30, maxWetDays: 0.1, minDaylight: 14});
+  assert.equal(matchDestinations([only], preferences).length, 0);
+  const offers = relaxations([only], preferences);
+  assert.ok(offers.length, "the empty state must be able to offer something");
+  assert.ok(offers.every((offer) => offer.results > 0), "an offer that yields nothing is not an offer");
+});
+
 test("finder keeps hiking score distinct from user match", () => {
-  // Sort explicitly by match: the default is now the hiking score, and this
-  // asserts the separate match ranking, which is why there are two numbers.
-  const results = matchDestinations([destination("dry", 18, .05, 0, 80), destination("wet", 18, .6, 0, 90)], inMonth(1, {sort: "match"}));
+  const results = matchDestinations([destination("dry", 18, .05, 0, 80), destination("wet", 18, .6, 0, 90)], inMonth(1));
   assert.equal(results[0].destination.slug, "dry");
   assert.equal(results[0].month.score, 80);
   assert.notEqual(results[0].match, results[0].month.score);

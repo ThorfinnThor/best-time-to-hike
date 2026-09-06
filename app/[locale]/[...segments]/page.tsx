@@ -18,12 +18,13 @@ import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
 import { breadcrumbLd, destinationFaqLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
 import { areaById } from "@/lib/seo/areas";
+import { blockingComponents } from "@/lib/scoring/recommendations";
 import { AreaRankingPage } from "@/components/hiking/AreaRankingPage";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ComparisonTool } from "@/components/compare/ComparisonTool";
 import { routeCatalog } from "@/lib/seo/route-catalog";
-import type { ComponentScores, Locale } from "@/lib/data/types";
+import type { ComponentScores, Locale, PublicDestination } from "@/lib/data/types";
 
 type Params = Promise<{locale:string;segments?:string[]}>;
 export const dynamicParams = false;
@@ -79,7 +80,7 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
         <ul>{withheld.map((destination) => <li key={destination.slug}>
           <Link href={pathFor({kind: "destination", slug: destination.slug}, locale)}>{destination.name}</Link>
           <span>{destination.countryName}</span>
-          <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.withheld.reasonSnow : copy.withheld.reasonNoMonth}</span>
+          <span>{withheldReason(destination, copy)}</span>
         </li>)}</ul>
       </section>;
     })()}
@@ -125,9 +126,24 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
         <Breadcrumbs trail={trail} locale={locale}/><FixtureNotice locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
     case "compare": { if(!getComparisonIndex().some((item)=>item.slug===page.slug)) notFound(); return <ComparisonPage comparison={getComparison(page.slug)} locale={locale}/>; }
-    case "compareTool": { const copy=t(locale); return <><FixtureNotice locale={locale}/><section className="page-intro tool-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.pickTwo}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
+    case "compareTool": { const copy=t(locale); return <><FixtureNotice locale={locale}/><section className="page-intro tool-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.toolIntro}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
     case "info": return <InformationPage locale={locale} pageKey={page.key}/>;
   }
+}
+
+/**
+ * Why this destination carries no recommendation, in the reader's terms.
+ *
+ * "No month clears every critical component" is true of every entry in the
+ * list, so it explains nothing. Where one component fails in all twelve months
+ * we name it, because that is the fact a reader needs in order to judge whether
+ * the withholding is conservative or correct.
+ */
+function withheldReason(destination: PublicDestination, copy: ReturnType<typeof t>): string {
+  if (destination.recommendationHoldReason === "persistent-snow") return copy.withheld.reasonSnow;
+  const blocking = blockingComponents(destination.months);
+  if (!blocking.length) return copy.withheld.reasonNoMonth;
+  return copy.withheld.reasonComponent(blocking.map((key) => copy.components[key]).join(", "));
 }
 
 export default async function LocalizedPage({params}:{params:Params}) {

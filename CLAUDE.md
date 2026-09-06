@@ -277,8 +277,13 @@ Cloudflare Pages builds every push to `main` and publishes `out/`. No Worker, no
 runtime. Rollback is a normal Git revert; Pages redeploys automatically. A failed data refresh leaves
 the last known-good commit and deployment untouched.
 
-Production activation requires `NEXT_PUBLIC_DATA_STATUS=production` **and** all six approval flags —
-see `docs/going-live.md`. Setting the flag without the approvals is prohibited.
+Production activation is decided by the **data**, not by an environment variable. `app/robots.ts` and
+`app/sitemap.ts` both read `getManifest().datasetStatus`, which the exporter derives from the
+`datasetStatus` field on the committed climate snapshots (currently `provisional` for all 315). While
+it is anything but `production`, robots.txt disallows everything and the sitemap is empty. Flipping it
+requires all six approval flags in `data-config/methodology/release-approvals.json` — see
+`docs/going-live.md`. There is no env-var override, deliberately: a flag that can disagree with the
+published data is a flag that will.
 
 ## Web-app phase — what to take from the sibling project
 

@@ -34,6 +34,28 @@ export function recommendationDecision(
   };
 }
 
+/**
+ * The critical components that keep every scored month of a destination out.
+ *
+ * The methodology page listed the withheld destinations but said only that no
+ * month clears every critical component, which is true of all of them and so
+ * tells the reader nothing. Naming the component that actually does the
+ * withholding is the same honesty the destination pages already keep: for most
+ * of these it is rain, in every month of the year, and a reader deciding
+ * whether to trust the catalogue deserves to know that.
+ *
+ * Only components failing in *every* scored month are returned, since those
+ * are the ones a different month could not fix.
+ */
+export function blockingComponents(months: Array<{components: ComponentScores | null}>): CriticalComponentKey[] {
+  const scored = months.filter((month): month is {components: ComponentScores} => month.components !== null);
+  if (!scored.length) return [];
+  return CRITICAL_COMPONENT_KEYS.filter((key) => scored.every((month) => {
+    const value = month.components[key];
+    return !Number.isFinite(value) || value <= recommendationConfig.criticalComponentMinimumExclusive;
+  }));
+}
+
 export function hasPersistentSnowHold(months: Array<Pick<PublicMonth, "metrics">>): boolean {
   const reviewMonthCount = representativenessConfig.glacier.persistentSnowReviewMonthCount;
   return months.filter((month) => month.metrics.snowDayProbability === 1).length === reviewMonthCount;

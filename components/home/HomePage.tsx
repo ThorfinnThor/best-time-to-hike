@@ -59,7 +59,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             const month = destination.months[bestMonth - 1];
             return (
               <article className="destination-summary-card" key={destination.slug}>
-                <DestinationImage slug={destination.slug} name={destination.name} region={destination.region} />
+                <DestinationImage slug={destination.slug} name={destination.name} region={taxonomyLabel(locale, "regions", destination.region)} />
                 <div className="destination-card-body">
                   <div className="destination-card-heading">
                     <div>
@@ -72,7 +72,7 @@ export function HomePage({ locale }: { locale: Locale }) {
                   <div className="climate-facts">
                     <span><b>☀</b>{Math.round(month.metrics.temperatureHikingMeanC)}°C</span>
                     <span><b>☂</b>{Math.round(month.metrics.wetDayProbability * 100)}% {common.wetDays}</span>
-                    <span><b>↕</b>{destination.elevation.minM}–{destination.elevation.maxM} m</span>
+                    <span><b>↕</b>{Math.round(destination.elevation.maxM)} m</span>
                   </div>
                   <Link href={destinationPath(locale, destination.slug)}>{content.allMonths} →</Link>
                 </div>
