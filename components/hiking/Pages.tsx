@@ -4,9 +4,11 @@ import { monthName, monthNameShort } from "@/lib/i18n/config";
 import { t } from "@/lib/i18n/dict";
 import { destinationPath, rankingPath } from "@/lib/i18n/links";
 import { getDestination, getManifest } from "@/lib/data/load";
+import { dayShapeDomain } from "@/lib/hiking/day-shape";
 import { ScoreRing } from "./ScoreRing";
 import { ScoreChart } from "./ScoreChart";
 import { ComponentGrid } from "./ComponentGrid";
+import { DayRange } from "./DayRange";
 import { DestinationImage } from "@/components/media/DestinationImage";
 
 export function FixtureNotice({locale}:{locale:Locale}) {
@@ -54,6 +56,7 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
     <section className="month-hero"><div><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.heading(destination.name, monthName(month,locale))}</h1><p>{c.method}</p></div><ScoreRing score={data.overallScore} locale={locale}/></section>
     <section className="stats-strip"><div><span>{c.confidence}</span><strong>{data.confidenceScore}%</strong></div><div><span>{copy.common.meanTemperature}</span><strong>{data.metrics.temperatureHikingMeanC}°C</strong></div><div><span>{copy.common.wetDays}</span><strong>{Math.round(data.metrics.wetDayProbability*100)}%</strong></div><div><span>{copy.common.daylight}</span><strong>{data.metrics.daylightHoursMean}h</strong></div></section>
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.why}</span><h2>{m.componentsHeading}</h2></div></div><ComponentGrid components={data.components} locale={locale}/></section>
+    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{copy.dayShape.eyebrow}</span><h2>{copy.dayShape.heading}</h2></div></div><DayRange metrics={data.metrics} domain={dayShapeDomain(destination.months.filter((item)=>item.metrics))} locale={locale}/></section>
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.elevation}</span><h2>{destination.elevationBands.length===1 ? m.selectedCellHeading : m.bandsHeading}</h2></div></div><div className="band-table">{data.bands.map((band)=><div key={band.bandId}><div><strong>{band.bandId.replaceAll("-"," ")}</strong><span>{band.targetElevationM} m</span></div><ScoreRing score={band.overallScore ?? 0} size="small" locale={locale}/><div><span>{band.temperatureHikingMeanC}°C</span><small>{Math.round(band.snowDayProbability*100)}% {copy.common.snowDays}</small></div></div>)}</div></section>
     <nav className="month-nav" aria-label={m.adjacentAria}><Link href={destinationPath(locale,destination.slug,previous)}>← {monthName(previous,locale)}</Link><Link href={destinationPath(locale,destination.slug)}>{destination.name}</Link><Link href={destinationPath(locale,destination.slug,next)}>{monthName(next,locale)} →</Link></nav>
     <MethodNote locale={locale}/>
