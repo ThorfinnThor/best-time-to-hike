@@ -283,9 +283,19 @@ the sentinel. A withheld destination keeps a provenance page and publishes no sc
 
 ## Deploy
 
-Cloudflare Pages builds every push to `main` and publishes `out/`. No Worker, no deploy token, no
-runtime. Rollback is a normal Git revert; Pages redeploys automatically. A failed data refresh leaves
-the last known-good commit and deployment untouched.
+Cloudflare Pages builds every push to `main` and publishes `out/`, which `wrangler.jsonc` names
+through `pages_build_output_dir`. No Worker, no deploy token, no runtime. Rollback is a normal Git
+revert; Pages redeploys automatically. A failed data refresh leaves the last known-good commit and
+deployment untouched.
+
+`deploy:cloudflare` is a manual override, not the normal path. It pushes a build straight from a
+laptop, so the deployment is not tied to a commit anyone can look up. Use the Git path unless Pages
+itself is broken.
+
+Pages builds on its own trigger, so **a green CI run is not a precondition for a deploy** unless the
+Pages project is configured to wait for the GitHub check. That setting is in the Cloudflare
+dashboard, not in this repo. `.nvmrc` pins Node 22 so the Pages builder matches CI rather than
+following Cloudflare's rolling default.
 
 Production activation is decided by the **data**, not by an environment variable. `app/robots.ts` and
 `app/sitemap.ts` both read `getManifest().datasetStatus`, which the exporter derives from the
