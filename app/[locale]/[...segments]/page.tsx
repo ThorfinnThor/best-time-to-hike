@@ -18,6 +18,7 @@ import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
 import { breadcrumbLd, destinationFaqLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
 import { areaById } from "@/lib/seo/areas";
+import operator from "@/config/operator.json";
 import { blockingComponents } from "@/lib/scoring/recommendations";
 import { AreaRankingPage } from "@/components/hiking/AreaRankingPage";
 import { JsonLd } from "@/components/seo/JsonLd";
@@ -66,9 +67,35 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
   // Widen away from the `as const` literal tuple: mapping over a union of
   // differently shaped readonly tuples is not callable in TypeScript.
   const paragraphs: readonly string[] = data.paragraphs;
+  // Only the legal pages carry sections; the rest are a lead and nothing else.
+  const sections: ReadonlyArray<{heading: string; paragraphs: readonly string[]}> =
+    "sections" in data ? data.sections : [];
   const componentLabels = copy.components;
   return <>
     <section className="page-intro prose-intro"><span className="eyebrow">{copy.brand}</span><h1>{data.title}</h1>{paragraphs.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}</section>
+    {sections.length ? <section className="content-section legal-body">
+      {sections.map((section)=><section key={section.heading}>
+        <h2>{section.heading}</h2>
+        {section.paragraphs.map((paragraph)=><p key={paragraph}>
+          {/* An address is one paragraph with real line breaks in it. */}
+          {paragraph.split("\n").map((line, index, lines)=><span key={line}>{line}{index < lines.length - 1 ? <br/> : null}</span>)}
+        </p>)}
+      </section>)}
+    </section> : null}
+    {pageKey==="imprint" ? (() => {
+      // Rendered from config/operator.json rather than written into the copy,
+      // so the address, the email and the VAT status have one source and the
+      // release validator can refuse a production build that leaves them open.
+      const c = copy.imprintContact;
+      return <section className="content-section legal-body"><section>
+        <h2>{c.heading}</h2>
+        <p>{c.email}: {operator.contactEmail ?? c.emailPending}</p>
+        <p>{c.phone}</p>
+        <p>{c.vat}: {operator.vatStatus === "kleinunternehmer" ? c.vatKleinunternehmer
+          : operator.vatStatus === "vat-id" && operator.vatId ? c.vatId(operator.vatId)
+          : c.vatPending}</p>
+      </section></section>;
+    })() : null}
     {pageKey==="methodology" && (() => {
       const withheld = getAllDestinations().filter((destination) => !destination.recommendationEligible);
       return <section className="content-section withheld-list">

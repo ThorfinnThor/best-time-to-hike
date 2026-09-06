@@ -353,6 +353,16 @@ export const DICT = {
         steady: (cold: number, warm: number) => `The walking day holds between ${cold}°C and ${warm}°C. One layer covers it from start to finish.`,
       },
     },
+    imprintContact: {
+      heading: "Contact and VAT",
+      email: "Email",
+      emailPending: "To be entered before publication. A production build is refused while this is missing, because § 5 DDG requires it.",
+      phone: "No telephone number is maintained; contact is by email.",
+      vat: "VAT",
+      vatKleinunternehmer: "Small-business status under § 19 UStG; no VAT is charged.",
+      vatId: (id: string) => `VAT identification number: ${id}`,
+      vatPending: "To be resolved before publication and stated here.",
+    },
     notFound: {
       title: "Trail not found",
       body: "This path is outside our published map.",
@@ -426,15 +436,85 @@ export const DICT = {
         ],
       },
       privacy: {
-        title: "Privacy",
+        title: "Privacy notice",
         paragraphs: [
-          "This static site has no accounts, analytics, cookies or runtime database. Cloudflare may process standard request metadata when serving files.",
+          "This site collects as little as is technically possible: no accounts, no analytics, no advertising or tracking technology, and no third-party server is contacted when a page loads. The German version of this page is the legally binding one.",
+        ],
+        sections: [
+          {heading: "Controller", paragraphs: [
+            "The controller within the meaning of the GDPR is:\nSeitenhafen361, sole proprietorship (Einzelunternehmen)\nOwner: Schayan Yousefian\nFreienwalder Str. 34\n13359 Berlin\nDeutschland",
+            "There is no statutory requirement to appoint a data protection officer.",
+          ]},
+          {heading: "Hosting and server logs", paragraphs: [
+            "The site is hosted as static files on Cloudflare Pages. The provider is Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA; for Europe, Cloudflare Germany GmbH, Rosental 7, 80331 Munich.",
+            "When a page is requested, Cloudflare processes technically necessary access data: the IP address, the date and time, the address requested, the volume transferred, the browser type and the operating system. This processing is necessary to deliver the site and keep it secure.",
+            "The legal basis is Art. 6(1)(f) GDPR. Our legitimate interest is the secure and reliable provision of the website.",
+            "Processing in the United States cannot be excluded. Cloudflare is certified under the EU-US Data Privacy Framework, supplemented by standard contractual clauses under Art. 46(2)(c) GDPR. We have concluded a data processing agreement with Cloudflare under Art. 28 GDPR.",
+            "We operate no database and no server-side application of our own. There are no forms, no sign-in and no newsletter.",
+          ]},
+          {heading: "No cookies, no analytics, no external resources", paragraphs: [
+            "This site sets no cookies. There is no audience measurement, no tracking and no profiling.",
+            "No content is loaded from third-party servers when a page opens: no external fonts, no script CDN, no map widgets, no social plugins, no embedded video. Destination photographs are served from our own domain. Your IP address is therefore not disclosed to any further third party.",
+          ]},
+          {heading: "Your shortlist, stored on your device", paragraphs: [
+            "When you star a destination, that list is stored in your browser's local storage under the key 'bth.saved.v1'. This is not cookie technology, but it falls under § 25 TDDDG all the same.",
+            "It is stored solely to provide the service you explicitly asked for and is strictly necessary for it, so no consent is required under § 25(2) no. 2 TDDDG.",
+            "The list never leaves your device. It is not transmitted to us or to anyone else, because there is no recipient for it. You can delete it at any time by clearing site data in your browser.",
+          ]},
+          {heading: "Contacting us by email", paragraphs: [
+            "If you write to us, we process what you send solely in order to deal with your enquiry. The legal basis is Art. 6(1)(f) GDPR, or Art. 6(1)(b) where a contract is being initiated or performed.",
+            "We delete this data once the enquiry has been dealt with, unless statutory retention obligations apply.",
+          ]},
+          {heading: "Advertising and affiliate links", paragraphs: [
+            "This site currently carries no advertising, no affiliate links and no paid placements. No partner programmes are integrated and no commission is earned.",
+            "The order of destinations and rankings is calculated solely from the published climate data and scoring rules. Commercial interests do not influence it, and that commitment is recorded as an invariant checked by the project's architecture guard.",
+            "Should affiliate links or advertising be introduced later: they will be labelled as such where they appear, this notice will be updated before they go live, and any technology that sets cookies or transmits personal data to third parties will require prior consent under § 25(1) TDDDG and Art. 6(1)(a) GDPR. Without that consent, such an integration would not be served.",
+          ]},
+          {heading: "Your rights", paragraphs: [
+            "You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and the right to object to processing (Art. 21 GDPR).",
+            "You also have the right to lodge a complaint with a supervisory authority. The competent authority for us is the Berlin Commissioner for Data Protection and Freedom of Information, Alt-Moabit 59-61, 10555 Berlin.",
+          ]},
+          {heading: "Changes to this notice", paragraphs: [
+            "We update this notice whenever the technical implementation of the site or the legal position changes. The version published here is always the applicable one.",
+          ]},
         ],
       },
       imprint: {
         title: "Imprint",
         paragraphs: [
-          "Project prototype. Operator contact details must be added before a commercial production launch.",
+          "Provider identification under § 5 of the German Digital Services Act (DDG) and § 18(2) of the Interstate Media Treaty (MStV). The German version of this page is the legally binding one; this translation is provided for convenience.",
+        ],
+        sections: [
+          {heading: "Provider", paragraphs: [
+            "Seitenhafen361, sole proprietorship (Einzelunternehmen)\nOwner: Schayan Yousefian\nFreienwalder Str. 34\n13359 Berlin\nDeutschland",
+                  ]},
+          {heading: "Responsible for content", paragraphs: [
+            "Responsible for editorial content under § 18(2) MStV: Schayan Yousefian, address as above.",
+          ]},
+          {heading: "Important: planning a trip", paragraphs: [
+            "This website is for information only. It is not hiking, route, navigation or safety advice, and it does not replace your own preparation.",
+            "Every figure comes from the ERA5-Land 1991-2020 historical climate normal and describes one selected model-grid cell 0.1 degrees across. It is expressly not a weather forecast, not a statement about a specific route, and not a statement about a whole region.",
+            "Anyone planning a walk must inform themselves before setting out, from official sources: the current forecast, the avalanche bulletin, trail and hut conditions, closures, permits, and their own government's travel advice. Hiking and mountain activity carry risks that each person bears on their own responsibility.",
+            "To the extent permitted by law, no liability is accepted for decisions made on the basis of this website or for any loss arising from them.",
+          ]},
+          {heading: "Liability for content", paragraphs: [
+            "As a service provider we are responsible for our own content on these pages under general law, in accordance with § 7(1) DDG. Under §§ 8 to 10 DDG, however, we are not obliged to monitor transmitted or stored third-party information, or to investigate circumstances that indicate unlawful activity.",
+            "Obligations to remove or block the use of information under general law remain unaffected. Liability in this respect is only possible from the point at which a specific infringement becomes known. We remove such content immediately once we become aware of it.",
+            "The calculations on this site are reproducible and versioned. Despite careful checking, no warranty is given for the accuracy, completeness or currency of the values shown.",
+          ]},
+          {heading: "Liability for links", paragraphs: [
+            "Our site contains links to external third-party websites over whose content we have no influence. We therefore cannot accept any responsibility for that third-party content. The respective provider or operator of a linked page is always responsible for its content.",
+            "Linked pages were checked for possible legal infringements at the time of linking, and no unlawful content was apparent. Permanent monitoring of linked pages is not reasonable without concrete evidence of an infringement. We remove such links immediately once we become aware of an infringement.",
+          ]},
+          {heading: "Copyright", paragraphs: [
+            "Content and works created by the operator on these pages are subject to German copyright law. Reproduction, adaptation, distribution and any form of exploitation beyond the limits of copyright require the written consent of the respective author or creator.",
+            "Destination photographs come from Wikimedia Commons and are used only under licences permitting commercial use: public domain, CC0, CC BY and CC BY-SA. The author, licence and source file of every photograph are listed in full on the image credits page.",
+            "The underlying climate data is ERA5-Land from the Copernicus Climate Change Service (C3S), DOI 10.24381/ee82e357. Neither the European Commission nor ECMWF is responsible for the use made of it here.",
+          ]},
+          {heading: "Consumer dispute resolution", paragraphs: [
+            "The European Commission shut down its online dispute resolution platform on 20 July 2025, so no link to it is given.",
+            "We are neither willing nor obliged to take part in dispute resolution proceedings before a consumer arbitration board under the German Consumer Dispute Resolution Act (VSBG).",
+          ]},
         ],
       },
       credits: {
@@ -785,6 +865,16 @@ export const DICT = {
         steady: (cold: number, warm: number) => `Der Wandertag bleibt zwischen ${cold}°C und ${warm}°C. Eine Schicht genügt von Anfang bis Ende.`,
       },
     },
+    imprintContact: {
+      heading: "Kontakt und Umsatzsteuer",
+      email: "E-Mail",
+      emailPending: "Wird vor der Veröffentlichung eingetragen. Ein Produktions-Build wird abgelehnt, solange diese Angabe fehlt, weil § 5 DDG sie verlangt.",
+      phone: "Eine Telefonnummer wird nicht vorgehalten; der Kontakt erfolgt per E-Mail.",
+      vat: "Umsatzsteuer",
+      vatKleinunternehmer: "Kleinunternehmer nach § 19 UStG; es wird keine Umsatzsteuer ausgewiesen.",
+      vatId: (id: string) => `Umsatzsteuer-Identifikationsnummer: ${id}`,
+      vatPending: "Wird vor der Veröffentlichung geklärt und hier ausgewiesen.",
+    },
     notFound: {
       title: "Weg nicht gefunden",
       body: "Dieser Pfad liegt außerhalb unserer veröffentlichten Karte.",
@@ -858,15 +948,85 @@ export const DICT = {
         ],
       },
       privacy: {
-        title: "Datenschutz",
+        title: "Datenschutzerklärung",
         paragraphs: [
-          "Diese statische Seite hat keine Konten, Analysen, Cookies oder Laufzeitdatenbank. Cloudflare kann beim Ausliefern der Dateien übliche Request-Metadaten verarbeiten.",
+          "Diese Website erhebt so wenig Daten wie technisch möglich: keine Konten, keine Analyse, keine Werbe- oder Tracking-Technologien, keine Einbindung fremder Server beim Aufruf einer Seite.",
+        ],
+        sections: [
+          {heading: "Verantwortlicher", paragraphs: [
+            "Verantwortlicher im Sinne der DSGVO ist:\nSeitenhafen361, Einzelunternehmen\nInhaber: Schayan Yousefian\nFreienwalder Str. 34\n13359 Berlin\nDeutschland",
+            "Ein Datenschutzbeauftragter ist gesetzlich nicht zu benennen.",
+          ]},
+          {heading: "Hosting und Server-Logfiles", paragraphs: [
+            "Die Website wird als statische Seite bei Cloudflare Pages gehostet. Anbieter ist Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, USA; für den europäischen Raum Cloudflare Germany GmbH, Rosental 7, 80331 München.",
+            "Beim Abruf einer Seite verarbeitet Cloudflare technisch notwendige Zugriffsdaten, insbesondere die IP-Adresse, Datum und Uhrzeit des Zugriffs, die aufgerufene Adresse, den übertragenen Datenumfang, den Browsertyp und das Betriebssystem. Diese Verarbeitung ist erforderlich, um die Seite auszuliefern und ihren Betrieb abzusichern.",
+            "Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO. Unser berechtigtes Interesse liegt in der sicheren und zuverlässigen Bereitstellung der Website.",
+            "Eine Verarbeitung in den Vereinigten Staaten ist dabei nicht ausgeschlossen. Cloudflare ist unter dem EU-US Data Privacy Framework zertifiziert; ergänzend bestehen Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO. Wir haben mit Cloudflare einen Auftragsverarbeitungsvertrag nach Art. 28 DSGVO geschlossen.",
+            "Wir selbst betreiben keine Datenbank und keine serverseitige Anwendung. Es gibt keine Formulare, keine Anmeldung und keinen Newsletter.",
+          ]},
+          {heading: "Keine Cookies, keine Analyse, keine externen Ressourcen", paragraphs: [
+            "Diese Website setzt keine Cookies. Es findet keine Reichweitenmessung, kein Tracking und kein Profiling statt.",
+            "Beim Aufruf einer Seite werden keine Inhalte von fremden Servern nachgeladen: keine externen Schriftarten, kein CDN für Skripte, keine Karten-Widgets, keine Social-Media-Plugins, keine eingebetteten Videos. Auch die Zielfotografien liegen auf unserer eigenen Domain. Ihre IP-Adresse wird dadurch an keinen weiteren Dritten übermittelt.",
+          ]},
+          {heading: "Lokale Speicherung Ihrer Merkliste", paragraphs: [
+            "Wenn Sie ein Ziel mit dem Stern merken, wird diese Liste unter dem Schlüssel „bth.saved.v1“ im lokalen Speicher (localStorage) Ihres Browsers abgelegt. Das ist keine Cookie-Technologie, fällt aber ebenfalls unter § 25 TDDDG.",
+            "Die Speicherung erfolgt ausschließlich, um den von Ihnen ausdrücklich gewünschten Dienst bereitzustellen, und ist dafür unbedingt erforderlich. Sie ist daher nach § 25 Abs. 2 Nr. 2 TDDDG einwilligungsfrei.",
+            "Die Liste verlässt Ihr Gerät nicht. Sie wird nicht an uns und nicht an Dritte übertragen, weil es dafür keinen Empfänger gibt. Sie können sie jederzeit löschen, indem Sie die Websitedaten in Ihrem Browser entfernen.",
+          ]},
+          {heading: "Kontaktaufnahme per E-Mail", paragraphs: [
+            "Wenn Sie uns schreiben, verarbeiten wir Ihre Angaben ausschließlich zur Bearbeitung Ihrer Anfrage. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO, bei Anbahnung oder Durchführung eines Vertrags Art. 6 Abs. 1 lit. b DSGVO.",
+            "Wir löschen diese Daten, sobald die Anfrage abschließend bearbeitet ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.",
+          ]},
+          {heading: "Werbung und Affiliate-Links", paragraphs: [
+            "Diese Website enthält derzeit keine Werbung, keine Affiliate-Links und keine bezahlten Platzierungen. Es werden keine Partnerprogramme eingebunden und keine Provisionen erhoben.",
+            "Die Reihenfolge der Ziele und Ranglisten wird ausschließlich aus den veröffentlichten Klimadaten und Bewertungsregeln berechnet. Wirtschaftliche Interessen beeinflussen sie nicht; diese Zusage ist in der Architekturprüfung des Projekts als Invariante hinterlegt.",
+            "Sollten künftig Affiliate-Links oder Werbung eingebunden werden, gilt: sie werden im Umfeld der Platzierung als solche gekennzeichnet, diese Datenschutzerklärung wird vor der Einbindung aktualisiert, und für jede Technologie, die Cookies setzt oder personenbezogene Daten an Dritte überträgt, wird zuvor eine Einwilligung nach § 25 Abs. 1 TDDDG und Art. 6 Abs. 1 lit. a DSGVO eingeholt. Ohne diese Einwilligung würde eine solche Einbindung nicht ausgeliefert.",
+          ]},
+          {heading: "Ihre Rechte", paragraphs: [
+            "Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) sowie das Recht, der Verarbeitung zu widersprechen (Art. 21 DSGVO).",
+            "Sie haben außerdem das Recht, sich bei einer Datenschutz-Aufsichtsbehörde zu beschweren. Für uns zuständig ist die Berliner Beauftragte für Datenschutz und Informationsfreiheit, Alt-Moabit 59-61, 10555 Berlin.",
+          ]},
+          {heading: "Änderungen dieser Erklärung", paragraphs: [
+            "Wir passen diese Datenschutzerklärung an, sobald sich die technische Umsetzung der Website oder die Rechtslage ändert. Maßgeblich ist stets die hier veröffentlichte Fassung.",
+          ]},
         ],
       },
       imprint: {
         title: "Impressum",
         paragraphs: [
-          "Projektprototyp. Vor einem kommerziellen Produktionsstart müssen die Kontaktdaten des Betreibers ergänzt werden.",
+          "Angaben gemäß § 5 Digitale-Dienste-Gesetz (DDG) und § 18 Abs. 2 Medienstaatsvertrag (MStV).",
+        ],
+        sections: [
+          {heading: "Anbieter", paragraphs: [
+            "Seitenhafen361, Einzelunternehmen\nInhaber: Schayan Yousefian\nFreienwalder Str. 34\n13359 Berlin\nDeutschland",
+                  ]},
+          {heading: "Verantwortlich für den Inhalt", paragraphs: [
+            "Verantwortlich für journalistisch-redaktionelle Inhalte nach § 18 Abs. 2 MStV: Schayan Yousefian, Anschrift wie oben.",
+          ]},
+          {heading: "Wichtiger Hinweis zur Nutzung: Reise- und Tourenplanung", paragraphs: [
+            "Diese Website dient ausschließlich Informationszwecken. Sie ist keine Wander-, Touren-, Navigations- oder Sicherheitsberatung und ersetzt keine eigene Vorbereitung.",
+            "Alle Angaben beruhen auf dem historischen Klimamittel ERA5-Land für den Zeitraum 1991 bis 2020 und beschreiben jeweils eine einzelne, ausgewählte Modell-Gitterzelle von 0,1 Grad Kantenlänge. Sie sind ausdrücklich keine Wettervorhersage, keine Aussage über eine konkrete Route und keine Aussage über die gesamte Region.",
+            "Wer eine Tour plant, muss sich vor jedem Aufbruch selbst und aus offiziellen Quellen informieren: aktuelle Wettervorhersage, Lawinenlagebericht, Wege- und Hüttenzustand, Sperrungen, Genehmigungen sowie die Reise- und Sicherheitshinweise des Auswärtigen Amtes. Bergsport und Wandern sind mit Risiken verbunden, die jede Person eigenverantwortlich trägt.",
+            "Für Entscheidungen, die auf Grundlage dieser Website getroffen werden, und für daraus entstehende Schäden wird keine Haftung übernommen, soweit gesetzlich zulässig.",
+          ]},
+          {heading: "Haftung für Inhalte", paragraphs: [
+            "Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach §§ 8 bis 10 DDG sind wir jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen.",
+            "Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden entsprechender Rechtsverletzungen entfernen wir diese Inhalte umgehend.",
+            "Die Berechnungen dieser Website sind reproduzierbar und versioniert. Trotz sorgfältiger Prüfung kann für die Richtigkeit, Vollständigkeit und Aktualität der dargestellten Werte keine Gewähr übernommen werden.",
+          ]},
+          {heading: "Haftung für Links", paragraphs: [
+            "Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.",
+            "Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen entfernen wir derartige Links umgehend.",
+          ]},
+          {heading: "Urheberrecht", paragraphs: [
+            "Die durch den Betreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.",
+            "Die Zielfotografien stammen von Wikimedia Commons und werden ausschließlich unter Lizenzen genutzt, die eine kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Urheber, Lizenz und Quelldatei jedes Bildes sind auf der Seite Bildnachweis vollständig aufgeführt.",
+            "Die zugrunde liegenden Klimadaten stammen aus ERA5-Land des Copernicus Climate Change Service (C3S), DOI 10.24381/ee82e357. Weder die Europäische Kommission noch ECMWF haften für die hier vorgenommene Weiterverarbeitung.",
+          ]},
+          {heading: "Verbraucherstreitbeilegung", paragraphs: [
+            "Die Europäische Kommission hat ihre Plattform zur Online-Streitbeilegung zum 20. Juli 2025 eingestellt; ein Link darauf entfällt daher.",
+            "Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle im Sinne des Verbraucherstreitbeilegungsgesetzes (VSBG) teilzunehmen.",
+          ]},
         ],
       },
       credits: {

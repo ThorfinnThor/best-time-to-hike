@@ -34,8 +34,15 @@ const era5LandOrography=readJson<any>("data-config/methodology/era5-land-orograp
 const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
+const operator=readJson<any>("config/operator.json");
 assert(Math.abs(Object.values(scoringWeights.overall).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Overall score weights do not sum to 1");
 assert(Math.abs(Object.values(confidence.weights).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Confidence weights do not sum to 1");
+// A German site needs a complete Impressum before it is reachable, and an
+// approval flag is a signature rather than a check. These are the fields
+// § 5 DDG requires that we cannot derive from anything else.
+for(const field of ["businessName","ownerName","street","postalCode","city","country"] as const){
+  assert(typeof operator[field]==="string"&&operator[field].length>0,`Operator ${field} is required for the imprint`);
+}
 assert(scoringWeights.algorithmVersion===architecture.algorithmVersion,"Algorithm version config mismatch");
 assert(recommendation.algorithmVersion===architecture.algorithmVersion,"Recommendation algorithm version config mismatch");
 for(const [name,curve] of Object.entries(curves))if(Array.isArray(curve)){
@@ -72,6 +79,11 @@ for (const config of configs.filter((item)=>item.active)) assert(geometryIds.fil
 
 const root = join(ROOT,"public/data/hiking");
 const manifest = readJson<any>("public/data/hiking/manifest.json");
+if(manifest.datasetStatus==="production"){
+  assert(typeof operator.contactEmail==="string"&&operator.contactEmail.includes("@"),"Operator contact email is required by § 5 DDG before a production build");
+  assert(operator.vatStatus==="kleinunternehmer"||(operator.vatStatus==="vat-id"&&typeof operator.vatId==="string"&&operator.vatId.length>0),"Operator VAT status must be resolved before a production build");
+}
+
 assert(manifest.algorithmVersion===scoringWeights.algorithmVersion,"Manifest algorithm version mismatch");
 assert(validateManifest(manifest), `Manifest schema: ${ajv.errorsText(validateManifest.errors)}`);
 assert(manifest.climateNormal.startYear===1991 && manifest.climateNormal.endYear===2020,"Climate normal must be 1991-2020");
