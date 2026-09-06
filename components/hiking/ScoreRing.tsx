@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/data/types";
+import type { Locale, ScoreLevel } from "@/lib/data/types";
 import { t } from "@/lib/i18n/dict";
 import { scoreLevel } from "@/lib/scoring/index";
 
@@ -13,7 +13,9 @@ const RING_COLOR = {
   poor: "#c65f42",
 } as const;
 
-export function ScoreRing({score,size="large",locale}:{score:number;size?:"large"|"small";locale:Locale}) {
-  const color = RING_COLOR[scoreLevel(score)];
+// `level` is the published label where the caller has one, so a month whose
+// label is capped is not drawn in the colour of the score it did not keep.
+export function ScoreRing({score,level,size="large",locale}:{score:number;level?:ScoreLevel;size?:"large"|"small";locale:Locale}) {
+  const color = RING_COLOR[level ?? scoreLevel(score)];
   return <div className={`score-ring ${size}`} style={{background:`conic-gradient(${color} ${score*3.6}deg, rgba(255,255,255,.22) 0deg)`}} aria-label={t(locale).common.scoreOutOf(score)}><span><strong>{score}</strong><small>/100</small></span></div>;
 }

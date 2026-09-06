@@ -41,6 +41,23 @@ export interface RecommendationDecision {
   belowFloorComponents: ComponentKey[];
 }
 
+/**
+ * The published label for a score, held down by a component at the floor.
+ *
+ * Demoting precipitation let a month with rain at 1 out of 100 reach 82 and
+ * carry the "very good" label, because 20 percent weight cannot cost more than
+ * 20 points. The arithmetic is right and the word is not: nothing should be
+ * called very good hiking while one of the six things we measure is at the
+ * bottom of its scale. The number stands, the label stops at "good", and the
+ * month page names the component. Only the label moves, so the score, the
+ * ranking order and every comparison are untouched.
+ */
+export function cappedScoreLevel(score: number, belowFloorComponents: readonly ComponentKey[]): ScoreLevel {
+  const level = scoreLevel(score);
+  if (!belowFloorComponents.length) return level;
+  return level === "excellent" || level === "very-good" ? "good" : level;
+}
+
 export function recommendationDecision(
   components: ComponentScores,
   overallScore: number,
@@ -62,7 +79,7 @@ export function recommendationDecision(
   return {
     recommendationEligible,
     overallScore: guardedScore,
-    scoreLevel: scoreLevel(guardedScore),
+    scoreLevel: cappedScoreLevel(guardedScore, belowFloorComponents),
     failingComponents,
     belowFloorComponents,
   };

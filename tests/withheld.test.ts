@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { blockingComponents, recommendationDecision } from "../lib/scoring/recommendations";
+import { blockingComponents, cappedScoreLevel, recommendationDecision } from "../lib/scoring/recommendations";
 import type { ComponentScores } from "../lib/data/types";
 
 const month = (patch: Partial<ComponentScores> = {}) => ({
@@ -33,4 +33,21 @@ test("the threshold is the recommendation floor, not a fresh number", () => {
 
 test("an unscored destination names nothing rather than guessing", () => {
   assert.deepEqual(blockingComponents([{components: null}, {components: null}]), []);
+});
+
+test("nothing is labelled above good while a component sits at the floor", () => {
+  // 20 percent weight cannot cost more than 20 points, so a month with rain at
+  // 1 reached 82 and called itself very good. The number stands; the word does not.
+  assert.equal(cappedScoreLevel(82, ["precipitation"]), "good");
+  assert.equal(cappedScoreLevel(94, ["precipitation"]), "good");
+  assert.equal(cappedScoreLevel(82, []), "very-good", "an unencumbered month keeps its label");
+  assert.equal(cappedScoreLevel(58, ["precipitation"]), "fair", "the cap never promotes a low score");
+});
+
+test("the cap moves the label and nothing else", () => {
+  const decision = recommendationDecision(
+    {temperature: 95, precipitation: 2, snow: 100, heatStress: 100, wind: 95, daylight: 90} as ComponentScores, 82);
+  assert.equal(decision.overallScore, 82, "the score is untouched, so ranking order is untouched");
+  assert.equal(decision.scoreLevel, "good");
+  assert.equal(decision.recommendationEligible, true);
 });
