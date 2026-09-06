@@ -1,4 +1,4 @@
-import { getComparisonIndex, getDestinationIndex } from "@/lib/data/load";
+import { getAllDestinations, getComparisonIndex, getDestinationIndex } from "@/lib/data/load";
 import { locales, monthSlug, routes } from "@/lib/i18n/config";
 import { areaCatalogue } from "@/lib/seo/areas";
 import type { Locale } from "@/lib/data/types";
@@ -9,9 +9,14 @@ export function routeCatalog(): StaticRoute[] {
   for (const locale of locales) {
     output.push({locale,segments:[]},{locale,segments:["finder"]},{locale,segments:[routes.compare[locale]]});
     for (const key of ["methodology","about","privacy","imprint","credits"] as const) output.push({locale,segments:[routes[key][locale]]});
-    for (const destination of getDestinationIndex()) {
+    for (const destination of getAllDestinations()) {
       output.push({locale,segments:[routes.destination[locale],destination.slug]});
-      for (let month=1;month<=12;month+=1) output.push({locale,segments:[routes.destination[locale],destination.slug,monthSlug(month,locale)]});
+      // A month the gate withholds is reported on the destination page instead
+      // of getting a route of its own.
+      for (const month of destination.months) {
+        if (!month.recommendationEligible) continue;
+        output.push({locale,segments:[routes.destination[locale],destination.slug,monthSlug(month.month,locale)]});
+      }
     }
     for (const area of areaCatalogue()) output.push({locale,segments:[routes.rankings[locale],area.id]});
     for (let month=1;month<=12;month+=1) {

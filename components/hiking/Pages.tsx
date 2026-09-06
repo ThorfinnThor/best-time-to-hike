@@ -26,6 +26,11 @@ function RecommendationReviewNotice({locale, destination}:{locale:Locale; destin
   return <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.holdTitle}</strong><p>{copy.holdBody}</p><p>{copy.selectedCell(cellLabel(cell.lat, cell.lon), metres(cell.modelElevationM, locale))}</p></div></aside>;
 }
 
+/** Which critical components closed a month, for the summary on the detail page. */
+function failing(components: ComponentScores): ComponentKey[] {
+  return CRITICAL_COMPONENT_KEYS.filter((key) => components[key] <= CRITICAL_COMPONENT_FLOOR);
+}
+
 export function DestinationPage({destination,locale}:{destination:PublicDestination;locale:Locale}) {
   const copy = t(locale); const c = copy.destination;
   const held = destination.recommendationHoldReason === "persistent-snow";
@@ -33,6 +38,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const hasEligibleMonth = destination.months.some((month)=>month.recommendationEligible);
   const peak = Math.max(0,...destination.months.flatMap((month)=>month.overallScore===null?[]:[month.overallScore]));
   const cell = destination.representativeCell;
+  const closed = destination.months.filter((month)=>!month.recommendationEligible);
   return <>
     <FixtureNotice locale={locale}/>
     <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
@@ -40,6 +46,14 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
     {!unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
     {unavailable && !hasEligibleMonth && !held ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.noEligibleMonthTitle}</strong><p>{copy.notices.noEligibleMonthBody}</p></div></aside> : null}
     <section className="content-section split"><div><span className="eyebrow">{unavailable ? c.provenanceEyebrow : c.elevation}</span><h2>{unavailable ? c.selectedCellHeading : c.referencePointHeading}</h2><p>{held ? c.heldBody : unavailable ? c.unavailableBody : c.scopeBody}</p><p>{cellLabel(cell.lat, cell.lon)} · {metres(cell.modelElevationM, locale)}</p></div><div className="elevation-list">{destination.elevationBands.map((band)=><div key={band.id}><span>{band.id.replaceAll("-"," ")}</span><strong>{metreRange(band.minM, band.maxM, locale)}</strong><small>{Math.round(band.weight*100)}% {copy.common.weight}</small></div>)}</div></section>
+    {closed.length ? <section className="content-section closed-months"><div className="section-heading"><div><span className="eyebrow">{c.closedEyebrow}</span><h2>{c.closedHeading(closed.length)}</h2><p>{c.closedIntro}</p></div></div>
+      <ul>{closed.map((month)=><li key={month.month}>
+        <strong>{monthName(month.month,locale)}</strong>
+        <span>{month.metrics ? degreesC(month.metrics.temperatureHikingMeanC, locale) : "—"}</span>
+        <span>{month.metrics ? `${Math.round(month.metrics.wetDayProbability*100)}% ${copy.common.wetDays}` : "—"}</span>
+        <span>{month.components ? c.closedReason(failing(month.components).map((key)=>copy.components[key]).join(", ")) : c.closedReasonUnknown}</span>
+      </li>)}</ul>
+    </section> : null}
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.alternatives}</span><h2>{c.keepExploring}</h2></div></div><div className="card-grid">{destination.alternatives.map((slug)=>{const item=getDestination(slug)!;return <Link className="destination-card" href={destinationPath(locale,slug)} key={slug}><span>{item.countryCode}</span><h3>{item.name}</h3><p>{item.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p><strong>{c.exploreDestination}</strong></Link>})}</div></section>
     <MethodNote locale={locale}/>
   </>;
@@ -59,7 +73,17 @@ function belowFloor(components: ComponentScores): ComponentKey[] {
 export function MonthPage({destination,month,locale}:{destination:PublicDestination;month:number;locale:Locale}) {
   const copy = t(locale); const c = copy.destination; const m = copy.month;
   const data = destination.months[month-1];
-  const previous = month===1?12:month-1; const next = month===12?1:month+1;
+  // Adjacent months that the gate withholds no longer have a route, so the nav
+  // steps to the nearest one that does.
+  const open = destination.months.filter((item)=>item.recommendationEligible).map((item)=>item.month);
+  const step = (from: number, direction: 1 | -1) => {
+    for (let offset=1; offset<=12; offset+=1) {
+      const candidate = ((from - 1 + direction * offset + 12 * 12) % 12) + 1;
+      if (open.includes(candidate)) return candidate;
+    }
+    return null;
+  };
+  const previous = step(month, -1); const next = step(month, 1);
   const cell = destination.representativeCell;
   if (destination.recommendationHoldReason === "persistent-snow") return <><FixtureNotice locale={locale}/><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.reviewTitle(destination.name)}</h1><p>{m.reviewBody}</p></section><RecommendationReviewNotice locale={locale} destination={destination}/><MethodNote locale={locale}/></>;
   if (!data || data.overallScore === null || data.confidenceScore === null || data.confidenceLevel === null || data.components === null || data.scoreLevel === null) return <><FixtureNotice locale={locale}/><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.noDataTitle}</h1><p>{m.noDataBody}</p></section><MethodNote locale={locale}/></>;
@@ -74,7 +98,7 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.why}</span><h2>{m.componentsHeading}</h2></div></div><ComponentGrid components={data.components} locale={locale}/></section>
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{copy.dayShape.eyebrow}</span><h2>{copy.dayShape.heading}</h2></div></div><DayRange metrics={data.metrics} domain={dayShapeDomain(destination.months.filter((item)=>item.metrics))} locale={locale}/></section>
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.elevation}</span><h2>{destination.elevationBands.length===1 ? m.selectedCellHeading : m.bandsHeading}</h2></div></div><div className="band-table">{data.bands.map((band)=><div key={band.bandId}><div><strong>{band.bandId.replaceAll("-"," ")}</strong><span>{metres(band.targetElevationM, locale)}</span></div><ScoreRing score={band.overallScore ?? 0} size="small" locale={locale}/><div><span>{degreesC(band.temperatureHikingMeanC, locale)}</span><small>{Math.round(band.snowDayProbability*100)}% {copy.common.snowDays}</small></div></div>)}</div></section>
-    <nav className="month-nav" aria-label={m.adjacentAria}><Link href={destinationPath(locale,destination.slug,previous)}>← {monthName(previous,locale)}</Link><Link href={destinationPath(locale,destination.slug)}>{destination.name}</Link><Link href={destinationPath(locale,destination.slug,next)}>{monthName(next,locale)} →</Link></nav>
+    <nav className="month-nav" aria-label={m.adjacentAria}>{previous && previous!==month ? <Link href={destinationPath(locale,destination.slug,previous)}>← {monthName(previous,locale)}</Link> : <span/>}<Link href={destinationPath(locale,destination.slug)}>{destination.name}</Link>{next && next!==month ? <Link href={destinationPath(locale,destination.slug,next)}>{monthName(next,locale)} →</Link> : <span/>}</nav>
     <MethodNote locale={locale}/>
   </>;
 }

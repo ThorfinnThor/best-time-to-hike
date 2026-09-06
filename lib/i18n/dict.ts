@@ -318,6 +318,11 @@ export const DICT = {
       keepExploring: "Keep exploring",
       exploreDestination: "Explore destination →",
       scoreChartAria: "Hiking scores across twelve months",
+      closedEyebrow: "Months we do not recommend",
+      closedHeading: (count: number) => `${count} ${count === 1 ? "month does" : "months do"} not clear the gate`,
+      closedIntro: "The record for these months is complete. They carry no hiking score because at least one critical component is at or below 20, and we would rather say so here than publish a weak recommendation.",
+      closedReason: (components: string) => `${components.toLowerCase()} below the floor`,
+      closedReasonUnknown: "withheld",
     },
     month: {
       reviewTitle: (name: string) => `Data review for ${name}`,
@@ -745,6 +750,11 @@ export const DICT = {
       keepExploring: "Weiterdenken",
       exploreDestination: "Ziel ansehen →",
       scoreChartAria: "Wanderwerte über zwölf Monate",
+      closedEyebrow: "Monate ohne Empfehlung",
+      closedHeading: (count: number) => `${count} ${count === 1 ? "Monat erfüllt" : "Monate erfüllen"} die Schwelle nicht`,
+      closedIntro: "Die Messreihe dieser Monate ist vollständig. Sie tragen keinen Wanderwert, weil mindestens eine kritische Komponente bei 20 oder darunter liegt, und das sagen wir hier lieber, als eine schwache Empfehlung zu veröffentlichen.",
+      closedReason: (components: string) => `${components} unter der Schwelle`,
+      closedReasonUnknown: "zurückgehalten",
     },
     month: {
       reviewTitle: (name: string) => `Datenprüfung für ${name}`,
