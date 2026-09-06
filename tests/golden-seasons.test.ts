@@ -29,6 +29,14 @@ interface GoldenCase {
   confidence: "high" | "medium";
   approvedBy: string | null;
   approvedAt: string | null;
+  /**
+   * Set when the label is signed and the engine disagrees anyway. It says the
+   * operator looked, decided the label is right and the engine is not, and
+   * chose to record the gap rather than resolve it now. A deviation keeps the
+   * disagreement in the report where it can be argued with; widening the label
+   * would have hidden it.
+   */
+  acceptedDeviation?: {reason: string; recordedBy: string; recordedAt: string; engineMonths: number[]};
 }
 
 const golden = JSON.parse(readFileSync("tests/fixtures/known-hiking-seasons.json", "utf8")) as
@@ -82,9 +90,29 @@ test("the signed labels are not only the ones the engine already agrees with", (
 test("the engine's best months fall inside the labelled season", {skip: !approved && "labels are not approved yet; see the report below"}, () => {
   const failures = golden.cases
     .map((item) => ({item, result: compare(item)}))
-    .filter(({result}) => result.verdict !== "agrees")
+    .filter(({item, result}) => result.verdict !== "agrees" && !item.acceptedDeviation)
     .map(({item, result}) => `${item.slug}: labelled ${item.label} (${item.expectedMonths.join(",")}), engine says ${result.best.join(",") || "no month"}`);
   assert.deepEqual(failures, [], `\n  ${failures.join("\n  ")}\n`);
+});
+
+test("an accepted deviation still describes the disagreement it was written for", () => {
+  // A deviation recorded against one answer must not go on quietly covering a
+  // different one. If the engine moves, the note is re-read or it is gone.
+  for (const item of golden.cases) {
+    const deviation = item.acceptedDeviation;
+    if (!deviation) continue;
+    assert.ok(item.approvedBy, `${item.slug} records a deviation but is not signed`);
+    assert.ok(deviation.reason.length > 60, `${item.slug}: a deviation needs a reason someone can disagree with`);
+    assert.deepEqual(compare(item).best, deviation.engineMonths,
+      `${item.slug}: the engine now says ${compare(item).best.join(",") || "no month"}, not ${deviation.engineMonths.join(",") || "no month"}. Re-read the deviation and update or remove it.`);
+  }
+});
+
+test("deviations stay the exception, not the way the suite passes", () => {
+  if (!approved) return;
+  const deviations = golden.cases.filter((item) => item.acceptedDeviation).length;
+  assert.ok(deviations <= golden.cases.length / 4,
+    `${deviations} of ${golden.cases.length} labels are accepted deviations. Past a quarter the set has stopped checking the engine and started excusing it.`);
 });
 
 test("report: how the engine currently compares with the labels", () => {
@@ -94,7 +122,8 @@ test("report: how the engine currently compares with the labels", () => {
     const result = compare(item);
     tally[result.verdict] = (tally[result.verdict] ?? 0) + 1;
     if (result.verdict !== "agrees") {
-      lines.push(`  ${result.verdict.padEnd(10)} ${item.slug.padEnd(22)} labelled ${item.expectedMonths.join(",").padEnd(16)} engine ${result.best.join(",") || "none"}`);
+      const flag = item.acceptedDeviation ? " [accepted]" : "";
+      lines.push(`  ${result.verdict.padEnd(10)} ${item.slug.padEnd(22)} labelled ${item.expectedMonths.join(",").padEnd(16)} engine ${result.best.join(",") || "none"}${flag}`);
     }
   }
   console.log(`\ngolden seasons (${golden.status}): ${Object.entries(tally).map(([k, v]) => `${v} ${k}`).join(", ")}`);

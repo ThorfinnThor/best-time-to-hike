@@ -273,6 +273,10 @@ band is derived as the resolved model elevation plus or minus 50 m.
 3. Dispatch the `Expand destination catalogue` workflow with `destinations=<ids>`, `publish` unchecked
    for a dry run and checked to commit. CI holds `CDSAPI_KEY`; nothing runs locally.
 
+Before dispatching, read `docs/next-expansion-batch.md`. It holds work that needs a download and is
+not worth a run of its own: three representative cells to re-pick, and a snow check that belongs in
+preparation. A batch that is already queued absorbs them for almost nothing.
+
 `--only` selects which candidates to activate. Preparation is **additive**: live destinations pass
 through untouched, so a trial batch can never truncate the catalogue. `BTH_DESTINATIONS` scopes both
 the download and the aggregation, so published destinations are never re-fetched or rewritten.
