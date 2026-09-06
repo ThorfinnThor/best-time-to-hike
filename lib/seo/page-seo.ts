@@ -12,16 +12,17 @@ import type { PageId } from "@/lib/i18n/resolve";
  * Title, description and index decision per page.
  *
  * The index decision matters more than the markup. This catalogue can render
- * 3,180 destination-month pages that differ only in their numbers, and
- * publishing all of them is a doorway pattern regardless of how good the
- * structured data is. So the rule is: index the pages that answer a question
- * with substance, and let the rest stay crawlable but out of the index.
+ * destination-month pages that differ only in their numbers, and publishing
+ * them is a doorway pattern regardless of how good the structured data is. So
+ * the rule is: index the pages that answer a question with substance, and let
+ * the rest stay crawlable but out of the index. The target is a few hundred
+ * strong pages, not a few thousand thin ones.
  *
  *   destination, recommendable   index      unique long-form article
  *   destination, withheld        noindex    provenance page, no recommendation
- *   month, a best month          index      the answer to "when should I hike X"
- *   month, merely eligible       noindex    real but structurally repetitive
- *   month, withheld              noindex    makes no claim at all
+ *   month, any                   noindex    linked and crawlable, never an entry
+ *                                           point; the destination page makes
+ *                                           the same claim with more around it
  *   ranking, comparison          index      genuinely different lists
  *   finder, legal pages          noindex    tool and boilerplate
  */
@@ -86,22 +87,22 @@ function monthSeo(destination: PublicDestination, monthNumber: number, locale: L
     : (de ? `Für diesen Monat halten wir eine Wanderempfehlung zurück. Welche Klimakomponente die Schwelle unterschreitet und was die Daten stattdessen zeigen.`
           : `We withhold a hiking recommendation for this month. Which climate component falls below the threshold, and what the record shows instead.`));
 
-  // A month page is indexed only when it is one of the destination's best
-  // months. The rest stay crawlable and keep their internal links, but they do
-  // not compete: 1,546 structurally identical month pages is a doorway set.
+  // No month page is indexed. Best months were the exception, and that was
+  // still 1,810 pages across both locales, built from one template and
+  // differing only in a month name and six numbers — which is the doorway
+  // pattern whatever the structured data says.
   //
-  // The confidence floor is applied here as well as on the destination page.
-  // While the dataset is provisional every month is capped at 64/low by the
-  // single-point rule, so nothing clears it; that cap is conditioned on
-  // datasetStatus, so the approvals that reach production lift it in the same
-  // step. Indexing a specific month claim while declining the general one
-  // would be the wrong way round.
-  const reasons: string[] = [];
+  // They are not junk: a reader who arrives at a destination and wants August
+  // should have this page, and it is linked, crawlable and carries its own
+  // canonical. It is a poor entry point rather than a poor page. The claim it
+  // makes is already made, with more around it, on the destination page that
+  // names its best months, and that page is the one competing for the query.
+  const reasons: string[] = ["month-page-not-an-entry-point"];
   if (!eligible) reasons.push("month-withheld-by-recommendation-gate");
   else if (!isBest) reasons.push("not-a-best-month-structurally-repetitive");
   if ((data?.confidenceScore ?? 0) < 65) reasons.push("low-confidence");
   if (getManifest().datasetStatus !== "production") reasons.push("non-production-dataset");
-  return {title, description, index: reasons.length === 0, reasons};
+  return {title, description, index: false, reasons};
 }
 
 export function pageSeo(page: PageId, locale: Locale): PageSeo {
