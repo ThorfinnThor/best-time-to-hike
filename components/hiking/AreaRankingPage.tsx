@@ -7,6 +7,7 @@ import { areaProfile, type Area } from "@/lib/seo/areas";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { ScoreRing } from "@/components/hiking/ScoreRing";
 import { blockingComponents } from "@/lib/scoring/recommendations";
+import { metres } from "@/lib/format";
 
 /**
  * An area page answers "where should I hike in the Alps", and the useful part
@@ -67,7 +68,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
             </div>
             <p className="card-caption">{destination.bestMonths.map((month) => monthName(month, locale)).join(" · ")}</p>
             <div className="climate-facts">
-              <span><b>↕</b>{Math.round(destination.representativeCell.modelElevationM)} m</span>
+              <span><b>↕</b>{metres(destination.representativeCell.modelElevationM, locale)}</span>
               <span><b>✓</b>{destination.months.filter((month) => month.recommendationEligible).length}/12 {copy.common.months}</span>
             </div>
             <Link href={destinationPath(locale, destination.slug)}>{copy.destination.exploreDestination}</Link>

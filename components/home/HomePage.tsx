@@ -5,6 +5,7 @@ import { TrustSection } from "@/components/home/TrustSection";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { getAllDestinations } from "@/lib/data/load";
 import { monthName } from "@/lib/i18n/config";
+import { degreesC, metres } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { areaCatalogue } from "@/lib/seo/areas";
 import { destinationPath, links } from "@/lib/i18n/links";
@@ -70,9 +71,9 @@ export function HomePage({ locale }: { locale: Locale }) {
                   </div>
                   <p className="card-caption">{content.score} · {content.shown}: {monthName(bestMonth, locale)}</p>
                   <div className="climate-facts">
-                    <span><b>☀</b>{Math.round(month.metrics.temperatureHikingMeanC)}°C</span>
+                    <span><b>☀</b>{degreesC(month.metrics.temperatureHikingMeanC, locale)}</span>
                     <span><b>☂</b>{Math.round(month.metrics.wetDayProbability * 100)}% {common.wetDays}</span>
-                    <span><b>↕</b>{Math.round(destination.elevation.maxM)} m</span>
+                    <span><b>↕</b>{metres(destination.elevation.maxM, locale)}</span>
                   </div>
                   <Link href={destinationPath(locale, destination.slug)}>{content.allMonths} →</Link>
                 </div>

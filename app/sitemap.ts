@@ -25,7 +25,7 @@ export default function sitemap():MetadataRoute.Sitemap {
     if (!pageSeo(page, route.locale).index) continue;
     entries.push({
       url: absoluteUrl(pathFor(page, route.locale)),
-      lastModified: new Date("2026-09-05"),
+      lastModified: new Date(getManifest().generatedAt),
       changeFrequency: "monthly" as const,
       priority: page.kind === "home" ? 1 : page.kind === "destination" ? 0.8 : 0.6,
       alternates: {languages: Object.fromEntries(locales.map((l) => [l, absoluteUrl(pathFor(page, l))]))},

@@ -165,7 +165,7 @@ export function matchDestinations(destinations: SearchDestination[], preferences
   return sortResults(results, preferences.sort);
 }
 
-export function sortResults(results: FinderResult[], sort: SortKey): FinderResult[] {
+function sortResults(results: FinderResult[], sort: SortKey): FinderResult[] {
   const byName = (a: FinderResult, b: FinderResult) => a.destination.name.localeCompare(b.destination.name);
   const tiebreak = (a: FinderResult, b: FinderResult) => b.month.score - a.month.score || a.destination.slug.localeCompare(b.destination.slug);
   const comparators: Record<SortKey, (a: FinderResult, b: FinderResult) => number> = {
@@ -210,7 +210,7 @@ export function preferencesFromQuery(search: string): FinderPreferences {
   const d = defaultPreferences;
   const number = (key: string, fallback: number) => {
     const raw = params.get(key);
-    const value = raw === null ? Number.NaN : Number(raw);
+    const value = raw === null || raw.trim() === "" ? Number.NaN : Number(raw);
     return Number.isFinite(value) ? value : fallback;
   };
   const flag = (key: string, fallback: boolean) => {

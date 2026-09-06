@@ -3,7 +3,7 @@ import { monthName } from "@/lib/i18n/config";
 import { getDestination, getManifest } from "@/lib/data/load";
 import { profileFor } from "@/lib/seo/profile";
 import { areaById, areaProfile } from "@/lib/seo/areas";
-import { taxonomyLabel, withArticle } from "@/lib/i18n/dict";
+import { t, taxonomyLabel, withArticle } from "@/lib/i18n/dict";
 import { evaluateIndexability } from "@/lib/seo/indexability";
 import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
@@ -142,8 +142,7 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
     }
     case "themeRanking": return {
-      title: de ? `${page.theme === "warm" ? "Warm wandern" : page.theme === "snowFree" ? "Schneefrei wandern" : "Wenig Regen"} im ${monthName(page.month, locale)}`
-               : `${page.theme === "warm" ? "Warm hiking" : page.theme === "snowFree" ? "Snow-free hiking" : "Low-rain hiking"} in ${monthName(page.month, locale)}`,
+      title: t(locale).ranking.themeTitle(t(locale).ranking.themes[page.theme], monthName(page.month, locale)),
       description: clamp(de
         ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus dem Klimanormal 1991 bis 2020.`
         : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2020 climate normal.`),

@@ -1,6 +1,7 @@
 import type { ClimateMetrics, Locale } from "@/lib/data/types";
 import { t } from "@/lib/i18n/dict";
 import { dayShape } from "@/lib/hiking/day-shape";
+import { degreesC } from "@/lib/format";
 
 /**
  * A single month's walking window on the destination's own temperature scale,
@@ -27,9 +28,9 @@ export function DayRange({metrics, domain, locale}:{metrics:ClimateMetrics; doma
       <span className="day-range-mean" style={{left:`${at(metrics.temperatureHikingMeanC)}%`}}/>
     </div>
     <div className="day-range-scale" aria-hidden="true">
-      <div><strong>{shape.coldC}°C</strong><span>{copy.coldEnd}</span></div>
-      <div><strong>{shape.meanC}°C</strong><span>{copy.meanLabel}</span></div>
-      <div><strong>{shape.warmC}°C</strong><span>{copy.warmEnd}</span></div>
+      <div><strong>{degreesC(shape.coldC, locale, 0)}</strong><span>{copy.coldEnd}</span></div>
+      <div><strong>{degreesC(shape.meanC, locale, 0)}</strong><span>{copy.meanLabel}</span></div>
+      <div><strong>{degreesC(shape.warmC, locale, 0)}</strong><span>{copy.warmEnd}</span></div>
     </div>
     <ul className="day-range-notes">{notes.map((item)=><li key={item.note}>{item.text}</li>)}</ul>
     <p className="day-range-method">{copy.method}</p>

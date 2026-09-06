@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import type { CompactSearchDestination, Locale, SearchDestination } from "@/lib/data/types";
 import { defaultPreferences, ELEVATION_CEILING, facetsFor, matchDestinations, preferencesFromQuery, preferencesToQuery, relaxations, type FinderPreferences, type SortKey } from "@/lib/finder/match";
 import { monthName, monthNameShort } from "@/lib/i18n/config";
+import { degreesC } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, links } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
@@ -220,7 +221,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
 
     {showResults ? <>
       {!compact ? <div className="finder-summary">
-        <strong aria-live="polite">{copy.finder.resultCount(filtered.length)}</strong>
+        <h2 aria-live="polite">{copy.finder.resultCount(filtered.length)}</h2>
         {savedReady && saved.length > 1 ? <Link className="compare-saved-link" href={`${links.compareIndex(locale)}?d=${saved.slice(0, 4).join(",")}`}>
           {copy.finder.compareSaved(Math.min(saved.length, 4))}
         </Link> : null}
@@ -247,7 +248,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
           <div className="result-tile-body">
             <div className="result-tile-heading">
               <div>
-                <span>{destination.countryCode} · {Math.round(month.temp)}°C · {Math.round(month.wet * 100)}% {copy.common.wetDays}</span>
+                <span>{destination.countryCode} · {degreesC(month.temp, locale)} · {Math.round(month.wet * 100)}% {copy.common.wetDays}</span>
                 <h3><Link href={destinationPath(locale, destination.slug, month.m)}>{destination.name}</Link></h3>
               </div>
               <SaveButton slug={destination.slug} name={destination.name} saved={isSaved(destination.slug)} onToggle={toggleSaved} locale={locale}/>

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { CompactSearchDestination, Locale } from "@/lib/data/types";
 import { monthName, monthNameShort } from "@/lib/i18n/config";
+import { degreesC } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
@@ -28,10 +29,18 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
 
   const bySlug = useMemo(() => new Map(destinations.map((destination) => [destination.slug, destination])), [destinations]);
 
+  // A shared link naming a destination we do not have (a typo, a slug that
+  // moved) used to drop it without a word, and the effect below then rewrote
+  // the URL, so the reader lost the link as well as the answer.
+  const [dropped, setDropped] = useState<string[]>([]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     const requested = new URLSearchParams(window.location.search).get("d");
-    if (requested) setChosen(requested.split(",").map((slug) => slug.trim()).filter((slug) => bySlug.has(slug)).slice(0, MAX));
+    if (!requested) return;
+    const asked = requested.split(",").map((slug) => slug.trim()).filter(Boolean);
+    setChosen(asked.filter((slug) => bySlug.has(slug)).slice(0, MAX));
+    setDropped(asked.filter((slug) => !bySlug.has(slug)));
   }, [bySlug]);
 
   useEffect(() => {
@@ -67,6 +76,7 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
           </button>
         </li>)}
       </ul> : null}
+      {dropped.length ? <p className="compare-dropped" role="status">{copy.compare.dropped(dropped.length)}</p> : null}
       {savedReady && saved.length > 1 && !chosen.length ? <button type="button" className="compare-from-saved"
         onClick={() => setChosen(saved.filter((slug) => bySlug.has(slug)).slice(0, MAX))}>
         {copy.compare.fromShortlist(Math.min(saved.length, MAX))}
@@ -94,7 +104,7 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
                 const entry = monthEntry(destination, month);
                 return <td key={destination.slug} className={entry ? "open" : "closed"}>
                   {entry
-                    ? <><strong>{entry[1]}</strong><small>{Math.round(entry[2])}°C</small></>
+                    ? <><strong>{entry[1]}</strong><small>{degreesC(entry[2], locale)}</small></>
                     : <span className="closed-mark" title={copy.compare.notRecommended}>{copy.compare.closedShort}</span>}
                 </td>;
               })}
