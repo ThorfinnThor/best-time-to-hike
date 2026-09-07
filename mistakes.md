@@ -372,6 +372,41 @@ reliable check is to measure the rendered box, which is why the fix for all thre
 
 ---
 
+## 23. The coordinate named the place, not the walking
+
+**found by the operator asking why Tenerife was not hot in July, fixed 2026-09-07.**
+
+A destination is a summit, a valley, a park or an island, and the point that names it on a map is
+often not the point anyone walks on. Nothing downstream questions the choice: the pipeline will
+download thirty years of hourly data for a point on a glacier, score it, publish it, and withhold
+every month. That does not look like a bad coordinate. It looks like a destination with a hard
+climate.
+
+Four reached production. Their cells carry snow on every day of every month, and in the *thinnest*
+month of the year still hold 6.9 m (Garhwal), 6.0 m (El Chaltén), 2.9 m (Zermatt) and 1.9 m (Denali).
+Denali's cell sits at 1,496 m where the walking is the park road at 600 to 900 m; Garhwal's at 3,540 m
+where the Valley of Flowers is walked at 3,050 to 3,350 m. Every other one of the 315 loses its snow
+entirely at some point in the year, so there is no borderline case to argue about.
+
+Two things made it survivable for so long. The persistent-snow hold caught all four and published no
+recommendation, so nothing false was ever claimed — the gate did its job while the input stayed wrong.
+And the failure is invisible from the inside: schema valid, checksums agree, tests pass, and the page
+politely explains that no month clears the gate.
+
+The prompt for this was the operator asking why Tenerife showed 21°C in July when Mallorca showed
+27.5°C. The answer was that Tenerife's cell is at 1,867 m on the Teide plateau, which is correct —
+that is where the walking is — but it took a measurement to know that rather than a guess. The first
+guess was that Tenerife was wrong too.
+
+**Rule.** Give the coordinate of the trailheads, the hut circuit or the valley path, and check the
+resolved model elevation against that number before spending a download. For a summit, an ice cap or
+a named glacier, ask whether the destination is the mountain or the walking below it; this catalogue
+is about walking. **Guarded since 2026-09-07** by `pnpm guard:cells`, which refuses any published cell
+whose snow never melts. The four above are named in the guard rather than silenced, so they do not
+block the build while they wait for a new download, and a fifth cannot appear quietly.
+
+---
+
 ## Inherited lessons — sibling project
 
 `climate-decision-engine/mistakes.md` documents 16 bug classes from a product with the same

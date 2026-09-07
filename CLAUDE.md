@@ -270,8 +270,24 @@ band is derived as the resolved model elevation plus or minus 50 m.
 2. `pnpm data:catalogue-preflight --candidates=<file>` — resolves model elevation and land fraction for
    every point and writes nothing. **Read both numbers.** A cell far above the hiking corridor, or below
    the land-fraction floor, is a coordinate to fix before spending a download (mistakes.md #18).
+
+   **The coordinate must be where people walk, not where the place is named.** A destination is a
+   summit, a valley, a park or an island, and the point that names it on a map is often not the point
+   anyone walks on. Give the coordinate of the trailheads, the hut circuit or the valley path, and
+   sanity-check the resolved model elevation against that: Zermatt's walking is the Gornergrat and
+   Sunnegga trails around 2,200 m, not the 3,000 m cell above them; Denali's is the park road at 600
+   to 900 m, not the 1,500 m cell; the Annapurna circuit is walked around 3,000 m, not at the 4,300 m
+   pass. A cell one band too high does not fail anything — it produces a real destination with a
+   climate nobody recognises, and every month withheld (mistakes.md #23).
+
+   For a summit, an ice cap or a named glacier, ask whether the destination is the mountain or the
+   walking below it. This catalogue is about walking.
 3. Dispatch the `Expand destination catalogue` workflow with `destinations=<ids>`, `publish` unchecked
    for a dry run and checked to commit. CI holds `CDSAPI_KEY`; nothing runs locally.
+
+`pnpm guard:cells` refuses a published cell whose snow never melts, which is the end state of getting
+this wrong: four such cells reached production and all four withhold every month. New ones are blocked;
+the four are listed in the guard and queued in `docs/next-expansion-batch.md`.
 
 Before dispatching, read `docs/next-expansion-batch.md`. It holds work that needs a download and is
 not worth a run of its own: three representative cells to re-pick, and a snow check that belongs in

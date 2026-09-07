@@ -5,19 +5,24 @@ expansion workflow has a 330-minute timeout because CDS queue times are
 unpredictable, so three destinations do not justify dispatching it; folded into
 a batch that is already queued, they cost almost nothing.
 
-## Three representative cells to re-pick
+## Five representative cells to re-pick
 
-Found by the golden season labels (`tests/fixtures/known-hiking-seasons.json`),
-each currently carrying an accepted deviation that names the same cause.
+Four were found by `pnpm guard:cells`, which refuses a cell whose snow never melts; the fifth,
+Annapurna, by the golden season labels. All five carry an accepted deviation naming the same cause.
 Alternative cells were located in the cached ERA5-Land invariant geopotential at
 `generated/intermediate/era5-invariants/`, so the coordinates below cost no
 download to find — only confirming what the climate is there does.
 
-| destination | current cell | why it is wrong | candidate | distance |
+`pnpm guard:cells` blocks any *new* destination whose cell never loses its snow. These four already
+had, and are listed in the guard so they do not block the build while they wait.
+
+| destination | current cell | why it is wrong | candidate | shift |
 | --- | --- | --- | --- | --- |
-| `zermatt` | 46.0, 7.7 · 2,996 m | 2.9–4.0 m snow depth in July and August: a permanent snowfield, not the Gornergrat and Sunnegga trails | 46.2, 7.8 · 2,215 m | 3 cells |
-| `el-chalten` | -49.3, -72.9 · 946 m | 6.7–7.6 m snow depth in every month: the edge of the Southern Patagonian Ice Field, not the Fitz Roy trailheads | -49.4, -72.7 · 698 m, land 0.93 | 3 cells |
-| `annapurna` | 28.5, 83.9 · 4,296 m | about 1,300 m above the circuit; October and November score 52 and 33 on temperature and would reach 92 and 79 at the candidate | 28.4, 84.1 · 3,130 m | 3 cells |
+| `zermatt` | 46.0, 7.7 · 2,996 m | 2.9 m of snow in its thinnest month: a permanent snowfield, not the Gornergrat and Sunnegga trails at ~2,200 m | 46.2, 7.8 · 2,215 m | −781 m, 3 cells |
+| `el-chalten` | -49.3, -72.9 · 946 m | 6.0 m in its thinnest month: the edge of the Southern Patagonian Ice Field, not the Fitz Roy trailheads | -49.4, -72.7 · 698 m, land 0.93 | −249 m, 3 cells |
+| `garhwal` | 30.7, 79.1 · 3,540 m | 6.9 m in its thinnest month, the deepest in the catalogue. The Valley of Flowers is walked at 3,050 to 3,350 m | 30.6, 79.2 · 3,149 m | −390 m, 2 cells |
+| `denali` | 63.3, -150.5 · 1,496 m | 1.9 m in its thinnest month. The walking is the park road and Savage River at 600 to 900 m | 63.4, -150.8 · 664 m | −831 m, 4 cells |
+| `annapurna` | 28.5, 83.9 · 4,296 m | not snowbound, but about 1,300 m above the circuit; October and November score 52 and 33 on temperature and would reach 92 and 79 at the candidate | 28.4, 84.1 · 3,130 m | −1,166 m, 3 cells |
 
 Both Zermatt and El Chaltén already carry an entry in
 `data-config/sources/representative-cell-overrides.json`. Those overrides were

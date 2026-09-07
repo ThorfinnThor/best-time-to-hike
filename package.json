@@ -41,12 +41,13 @@
     "data:rebuild": "pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:ingest": "pnpm data:dem && pnpm data:sampling && pnpm data:era5 && pnpm data:normalize && pnpm data:score && pnpm data:export && pnpm data:validate",
     "data:ingest-catalogue": "pnpm data:catalogue-prepare && pnpm data:era5 -- --provisional --refresh && pnpm data:rebuild",
-    "verify": "pnpm data:rebuild && pnpm guard:architecture && pnpm guard:determinism && pnpm guard:css && pnpm test && pnpm build && pnpm test:rendered && pnpm guard:deploy-budget && pnpm typecheck && pnpm release:report",
+    "verify": "pnpm data:rebuild && pnpm guard:architecture && pnpm guard:determinism && pnpm guard:css && pnpm guard:cells && pnpm test && pnpm build && pnpm test:rendered && pnpm guard:deploy-budget && pnpm typecheck && pnpm release:report",
     "deploy:cloudflare": "pnpm verify && wrangler pages deploy out --project-name=best-time-to-hike --branch=main",
     "data:image-qa": "tsx scripts/validate/image-qa.ts",
     "guard:deploy-budget": "tsx scripts/validate/deploy-budget.ts",
     "test:rendered": "tsx --test tests/rendered-pages.test.ts",
-    "guard:css": "tsx scripts/validate/css.ts"
+    "guard:css": "tsx scripts/validate/css.ts",
+    "guard:cells": "tsx scripts/validate/cells.ts"
   },
   "dependencies": {
     "ajv": "^8.17.1",
