@@ -5,6 +5,7 @@ import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
 import { pathFor, type PageId } from "@/lib/i18n/resolve";
 import { DocumentLocale } from "@/components/i18n/DocumentLocale";
+import { LanguageLink } from "@/components/i18n/LanguageLink";
 
 export function SiteHeader({locale,page}:{locale:Locale;page?:PageId}) {
   const copy = t(locale).header;
@@ -25,8 +26,8 @@ export function SiteHeader({locale,page}:{locale:Locale;page?:PageId}) {
     <Link className="brand" href={links.home(locale)} aria-label={copy.homeAria}><span className="brand-mark">▲</span><span>BestTime<span>ToHike</span></span></Link>
     <nav className="desktop-nav" aria-label={copy.navAria}>
       {navLinks.map((item)=><Link key={item.href} href={item.href}>{item.label}</Link>)}
-      <span className="language-switch" aria-label={copy.languageAria}><Link className={locale === "de" ? "active" : ""} href={inLocale("de")}>DE</Link><Link className={locale === "en" ? "active" : ""} href={inLocale("en")}>EN</Link></span>
+      <span className="language-switch" aria-label={copy.languageAria}><LanguageLink className={locale === "de" ? "active" : ""} href={inLocale("de")}>DE</LanguageLink><LanguageLink className={locale === "en" ? "active" : ""} href={inLocale("en")}>EN</LanguageLink></span>
     </nav>
-    <details className="mobile-nav"><summary>{copy.menu}</summary><nav aria-label={copy.mobileNavAria}>{navLinks.map((item)=><Link key={item.href} href={item.href}>{item.label}</Link>)}<Link href={inLocale(other)}>{other.toUpperCase()}</Link></nav></details>
+    <details className="mobile-nav"><summary>{copy.menu}</summary><nav aria-label={copy.mobileNavAria}>{navLinks.map((item)=><Link key={item.href} href={item.href}>{item.label}</Link>)}<LanguageLink href={inLocale(other)}>{other.toUpperCase()}</LanguageLink></nav></details>
   </header></>;
 }

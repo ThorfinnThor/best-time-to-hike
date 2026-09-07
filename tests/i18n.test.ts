@@ -8,6 +8,20 @@ import { altLanguages, links } from "../lib/i18n/links";
 import { pathFor, resolvePageId, type PageId } from "../lib/i18n/resolve";
 import { routeCatalog } from "../lib/seo/route-catalog";
 import type { Locale } from "../lib/data/types";
+import { languageQueryHref } from "../lib/i18n/language-query";
+
+test("language links retain finder filters and comparison selections", () => {
+  for (const locale of locales) {
+    const finder = pathFor({kind:"finder"}, locale);
+    const query = "m=6&tmin=8&rain=0";
+    assert.equal(languageQueryHref(finder, query), `${finder}?${query}`);
+    assert.equal(languageQueryHref(finder, ""), finder);
+    const compare = pathFor({kind:"compareTool"}, locale);
+    assert.equal(new URLSearchParams(languageQueryHref(compare, "d=mallorca%2Cmadeira").split("?")[1]).get("d"), "mallorca,madeira");
+  }
+  const header = readFileSync("components/layout/SiteHeader.tsx", "utf8");
+  assert.equal((header.match(/<LanguageLink\b/g) ?? []).length, 3, "desktop and mobile language links must preserve state");
+});
 
 type Shape = string | Shape[] | { [key: string]: Shape };
 
