@@ -406,6 +406,7 @@ export const DICT = {
       addLabel: "Add a destination",
       placeholder: "Search by name",
       pickTwo: "Choose at least two destinations to compare.",
+      addOneMore: "Add a second destination to compare this one against.",
       dropped: (count: number) => count === 1 ? "One destination in that link is not in the catalogue, so it was left out." : `${count} destinations in that link are not in the catalogue, so they were left out.`,
       toolIntro: "Put up to four destinations side by side, month by month. The grid leaves a month blank wherever the recommendation gate withholds it.",
       removeLabel: (name: string) => `Remove ${name} from the comparison`,
@@ -413,7 +414,7 @@ export const DICT = {
       recommendableMonths: "Recommendable months",
       notRecommended: "Not recommended: at least one critical climate component falls below the threshold",
       closedShort: "—",
-      closedNote: "A dash means the recommendation gate withholds that month, not that data is missing. Scores describe one representative ERA5-Land grid cell over 1991 to 2020.",
+      closedNote: "A blank month is one the recommendation gate withholds, not one we have no data for. The word beneath it names the component that fell below the threshold. Scores describe one representative ERA5-Land grid cell over 1991 to 2020.",
     },
     comparison: {
       eyebrow: "Side-by-side season guide",
@@ -918,6 +919,7 @@ export const DICT = {
       addLabel: "Ziel hinzufügen",
       placeholder: "Nach Namen suchen",
       pickTwo: "Wähle mindestens zwei Ziele für den Vergleich.",
+      addOneMore: "Füge ein zweites Ziel hinzu, um dieses zu vergleichen.",
       dropped: (count: number) => count === 1 ? "Ein Ziel aus diesem Link steht nicht im Katalog und wurde weggelassen." : `${count} Ziele aus diesem Link stehen nicht im Katalog und wurden weggelassen.`,
       toolIntro: "Stelle bis zu vier Ziele Monat für Monat nebeneinander. Wo die Empfehlungsschwelle einen Monat zurückhält, bleibt das Feld leer.",
       removeLabel: (name: string) => `${name} aus dem Vergleich entfernen`,
@@ -925,7 +927,7 @@ export const DICT = {
       recommendableMonths: "Empfehlenswerte Monate",
       notRecommended: "Nicht empfohlen: mindestens eine kritische Klimakomponente liegt unter der Schwelle",
       closedShort: "—",
-      closedNote: "Ein Strich bedeutet, dass der Empfehlungstest diesen Monat zurückhält, nicht dass Daten fehlen. Die Werte gelten für eine repräsentative ERA5-Land-Gitterzelle im Zeitraum 1991 bis 2020.",
+      closedNote: "Ein leerer Monat wird vom Empfehlungstest zurückgehalten; es fehlen keine Daten. Das Wort darunter nennt die Komponente, die unter der Schwelle liegt. Die Werte gelten für eine repräsentative ERA5-Land-Gitterzelle im Zeitraum 1991 bis 2020.",
     },
     comparison: {
       eyebrow: "Saisonaler Direktvergleich",

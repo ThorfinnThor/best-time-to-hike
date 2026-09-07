@@ -13,11 +13,6 @@ import { ComponentGrid } from "./ComponentGrid";
 import { DayRange } from "./DayRange";
 import { DestinationImage } from "@/components/media/DestinationImage";
 
-export function FixtureNotice({locale}:{locale:Locale}) {
-  const copy = t(locale).notices;
-  const realData = getManifest().datasetStatus !== "fixture";
-  return <div className="fixture-notice"><strong>{realData ? copy.realDataTitle : copy.fixtureTitle}</strong><span>{realData ? copy.realDataBody : copy.fixtureBody}</span></div>;
-}
 
 function RecommendationReviewNotice({locale, destination}:{locale:Locale; destination:PublicDestination}) {
   const copy = t(locale).notices;
@@ -40,7 +35,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const cell = destination.representativeCell;
   const closed = destination.months.filter((month)=>!month.recommendationEligible);
   return <>
-    <FixtureNotice locale={locale}/>
+    
     <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
     {!unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
@@ -85,10 +80,10 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
   };
   const previous = step(month, -1); const next = step(month, 1);
   const cell = destination.representativeCell;
-  if (destination.recommendationHoldReason === "persistent-snow") return <><FixtureNotice locale={locale}/><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.reviewTitle(destination.name)}</h1><p>{m.reviewBody}</p></section><RecommendationReviewNotice locale={locale} destination={destination}/><MethodNote locale={locale}/></>;
-  if (!data || data.overallScore === null || data.confidenceScore === null || data.confidenceLevel === null || data.components === null || data.scoreLevel === null) return <><FixtureNotice locale={locale}/><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.noDataTitle}</h1><p>{m.noDataBody}</p></section><MethodNote locale={locale}/></>;
+  if (destination.recommendationHoldReason === "persistent-snow") return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.reviewTitle(destination.name)}</h1><p>{m.reviewBody}</p></section><RecommendationReviewNotice locale={locale} destination={destination}/><MethodNote locale={locale}/></>;
+  if (!data || data.overallScore === null || data.confidenceScore === null || data.confidenceLevel === null || data.components === null || data.scoreLevel === null) return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.noDataTitle}</h1><p>{m.noDataBody}</p></section><MethodNote locale={locale}/></>;
   return <>
-    <FixtureNotice locale={locale}/>
+    
     {!data.recommendationEligible ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.ineligibleMonthTitle}</strong><p>{copy.notices.ineligibleMonthBody}</p></div></aside> : null}
     {data.recommendationEligible && data.caveats.includes("non-critical-component-floor")
       ? <aside className="method-note below-floor" role="status"><span>ⓘ</span><div><strong>{copy.notices.belowFloorTitle}</strong><p>{copy.notices.belowFloorBody(belowFloor(data.components).map((key)=>copy.components[key]).join(", "))}</p></div></aside>
@@ -114,13 +109,13 @@ function rankingThemeLabel(theme: string, locale: Locale): string {
 
 export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
   const copy = t(locale);
-  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
+  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {
   const copy = t(locale);
   const first=getDestination(comparison.destinations[0])!; const second=getDestination(comparison.destinations[1])!;
-  return <><FixtureNotice locale={locale}/><section className="page-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{first.name} vs {second.name}</h1><p>{copy.comparison.intro}</p></section><section className="comparison-grid"><div className="comparison-head"><strong>{first.name}</strong><span>{copy.common.month}</span><strong>{second.name}</strong></div>{comparison.months.map((item)=><div key={item.month}><span className={item.winner===first.slug?"winner":""}>{item.firstScore ?? "—"}</span><Link href={rankingPath(locale,item.month)}>{monthNameShort(item.month,locale)}</Link><span className={item.winner===second.slug?"winner":""}>{item.secondScore ?? "—"}</span></div>)}</section><div className="centered-links"><Link className="button secondary" href={destinationPath(locale,first.slug)}>{first.name}</Link><Link className="button secondary" href={destinationPath(locale,second.slug)}>{second.name}</Link></div><MethodNote locale={locale}/></>;
+  return <><section className="page-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{first.name} vs {second.name}</h1><p>{copy.comparison.intro}</p></section><section className="comparison-grid"><div className="comparison-head"><strong>{first.name}</strong><span>{copy.common.month}</span><strong>{second.name}</strong></div>{comparison.months.map((item)=><div key={item.month}><span className={item.winner===first.slug?"winner":""}>{item.firstScore ?? "—"}</span><Link href={rankingPath(locale,item.month)}>{monthNameShort(item.month,locale)}</Link><span className={item.winner===second.slug?"winner":""}>{item.secondScore ?? "—"}</span></div>)}</section><div className="centered-links"><Link className="button secondary" href={destinationPath(locale,first.slug)}>{first.name}</Link><Link className="button secondary" href={destinationPath(locale,second.slug)}>{second.name}</Link></div><MethodNote locale={locale}/></>;
 }
 
 export function MethodNote({locale}:{locale:Locale}) {

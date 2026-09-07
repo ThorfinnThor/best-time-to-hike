@@ -7,6 +7,7 @@ import { degreesC } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
+import { COMPONENT_KEYS } from "@/lib/scoring/recommendations";
 
 const MAX = 4;
 
@@ -21,6 +22,12 @@ const MAX = 4;
  * real statement: the gate withholds that month. The grid says so rather than
  * showing a low score, which is the same honesty the destination pages keep.
  */
+/** Which component closed a month, for the blank cells in the grid. */
+function closedReason(destination: CompactSearchDestination, month: number, locale: Locale): string {
+  const entry = destination.closed.find(([value]) => value === month);
+  return entry ? t(locale).components[COMPONENT_KEYS[entry[1]]] : "";
+}
+
 export function ComparisonTool({destinations, locale}: {destinations: CompactSearchDestination[]; locale: Locale}) {
   const copy = t(locale);
   const [chosen, setChosen] = useState<string[]>([]);
@@ -83,7 +90,7 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
       </button> : null}
     </div>
 
-    {picked.length < 2
+    {picked.length === 0
       ? <p className="compare-hint">{copy.compare.pickTwo}</p>
       : <div className="compare-grid-wrap">
         <table className="compare-grid">
@@ -105,7 +112,10 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
                 return <td key={destination.slug} className={entry ? "open" : "closed"}>
                   {entry
                     ? <><strong>{entry[1]}</strong><small>{degreesC(entry[2], locale)}</small></>
-                    : <span className="closed-mark" title={copy.compare.notRecommended}>{copy.compare.closedShort}</span>}
+                    : <span className="closed-mark" title={copy.compare.notRecommended}>
+                        {copy.compare.closedShort}
+                        <small>{closedReason(destination, month, locale)}</small>
+                      </span>}
                 </td>;
               })}
             </tr>)}
@@ -117,6 +127,7 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
             </tr>
           </tfoot>
         </table>
+        {picked.length === 1 ? <p className="compare-hint compare-hint-inline">{copy.compare.addOneMore}</p> : null}
         <p className="compare-note">{copy.compare.closedNote}</p>
       </div>}
   </section>;

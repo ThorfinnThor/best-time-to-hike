@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import type { CompactMonth, CompactSearchDestination, Comparison, ComponentScores, DatasetStatus, DestinationConfig, PublicDestination, Ranking } from "../../lib/data/types";
 import pageDefinitions from "../../data-config/seo/page-definitions.json";
 import scoringWeights from "../../data-config/scoring/weights.json";
-import { bestMonthsFor } from "../../lib/scoring/recommendations";
+import { bestMonthsFor, COMPONENT_KEYS } from "../../lib/scoring/recommendations";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
 type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]; recommendationEligible:boolean; recommendationHoldReason?:"persistent-snow"; representativeCell:{lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string}; datasetStatus:DatasetStatus; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; retrievedAt:string};
@@ -49,6 +49,17 @@ const search: CompactSearchDestination[] = publicDestinations
     // Altitude is a first-class hiking criterion and costs one number per
     // destination, so the finder can filter on it without another request.
     elevationM: Math.round(destination.representativeCell.modelElevationM),
+    // The reason a month is missing, at two numbers each: the comparison grid
+    // showed a dash and a reader could not tell whether that meant bad, unknown
+    // or broken. Mallorca in July is 79% of days above 28 degrees, and saying
+    // "heat" costs almost nothing.
+    closed: destination.months
+      .filter((month) => !month.recommendationEligible && month.components !== null)
+      .map((month) => {
+        const worst = COMPONENT_KEYS.reduce((low, key) =>
+          month.components![key] < month.components![low] ? key : low, COMPONENT_KEYS[0]);
+        return [month.month, COMPONENT_KEYS.indexOf(worst)] as [number, number];
+      }),
     monthly: destination.months
       .filter((month) => month.recommendationEligible && month.overallScore !== null)
       .map((month) => [

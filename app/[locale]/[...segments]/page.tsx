@@ -5,7 +5,7 @@ import weights from "@/data-config/scoring/weights.json";
 import { allImages } from "@/lib/media/images";
 import { Finder } from "@/components/finder/Finder";
 import { HomePage } from "@/components/home/HomePage";
-import { ComparisonPage, DestinationPage, FixtureNotice, MethodNote, MonthPage, RankingPage } from "@/components/hiking/Pages";
+import { ComparisonPage, DestinationPage, MethodNote, MonthPage, RankingPage } from "@/components/hiking/Pages";
 import { LongformArticle } from "@/components/seo/LongformArticle";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
@@ -126,7 +126,7 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
 
 function FinderPage({locale}:{locale:Locale}) {
   const copy = t(locale).finder;
-  return <><FixtureNotice locale={locale}/><section className="page-intro tool-intro"><span className="eyebrow">{copy.pageEyebrow}</span><h1>{copy.pageHeading}</h1><p>{copy.pageSub}</p></section><div className="finder-page"><Finder destinations={getSearchIndex()} locale={locale}/></div></>;
+  return <><section className="page-intro tool-intro"><span className="eyebrow">{copy.pageEyebrow}</span><h1>{copy.pageHeading}</h1><p>{copy.pageSub}</p></section><div className="finder-page"><Finder destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>;
 }
 
 function renderPage(locale:Locale,page:PageId):React.ReactNode {
@@ -150,10 +150,10 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
       const label=taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: label, path: pathFor(page, locale)}];
       return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={rankingLd(label, area.destinations.slice(0, 20).map((destination) => ({name: destination.name, path: pathFor({kind:"destination", slug: destination.slug}, locale)})))}/>
-        <Breadcrumbs trail={trail} locale={locale}/><FixtureNotice locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
+        <Breadcrumbs trail={trail} locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
     case "compare": { if(!getComparisonIndex().some((item)=>item.slug===page.slug)) notFound(); return <ComparisonPage comparison={getComparison(page.slug)} locale={locale}/>; }
-    case "compareTool": { const copy=t(locale); return <><FixtureNotice locale={locale}/><section className="page-intro tool-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.toolIntro}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
+    case "compareTool": { const copy=t(locale); return <><section className="page-intro tool-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.toolIntro}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
     case "info": return <InformationPage locale={locale} pageKey={page.key}/>;
   }
 }

@@ -130,6 +130,13 @@ export interface PublicDestination {
  */
 export type CompactMonth = [number, number, number, number, number, number, number];
 
+/**
+ * A month the gate withholds, as [month, component index into COMPONENT_KEYS].
+ * Two small numbers so the comparison grid can say why a cell is blank instead
+ * of printing a dash and leaving the reader to guess.
+ */
+export type CompactClosedMonth = [number, number];
+
 export interface CompactSearchDestination {
   slug: string;
   name: string;
@@ -139,6 +146,7 @@ export interface CompactSearchDestination {
   tags: string[];
   elevationM: number;
   monthly: CompactMonth[];
+  closed: CompactClosedMonth[];
 }
 
 export interface SearchDestination {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Finder } from "@/components/finder/Finder";
-import { FixtureNotice, MethodNote } from "@/components/hiking/Pages";
+import { MethodNote } from "@/components/hiking/Pages";
 import { TrustSection } from "@/components/home/TrustSection";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { getAllDestinations } from "@/lib/data/load";
@@ -30,7 +30,6 @@ export function HomePage({ locale }: { locale: Locale }) {
 
   return (
     <>
-      <FixtureNotice locale={locale} />
       <section className="home-hero">
         <div className="hero-glow" aria-hidden="true" />
         <div className="home-hero-inner">
