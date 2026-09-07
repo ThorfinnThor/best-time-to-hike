@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { getDestination } from "../lib/data/load";
+import { reviewGoldenCases } from "../scripts/lib/golden-review";
 
 /**
  * The engine checked against seasons a person would name.
@@ -76,15 +77,13 @@ test("a signed label carries an approver and a date, and APPROVED means all of t
   assert.deepEqual(unsigned, [], `status is APPROVED while these are unsigned: ${unsigned.join(", ")}`);
 });
 
-test("the signed labels are not only the ones the engine already agrees with", () => {
-  // A set filtered to the passing cases cannot fail, and a check that cannot
-  // fail is decoration. This does not forbid the state — signing the easy ones
-  // first is reasonable — it forbids finishing there and calling it approved.
-  const signed = golden.cases.filter((item) => item.approvedBy);
-  if (!approved || !signed.length) return;
-  const disagreeing = signed.filter((item) => compare(item).verdict !== "agrees");
-  assert.ok(disagreeing.length > 0,
-    "every signed label agrees with the engine, so the golden set is a mirror of it; sign at least one case where they differ, having decided which of the two is wrong");
+test("the approved golden set clears the same evidence gate as the release report", () => {
+  if (!approved) return;
+  const review = reviewGoldenCases(golden, golden.cases.flatMap((item) => {
+    const destination = getDestination(item.slug);
+    return destination ? [destination] : [];
+  }));
+  assert.ok(review.passed, JSON.stringify(review.cases.filter((item) => item.errors.length)));
 });
 
 test("the engine's best months fall inside the labelled season", {skip: !approved && "labels are not approved yet; see the report below"}, () => {

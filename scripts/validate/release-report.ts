@@ -6,15 +6,11 @@ import { routeCatalog } from "../../lib/seo/route-catalog";
 import { pageSeo } from "../../lib/seo/page-seo";
 import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
+import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
 const releaseApprovals = readJson<any>("data-config/methodology/release-approvals.json");
-interface GoldenCase {
-  approvedBy: string | null;
-  approvedAt: string | null;
-  acceptedDeviation?: {reason:string;recordedBy:string;recordedAt:string;engineMonths:number[]};
-}
 const golden = readJson<{status:string;cases:GoldenCase[]}>("tests/fixtures/known-hiking-seasons.json");
 const configFiles = [
   "data-config/methodology/climate-aggregation-v1.json",
@@ -26,7 +22,8 @@ const configFiles = [
   "data-config/methodology/sampling-v1.json",
   "data-config/methodology/source-semantics.json",
   "data-config/scoring/curves.json",
-  "data-config/scoring/weights.json"
+  "data-config/scoring/weights.json",
+  "tests/fixtures/known-hiking-seasons.json"
 ];
 const destinationRoot = join(ROOT, "public/data/hiking/destinations");
 const destinationFiles = readdirSync(destinationRoot, { withFileTypes: true }).flatMap((country) => country.isDirectory()
@@ -60,21 +57,13 @@ const crawlLockLayers = {
 };
 const nonProductionIndexabilityLocked = manifest.datasetStatus === "production"
   || Object.values(crawlLockLayers).every(Boolean);
-const goldenSignedCases = golden.cases.filter((item) => Boolean(item.approvedBy) && Number.isFinite(new Date(item.approvedAt ?? "").getTime()));
-const goldenDeviationCases = golden.cases.filter((item) => item.acceptedDeviation);
-const goldenMetadataValid = goldenSignedCases.length === golden.cases.length
-  && goldenDeviationCases.every((item) => {
-    const deviation = item.acceptedDeviation!;
-    return deviation.reason.length > 60 && Boolean(deviation.recordedBy)
-      && Number.isFinite(new Date(deviation.recordedAt).getTime()) && Array.isArray(deviation.engineMonths);
-  });
+const goldenReview = reviewGoldenCases(golden, destinations);
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
   nonProductionIndexabilityLocked,
   realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
   destinationMinimumMet: manifest.destinationCount >= 50,
-  goldenMinimumMet: golden.status === "APPROVED" && golden.cases.length >= 30
-    && goldenMetadataValid && goldenDeviationCases.length <= golden.cases.length / 4,
+  goldenMinimumMet: goldenReview.passed,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
   climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2020,
   releaseApprovals: Object.fromEntries(Object.entries(releaseApprovals.approvals).map(([key,value]:[string,any])=>[key,value.approved===true&&Boolean(value.approvedBy)&&Number.isFinite(new Date(value.approvedAt).getTime())]))
@@ -104,9 +93,7 @@ const report = {
   },
   goldenReview: {
     status: golden.status,
-    signedCases: goldenSignedCases.length,
-    acceptedDeviations: goldenDeviationCases.length,
-    maximumAcceptedDeviations: Math.floor(golden.cases.length / 4),
+    ...goldenReview,
   },
   crawlLockLayers,
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },

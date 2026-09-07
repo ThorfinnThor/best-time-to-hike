@@ -1,6 +1,6 @@
 name: Stage representative-cell replacements
 
-# This workflow never publishes. It replaces five bad cells only in the runner,
+# This workflow never publishes. This run is scoped to the revised El Chalten cell,
 # re-downloads their official ERA5-Land series, and uploads the result for a
 # scientific review. Hunza is refreshed unchanged as a reproducibility control.
 on:
@@ -19,7 +19,7 @@ jobs:
     timeout-minutes: 330
     env:
       BTH_CDS_CONCURRENCY: 5
-      BTH_DESTINATIONS: el-chalten,garhwal,denali,annapurna,hunza
+      BTH_DESTINATIONS: el-chalten,hunza
       CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
       NEXT_PUBLIC_APP_URL: https://best-time-to-hike.pages.dev
     steps:
@@ -40,7 +40,7 @@ jobs:
       - run: pnpm data:setup-python
 
       - name: Resolve and apply candidates inside the runner
-        run: pnpm data:cell-replacement-prepare -- --apply
+        run: pnpm data:cell-replacement-prepare -- --apply --only=el-chalten
 
       - name: Restore canonical point-series cache
         uses: actions/cache/restore@v4
@@ -69,7 +69,7 @@ jobs:
 
       - name: Build scientific staging report
         if: ${{ always() }}
-        run: pnpm data:cell-replacement-review
+        run: pnpm data:cell-replacement-review -- --only=el-chalten
 
       - name: Upload review evidence
         if: ${{ always() }}
@@ -82,23 +82,14 @@ jobs:
             generated/intermediate/cell-replacements
             generated/reports/representative-cell-replacements-v1.json
             data-config/sources/destinations.json
+            data-config/sources/representative-cell-replacements-v1.json
+            tests/fixtures/known-hiking-seasons.json
             data-config/sources/representative-cell-overrides.json
             data-config/geography/destination-areas.geojson
             data-snapshots/dem/el-chalten.json
-            data-snapshots/dem/garhwal.json
-            data-snapshots/dem/denali.json
-            data-snapshots/dem/annapurna.json
             data-snapshots/sampling/el-chalten.json
-            data-snapshots/sampling/garhwal.json
-            data-snapshots/sampling/denali.json
-            data-snapshots/sampling/annapurna.json
             data-snapshots/climate/el-chalten.json
-            data-snapshots/climate/garhwal.json
-            data-snapshots/climate/denali.json
-            data-snapshots/climate/annapurna.json
             data-snapshots/climate/hunza.json
             public/data/hiking/destinations/ar/el-chalten.json
-            public/data/hiking/destinations/in/garhwal.json
-            public/data/hiking/destinations/us/denali.json
-            public/data/hiking/destinations/np/annapurna.json
+            public/data/hiking/destinations/index.json
             public/data/hiking/destinations/pk/hunza.json

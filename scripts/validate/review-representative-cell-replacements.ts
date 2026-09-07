@@ -17,6 +17,12 @@ interface ClimateSnapshot {
 }
 
 const config = readJson<ReplacementConfig>("data-config/sources/representative-cell-replacements-v1.json");
+const onlyArgument = process.argv.slice(2).find((argument) => argument.startsWith("--only="));
+const only = onlyArgument ? onlyArgument.slice(7).split(",").map((id) => id.trim()).filter(Boolean) : null;
+if (only && (!only.length || only.some((id) => config.replacements[id]?.stagingDisposition !== "candidate"))) {
+  throw new Error("CELL_REPLACEMENT_REVIEW001 --only must name active candidates");
+}
+const golden = readJson<{cases: Array<{slug: string; expectedMonths: number[]}>}>("tests/fixtures/known-hiking-seasons.json");
 if (config.schemaVersion !== 1 || config.approval !== false) {
   throw new Error("CELL_REPLACEMENT_REVIEW001 replacement candidates must remain unapproved during staging");
 }
@@ -35,7 +41,7 @@ const monthlyTemperatureJump = (months: BandClimateMonth[]) => {
 
 const canonicalClimate = (snapshot: ClimateSnapshot) => snapshot.bands;
 const results = Object.keys(config.replacements).sort()
-  .filter((id) => config.replacements[id].stagingDisposition === "candidate")
+  .filter((id) => config.replacements[id].stagingDisposition === "candidate" && (!only || only.includes(id)))
   .map((id) => {
   const climate = readJson<ClimateSnapshot>(`data-snapshots/climate/${id}.json`);
   const indexEntry = destinationIndex.find((entry) => entry.slug === id);
@@ -52,6 +58,20 @@ const results = Object.keys(config.replacements).sort()
     throw new Error(`CELL_REPLACEMENT_REVIEW001 incomplete canonical climate evidence for ${id}`);
   }
   const allYearSnow = months.every((month) => month.snowDayProbability >= 0.999);
+  const candidate = config.replacements[id];
+  const resolved = climate.sourceDownloads[0].resolvedLocation;
+  // Compare grid identities at the source's 0.1-degree resolution, allowing
+  // only the serialization noise seen in the source's float coordinates.
+  const gridKey = (lat: number, lon: number) => `${lat.toFixed(1)},${lon.toFixed(1)}`;
+  if (gridKey(resolved.latitude, resolved.longitude) !== gridKey(candidate.lat, candidate.lon)
+    || !destination.representativeCell
+    || gridKey(destination.representativeCell.lat, destination.representativeCell.lon) !== gridKey(candidate.lat, candidate.lon)) {
+    throw new Error(`CELL_REPLACEMENT_REVIEW002 candidate, climate and public coordinates disagree for ${id}`);
+  }
+  const label = golden.cases.find((item) => item.slug === id);
+  const expectedMonthsWithoutRecommendation = label?.expectedMonths.filter((month) =>
+    !destination.months.find((item) => item.month === month)?.recommendationEligible) ?? [];
+  const bestMonthsOutsideReference = label ? destination.bestMonths.filter((month) => !label.expectedMonths.includes(month)) : [];
   const minimumSnowDepthM = Math.min(...months.map((month) => month.snowDepthMeanOnSnowDaysM));
   return {
     destinationId: id,
@@ -60,6 +80,17 @@ const results = Object.keys(config.replacements).sort()
     minimumSnowDepthM: round(minimumSnowDepthM, 1),
     recommendationEligible: destination.recommendationEligible,
     eligibleMonths: destination.months.filter((month) => month.recommendationEligible).map((month) => month.month),
+    bestMonths: destination.bestMonths,
+    seasonReview: {
+      referenceAvailable: Boolean(label),
+      expectedMonths: label?.expectedMonths ?? [],
+      bestMonthsOutsideReference,
+      expectedMonthsWithoutRecommendation,
+      interpretation: !label ? "No Golden reference exists; independent season review is required."
+        : !destination.bestMonths.length || bestMonthsOutsideReference.length || expectedMonthsWithoutRecommendation.length
+          ? "Season discrepancy remains; passing the snow gate does not resolve the reference-season review."
+          : "Best months lie within the reference and every reference month is eligible; route-coordinate review is still required.",
+    },
     largestAdjacentTemperatureJump: monthlyTemperatureJump(months),
     climateGate: allYearSnow ? "rejected-persistent-snow" : "passed-no-persistent-snow",
     approval: false,

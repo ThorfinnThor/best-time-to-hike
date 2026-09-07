@@ -51,5 +51,20 @@ test("replacement workflow cannot publish or push", () => {
   assert.doesNotMatch(workflow, /BTH_DESTINATIONS:.*zermatt/);
   assert.match(workflow, /data:cell-replacement-review/);
   assert.doesNotMatch(workflow, /\{zermatt,/);
-  assert.match(workflow, /destinations\/np\/annapurna\.json/);
+  assert.match(workflow, /destinations\/ar\/el-chalten\.json/);
+});
+
+test("El Chalten stages the route-supported cell and preserves the rejected proposal", () => {
+  const candidate = replacements.replacements["el-chalten"];
+  assert.equal(candidate.approval, false);
+  assert.equal(candidate.stagingDisposition, "candidate");
+  assert.deepEqual([candidate.lat, candidate.lon], [-49.3, -72.9]);
+  assert.deepEqual([candidate.rejectedCandidate.lat, candidate.rejectedCandidate.lon], [-49.4, -72.7]);
+  assert.match(candidate.rejectedCandidate.reason, /15 route bounding boxes/);
+  const workflow = readFileSync(".github/workflows/stage-cell-replacements.yml", "utf8");
+  const scope = workflow.match(/BTH_DESTINATIONS: (.+)/)?.[1].split(",").sort();
+  const expected = ["el-chalten", ...replacements.controls.destinations].sort();
+  assert.deepEqual(scope, expected, "download scope must follow reviewed candidates and controls");
+  assert.match(workflow, /prepare -- --apply --only=el-chalten/);
+  assert.match(workflow, /review -- --only=el-chalten/);
 });
