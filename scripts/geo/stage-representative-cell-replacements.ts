@@ -151,7 +151,7 @@ async function main() {
 
   const updatedDestinations = destinations.map((destination) => {
     const replacement = config.replacements[destination.id];
-    if (!replacement || replacement.stagingDisposition !== "candidate") return destination;
+    if (!replacement || replacement.stagingDisposition !== "candidate" || !ids.includes(destination.id)) return destination;
     const point = byKey.get(coordinateKey(destination.id))!;
     const elevation = round(point.era5LandGridElevationM, 1);
     return {...destination, elevationBands: [{id: "representative", minM: Math.floor(elevation - 50), maxM: Math.ceil(elevation + 50), weight: 1}]};

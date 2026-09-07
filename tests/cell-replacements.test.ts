@@ -35,10 +35,12 @@ test("replacement cells remain an evidence-only scientific staging set", () => {
 
 test("publication is hard-scoped to the one approved replacement", () => {
   const workflow = readFileSync(".github/workflows/publish-denali-cell-replacement.yml", "utf8");
+  const preparation = readFileSync("scripts/geo/stage-representative-cell-replacements.ts", "utf8");
   assert.match(workflow, /BTH_DESTINATIONS: denali/);
   assert.match(workflow, /--only=denali/);
   assert.match(workflow, /data:cell-replacement-finalize/);
   assert.doesNotMatch(workflow, /el-chalten|garhwal|annapurna|zermatt/);
+  assert.match(preparation, /!ids\.includes\(destination\.id\)/);
 });
 
 test("replacement workflow cannot publish or push", () => {
