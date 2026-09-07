@@ -343,6 +343,35 @@ into `run:` strings, which is a script-injection surface even when the input com
 
 ---
 
+## 22. A deleted design's CSS still matched the markup that replaced it
+
+**reported by the operator from the deployed site, fixed 2026-09-07.**
+
+The footer was rebuilt at some point and the old rules were left behind. One of them,
+`.site-footer>div:first-child{max-width:380px}`, still matched `.footer-grid`, and at 0,2,0 it beat
+the 0,1,0 of the class that was supposed to own the layout. A 1200px column rendered at **380px**,
+which the operator saw as a band of empty space either side of the footer on every page.
+
+Nothing failed. The build passed, the determinism guard passed, no test noticed, and the page was
+merely wrong to look at. It is the third of this shape here: `.destination-card-art.has-photo` (0,2,0)
+beat `.destination-hero-photo` (0,1,0) and left the hero photo in flow, and a scrim added as `::after`
+collided with an existing `:after` on the same element.
+
+The same commit carried two more of the family. `.compare-tool` centred itself with
+`width:min(1180px,…);margin:0 auto` inside `.finder-page`, which already centres and gutters, so the
+tool sat 24px inside the heading above it; and the gutter was declared on both the page wrapper and
+the tool, so it applied twice. Measured, the heading started at 170px and the controls at 194px.
+
+**Rule.** When markup is replaced, its CSS is part of the deletion. A rule that selects by element
+position rather than by name (`>div:first-child`, `:nth-child`, bare `section`) will silently adopt
+whatever replaces it, and its specificity will usually win. Prefer a class the component actually
+owns. A component that centres or gutters itself must not be placed inside a container that does the
+same; pick one owner for the measurement. And layout faults do not announce themselves — the only
+reliable check is to measure the rendered box, which is why the fix for all three above began with
+`getBoundingClientRect()` at a real viewport width rather than with reading the stylesheet.
+
+---
+
 ## Inherited lessons — sibling project
 
 `climate-decision-engine/mistakes.md` documents 16 bug classes from a product with the same
