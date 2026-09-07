@@ -159,8 +159,8 @@ async function main() {
       [round(longitude - halfCell, 6), round(latitude - halfCell, 6)],
     ]]};
     feature.properties.provenance = {
-      status: "science-staging",
-      sourceType: "project-curated-candidate",
+      status: "pending-review",
+      sourceType: "project-curated-draft",
       sourceLabel: config.replacements[id].label,
       intendedScope: "Historical climate at one candidate representative model-grid cell; not a trail-corridor or whole-region average.",
       excludedClasses: ["whole-region-average", "route-specific-conditions", "live-weather"],

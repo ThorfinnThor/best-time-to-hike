@@ -68,6 +68,7 @@ jobs:
         run: pnpm data:rebuild
 
       - name: Build scientific staging report
+        if: ${{ always() }}
         run: pnpm data:cell-replacement-review
 
       - name: Upload review evidence
@@ -79,12 +80,29 @@ jobs:
           retention-days: 14
           path: |
             generated/intermediate/cell-replacements
-            generated/intermediate/era5-raw/*.meta.json
             generated/reports/representative-cell-replacements-v1.json
             data-config/sources/destinations.json
             data-config/sources/representative-cell-overrides.json
             data-config/geography/destination-areas.geojson
-            data-snapshots/dem/{zermatt,el-chalten,garhwal,denali,annapurna}.json
-            data-snapshots/sampling/{zermatt,el-chalten,garhwal,denali,annapurna}.json
-            data-snapshots/climate/{zermatt,el-chalten,garhwal,denali,annapurna,hunza}.json
-            public/data/hiking/destinations/{zermatt,el-chalten,garhwal,denali,annapurna,hunza}/index.json
+            data-snapshots/dem/zermatt.json
+            data-snapshots/dem/el-chalten.json
+            data-snapshots/dem/garhwal.json
+            data-snapshots/dem/denali.json
+            data-snapshots/dem/annapurna.json
+            data-snapshots/sampling/zermatt.json
+            data-snapshots/sampling/el-chalten.json
+            data-snapshots/sampling/garhwal.json
+            data-snapshots/sampling/denali.json
+            data-snapshots/sampling/annapurna.json
+            data-snapshots/climate/zermatt.json
+            data-snapshots/climate/el-chalten.json
+            data-snapshots/climate/garhwal.json
+            data-snapshots/climate/denali.json
+            data-snapshots/climate/annapurna.json
+            data-snapshots/climate/hunza.json
+            public/data/hiking/destinations/zermatt/index.json
+            public/data/hiking/destinations/el-chalten/index.json
+            public/data/hiking/destinations/garhwal/index.json
+            public/data/hiking/destinations/denali/index.json
+            public/data/hiking/destinations/annapurna/index.json
+            public/data/hiking/destinations/hunza/index.json
