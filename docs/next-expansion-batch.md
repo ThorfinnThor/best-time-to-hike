@@ -18,7 +18,7 @@ had, and are listed in the guard so they do not block the build while they wait.
 
 | destination | current cell | why it is wrong | candidate | shift |
 | --- | --- | --- | --- | --- |
-| `zermatt` | 46.0, 7.7 · 2,996 m | 2.9 m of snow in its thinnest month: a permanent snowfield, not the official Zermatt-Sunnegga route | 46.0, 7.8 · official GPX-intersecting cell | 1 cell east |
+| `zermatt` | 46.0, 7.7 · 2,996 m | 2.9 m of snow in its thinnest month: a permanent snowfield, not the official Zermatt-Sunnegga route | no valid one-cell replacement: the official GPX-intersecting 46.0, 7.8 cell triggers the official ≥10 m glacier indicator; 46.2, 7.8 is outside the cited route | keep review hold; requires a finer or different supported method |
 | `el-chalten` | -49.3, -72.9 · 946 m | 6.0 m in its thinnest month: the edge of the Southern Patagonian Ice Field, not the Fitz Roy trailheads | -49.4, -72.7 · 698 m, land 0.93 | −249 m, 3 cells |
 | `garhwal` | 30.7, 79.1 · 3,540 m | 6.9 m in its thinnest month, the deepest in the catalogue. The Valley of Flowers is walked at 3,050 to 3,350 m | 30.6, 79.2 · 3,149 m | −390 m, 2 cells |
 | `denali` | 63.3, -150.5 · 1,496 m | 1.9 m in its thinnest month and far from the official Savage River trail network | 63.7, -149.3 · official NPS-trail-intersecting cell | route-derived replacement |

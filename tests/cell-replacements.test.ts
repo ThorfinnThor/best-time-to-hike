@@ -8,6 +8,12 @@ test("replacement cells remain an evidence-only scientific staging set", () => {
   assert.equal(replacements.status, "science-staging");
   assert.equal(replacements.approval, false);
   assert.deepEqual(Object.keys(replacements.replacements).sort(), ["annapurna", "denali", "el-chalten", "garhwal", "zermatt"]);
+  assert.equal(replacements.replacements.zermatt.stagingDisposition, "rejected");
+  assert.match(replacements.replacements.zermatt.rejectionReason, /10 m glacier-indicator/);
+  assert.deepEqual(
+    Object.entries(replacements.replacements).filter(([, candidate]) => candidate.stagingDisposition === "candidate").map(([id]) => id).sort(),
+    ["annapurna", "denali", "el-chalten", "garhwal"],
+  );
   assert.deepEqual(replacements.controls.destinations, ["hunza"]);
   const cells = new Set<string>();
   for (const [id, candidate] of Object.entries(replacements.replacements)) {
@@ -27,6 +33,7 @@ test("replacement workflow cannot publish or push", () => {
   assert.match(workflow, /contents: read/);
   assert.doesNotMatch(workflow, /git push|--publish|contents: write/);
   assert.match(workflow, /hunza/);
+  assert.doesNotMatch(workflow, /BTH_DESTINATIONS:.*zermatt/);
   assert.match(workflow, /data:cell-replacement-review/);
   assert.doesNotMatch(workflow, /\{zermatt,/);
   assert.match(workflow, /destinations\/np\/annapurna\.json/);

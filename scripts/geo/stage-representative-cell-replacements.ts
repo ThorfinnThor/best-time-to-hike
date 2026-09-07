@@ -12,6 +12,8 @@ import type { DestinationConfig } from "../../lib/data/types";
 import { readJson, round, writeJson } from "../lib/io";
 
 interface Replacement {
+  stagingDisposition: "candidate" | "rejected";
+  rejectionReason?: string;
   lat: number;
   lon: number;
   label: string;
@@ -62,15 +64,19 @@ async function main() {
     throw new Error("CELL_REPLACEMENT001 replacement config must remain an unapproved science-staging document");
   }
   const destinations = readJson<DestinationConfig[]>("data-config/sources/destinations.json");
-  const ids = Object.keys(config.replacements).sort();
+  const allIds = Object.keys(config.replacements).sort();
+  const ids = allIds.filter((id) => config.replacements[id].stagingDisposition === "candidate");
   if (!ids.length || new Set(ids).size !== ids.length) throw new Error("CELL_REPLACEMENT001 invalid replacement ids");
-  for (const id of ids) {
+  for (const id of allIds) {
     if (!destinations.some((destination) => destination.id === id && destination.active)) {
       throw new Error(`CELL_REPLACEMENT001 unknown or inactive replacement destination ${id}`);
     }
     const candidate = config.replacements[id];
     if (!Number.isFinite(candidate.lat) || !Number.isFinite(candidate.lon) || !candidate.label || !candidate.reason || !candidate.evidence.length) {
       throw new Error(`CELL_REPLACEMENT001 incomplete replacement evidence for ${id}`);
+    }
+    if (candidate.stagingDisposition === "rejected" && !candidate.rejectionReason) {
+      throw new Error(`CELL_REPLACEMENT001 rejected candidate lacks a reason for ${id}`);
     }
   }
   for (const id of config.controls.destinations) {

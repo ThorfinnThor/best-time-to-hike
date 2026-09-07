@@ -5,7 +5,7 @@ interface ReplacementConfig {
   schemaVersion: number;
   approval: boolean;
   controls: {destinations: string[]; reason: string};
-  replacements: Record<string, {lat: number; lon: number; label: string; reason: string}>;
+  replacements: Record<string, {stagingDisposition: "candidate" | "rejected"; lat: number; lon: number; label: string; reason: string}>;
 }
 
 interface ClimateSnapshot {
@@ -34,7 +34,9 @@ const monthlyTemperatureJump = (months: BandClimateMonth[]) => {
 };
 
 const canonicalClimate = (snapshot: ClimateSnapshot) => snapshot.bands;
-const results = Object.keys(config.replacements).sort().map((id) => {
+const results = Object.keys(config.replacements).sort()
+  .filter((id) => config.replacements[id].stagingDisposition === "candidate")
+  .map((id) => {
   const climate = readJson<ClimateSnapshot>(`data-snapshots/climate/${id}.json`);
   const indexEntry = destinationIndex.find((entry) => entry.slug === id);
   if (!indexEntry) throw new Error(`CELL_REPLACEMENT_REVIEW001 missing public index entry for ${id}`);
@@ -65,7 +67,7 @@ const results = Object.keys(config.replacements).sort().map((id) => {
       ? "Select another candidate cell and repeat the official-source download."
       : "Perform coordinate-level route QA and review changed Golden Case output before publication.",
   };
-});
+  });
 
 const controls = config.controls.destinations.map((id) => {
   const baseline = readJson<ClimateSnapshot>(`generated/intermediate/cell-replacements/baseline/climate/${id}.json`);
