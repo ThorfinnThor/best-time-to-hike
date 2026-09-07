@@ -26,6 +26,19 @@ test("replacement cells remain an evidence-only scientific staging set", () => {
     assert.equal(cells.has(cell), false, `${id} duplicates ${cell}`);
     cells.add(cell);
   }
+  assert.equal(replacements.replacements.denali.approval, true);
+  assert.match(replacements.replacements.denali.approvalEvidence, /Official NPS/);
+  for (const id of ["annapurna", "el-chalten", "garhwal", "zermatt"] as const) {
+    assert.equal(replacements.replacements[id].approval, false, id);
+  }
+});
+
+test("publication is hard-scoped to the one approved replacement", () => {
+  const workflow = readFileSync(".github/workflows/publish-denali-cell-replacement.yml", "utf8");
+  assert.match(workflow, /BTH_DESTINATIONS: denali/);
+  assert.match(workflow, /--only=denali/);
+  assert.match(workflow, /data:cell-replacement-finalize/);
+  assert.doesNotMatch(workflow, /el-chalten|garhwal|annapurna|zermatt/);
 });
 
 test("replacement workflow cannot publish or push", () => {

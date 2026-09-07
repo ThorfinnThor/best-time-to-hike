@@ -21,7 +21,9 @@ import { readJson } from "../lib/io";
  * Known cases are listed rather than silenced, so the guard blocks a fifth
  * without blocking the build on the four already queued for a new download.
  */
-const SNOWBOUND_ALL_YEAR = new Set(["zermatt", "el-chalten", "denali", "garhwal"]);
+const SNOWBOUND_ALL_YEAR = new Set(
+  readJson<{destinationIds: string[]}>("data-config/sources/known-snowbound-cell-holds.json").destinationIds,
+);
 
 const index = readJson<Array<{slug: string}>>("public/data/hiking/destinations/index.json");
 const manifest = readJson<{fileChecksums: Record<string, string>}>("public/data/hiking/manifest.json");

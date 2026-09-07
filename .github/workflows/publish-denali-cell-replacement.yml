@@ -1,0 +1,68 @@
+name: Publish approved Denali cell replacement
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-real-static-data
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      BTH_CDS_CONCURRENCY: 1
+      BTH_DESTINATIONS: denali
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+      NEXT_PUBLIC_APP_URL: https://best-time-to-hike.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-data.txt
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm data:setup-python
+
+      - name: Apply only the explicitly approved Denali candidate
+        run: pnpm data:cell-replacement-prepare -- --apply --only=denali
+
+      - name: Restore verified point series
+        uses: actions/cache/restore@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-denali-approved-v1-${{ github.run_id }}
+          restore-keys: |
+            era5-land-cell-replacements-v1-
+
+      - name: Refresh and aggregate official Denali climate
+        run: pnpm data:era5 -- --provisional --refresh
+
+      - name: Rebuild before final approval check
+        run: pnpm data:rebuild
+
+      - name: Finalize the reviewed replacement and remove its temporary hold
+        run: pnpm data:cell-replacement-finalize -- --only=denali
+
+      - name: Verify the complete static site
+        run: pnpm verify
+
+      - name: Commit verified provisional data
+        run: |
+          git config user.name "best-time-to-hike-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data-config/sources/destinations.json data-config/sources/representative-cell-overrides.json data-config/sources/known-snowbound-cell-holds.json data-config/geography/destination-areas.geojson data-snapshots public/data/hiking generated/reports
+          git diff --cached --quiet || git commit -m "data: replace Denali with official trail cell"
+          git push

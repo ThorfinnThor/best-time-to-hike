@@ -12,6 +12,10 @@ import type { DestinationConfig } from "../../lib/data/types";
 import { readJson, round, writeJson } from "../lib/io";
 
 interface Replacement {
+  approval: boolean;
+  approvedBy?: string;
+  approvedAt?: string;
+  approvalEvidence?: string;
   stagingDisposition: "candidate" | "rejected";
   rejectionReason?: string;
   lat: number;
@@ -38,6 +42,10 @@ interface OrographyPoint {
 }
 
 const apply = process.argv.slice(2).includes("--apply");
+const onlyArgument = process.argv.slice(2).find((argument) => argument.startsWith("--only="));
+const only = onlyArgument
+  ? new Set(onlyArgument.slice("--only=".length).split(",").map((id) => id.trim()).filter(Boolean))
+  : null;
 const configPath = "data-config/sources/representative-cell-replacements-v1.json";
 const workRoot = "generated/intermediate/cell-replacements";
 const planPath = `${workRoot}/request-plan.json`;
@@ -65,7 +73,11 @@ async function main() {
   }
   const destinations = readJson<DestinationConfig[]>("data-config/sources/destinations.json");
   const allIds = Object.keys(config.replacements).sort();
-  const ids = allIds.filter((id) => config.replacements[id].stagingDisposition === "candidate");
+  if (only) {
+    const unknown = [...only].filter((id) => !allIds.includes(id));
+    if (unknown.length) throw new Error(`CELL_REPLACEMENT001 --only names unknown replacements: ${unknown.join(", ")}`);
+  }
+  const ids = allIds.filter((id) => config.replacements[id].stagingDisposition === "candidate" && (!only || only.has(id)));
   if (!ids.length || new Set(ids).size !== ids.length) throw new Error("CELL_REPLACEMENT001 invalid replacement ids");
   for (const id of allIds) {
     if (!destinations.some((destination) => destination.id === id && destination.active)) {
@@ -77,6 +89,9 @@ async function main() {
     }
     if (candidate.stagingDisposition === "rejected" && !candidate.rejectionReason) {
       throw new Error(`CELL_REPLACEMENT001 rejected candidate lacks a reason for ${id}`);
+    }
+    if (candidate.approval && (!candidate.approvedBy || !candidate.approvedAt || !candidate.approvalEvidence)) {
+      throw new Error(`CELL_REPLACEMENT001 approved candidate lacks review evidence for ${id}`);
     }
   }
   for (const id of config.controls.destinations) {
