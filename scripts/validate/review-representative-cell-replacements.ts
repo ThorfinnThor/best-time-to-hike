@@ -20,6 +20,7 @@ const config = readJson<ReplacementConfig>("data-config/sources/representative-c
 if (config.schemaVersion !== 1 || config.approval !== false) {
   throw new Error("CELL_REPLACEMENT_REVIEW001 replacement candidates must remain unapproved during staging");
 }
+const destinationIndex = readJson<Array<{slug: string; countryCode: string}>>("public/data/hiking/destinations/index.json");
 
 const monthlyTemperatureJump = (months: BandClimateMonth[]) => {
   let largest = {fromMonth: 1, toMonth: 2, deltaC: 0};
@@ -35,7 +36,9 @@ const monthlyTemperatureJump = (months: BandClimateMonth[]) => {
 const canonicalClimate = (snapshot: ClimateSnapshot) => snapshot.bands;
 const results = Object.keys(config.replacements).sort().map((id) => {
   const climate = readJson<ClimateSnapshot>(`data-snapshots/climate/${id}.json`);
-  const destination = readJson<PublicDestination>(`public/data/hiking/destinations/${id}/index.json`);
+  const indexEntry = destinationIndex.find((entry) => entry.slug === id);
+  if (!indexEntry) throw new Error(`CELL_REPLACEMENT_REVIEW001 missing public index entry for ${id}`);
+  const destination = readJson<PublicDestination>(`public/data/hiking/destinations/${indexEntry.countryCode.toLowerCase()}/${id}.json`);
   const months = climate.bands.representative?.months;
   if (climate.sourceDataset !== "reanalysis-era5-land-timeseries"
     || climate.sourceDoi !== "10.24381/ee82e357"

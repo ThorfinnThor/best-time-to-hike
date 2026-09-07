@@ -29,4 +29,5 @@ test("replacement workflow cannot publish or push", () => {
   assert.match(workflow, /hunza/);
   assert.match(workflow, /data:cell-replacement-review/);
   assert.doesNotMatch(workflow, /\{zermatt,/);
+  assert.match(workflow, /destinations\/np\/annapurna\.json/);
 });
