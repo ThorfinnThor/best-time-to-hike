@@ -74,3 +74,46 @@ the checklist does not supply the missing evidence or operator details.
 The UX correction can be deployed provisionally through the existing Cloudflare
 Git integration. Production indexing and catalogue expansion remain deferred
 until their prerequisites are satisfied. No source token is needed at runtime.
+
+### Deployment verification
+
+Commit `0319ec3` passed full local verification and GitHub CI. Cloudflare Pages
+deployment `6d4fd62b-0570-4b44-aef9-63c1cc06c689` serves the correction. Verified
+the language switch both on its immutable deployment URL and on
+https://best-time-to-hike.pages.dev: June filters `m=6&tmin=8&rain=0` survive
+EN to DE, and 245 English results become 245 German results rather than 212.
+No browser error-level console entry was recorded in the final main-origin test.
+The ranking navigation and El Chalten's no-recommendation page were also checked.
+
+A separate check, `Workers Builds: best-time-to-hike-data`, failed for the same
+commit. It is not the Pages deployment; its cause was not diagnosed here. No
+Worker was deleted or disconnected. This residual infrastructure issue and the
+full accessibility/performance audit remain open.
+
+### Follow-up: obsolete Worker build disconnected
+
+Inspected Cloudflare build `2a522f6b-38d6-4533-943b-2093946238ed`.
+Its build command `pnpm cloudflare:data:typecheck` fails because that script
+was removed when the project became static. Its deploy command also refers
+to the retired `cloudflare/data-pipeline/wrangler.jsonc` configuration.
+Disconnected only this Worker's Git build integration in Cloudflare; the
+settings now show Git repository / Connect. The Worker itself, its secrets,
+runtime data and the Pages integration were not removed or modified.
+Historical failed checks remain historical; a new push has not yet verified
+the absence of a new Worker check.
+
+### Targeted accessibility corrections
+
+Read the live Finder's computed text/background colors. Filter-label contrast
+was 4.19:1 and the intro eyebrow 2.81:1, below the 4.5:1 minimum for small text
+([WCAG 1.4.3](https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum)).
+Darkened the secondary green text token and only the pale-intro orange text:
+the same pairs now calculate to 5.73:1 and 4.79:1. Decorative orange, typography
+and layout remain unchanged. Added two targeted palette regression tests.
+These calculations do not certify all text, imagery, focus or interaction states.
+
+The performance skill requires Chrome DevTools navigation/trace tools, which
+are unavailable in this session. No performance trace, Lighthouse score or
+complete accessibility/performance approval is claimed. The seven production
+gates remain unchanged. Domain purchase and operator details are explicitly
+deferred at the user's request, not requested again as prerequisites for this work.
