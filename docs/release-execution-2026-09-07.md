@@ -117,3 +117,18 @@ are unavailable in this session. No performance trace, Lighthouse score or
 complete accessibility/performance approval is claimed. The seven production
 gates remain unchanged. Domain purchase and operator details are explicitly
 deferred at the user's request, not requested again as prerequisites for this work.
+
+### Deployment and audit follow-up
+
+Commit `4952dc8` passed GitHub CI (`34153964907`) and Cloudflare Pages published
+the production deployment at
+https://9228b295.best-time-to-hike.pages.dev. Live computed styles now use
+`#a34825` for the pale-intro eyebrow and `#526b58` for secondary labels. The
+keyboard smoke test reached the Finder selects, number inputs and toggle buttons
+in order, with a visible 3 px focus outline on each.
+
+The generated static output contains 1.2 MB of Next static JS/CSS and 12302
+files; the larger 430 MB local `out/` total is dominated by prerendered HTML,
+JSON and destination imagery. This is an inventory, not a Core Web Vitals
+measurement. A Chrome DevTools MCP trace is still required for LCP, CLS, FCP,
+TBT and network-chain findings.
