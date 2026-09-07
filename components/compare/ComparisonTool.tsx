@@ -22,10 +22,9 @@ const MAX = 4;
  * real statement: the gate withholds that month. The grid says so rather than
  * showing a low score, which is the same honesty the destination pages keep.
  */
-/** Which component closed a month, for the blank cells in the grid. */
-function closedReason(destination: CompactSearchDestination, month: number, locale: Locale): string {
-  const entry = destination.closed.find(([value]) => value === month);
-  return entry ? t(locale).components[COMPONENT_KEYS[entry[1]]] : "";
+/** A withheld month, with what we measured and what closed it. */
+function closedMonth(destination: CompactSearchDestination, month: number) {
+  return destination.closed.find(([value]) => value === month);
 }
 
 export function ComparisonTool({destinations, locale}: {destinations: CompactSearchDestination[]; locale: Locale}) {
@@ -112,10 +111,16 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
                 return <td key={destination.slug} className={entry ? "open" : "closed"}>
                   {entry
                     ? <><strong>{entry[1]}</strong><small>{degreesC(entry[2], locale)}</small></>
-                    : <span className="closed-mark" title={copy.compare.notRecommended}>
-                        {copy.compare.closedShort}
-                        <small>{closedReason(destination, month, locale)}</small>
-                      </span>}
+                    : (() => {
+                      const closed = closedMonth(destination, month);
+                      if (!closed) return <span className="closed-mark">{copy.compare.closedShort}</span>;
+                      // The measurements stand; only the recommendation is withheld.
+                      return <span className="closed-mark" title={copy.compare.notRecommended}>
+                        <strong>{degreesC(closed[2], locale)}</strong>
+                        <small>{Math.round(closed[3] * 100)}% {copy.common.wetDays}</small>
+                        <em>{t(locale).components[COMPONENT_KEYS[closed[1]]]}</em>
+                      </span>;
+                    })()}
                 </td>;
               })}
             </tr>)}

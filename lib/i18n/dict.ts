@@ -414,7 +414,7 @@ export const DICT = {
       recommendableMonths: "Recommendable months",
       notRecommended: "Not recommended: at least one critical climate component falls below the threshold",
       closedShort: "—",
-      closedNote: "A blank month is one the recommendation gate withholds, not one we have no data for. The word beneath it names the component that fell below the threshold. Scores describe one representative ERA5-Land grid cell over 1991 to 2020.",
+      closedNote: "A shaded month is one we do not recommend, not one we lack data for: the temperature and rain are still shown, and the word beneath them names the component that fell below the threshold. Only the hiking score is withheld. Scores describe one representative ERA5-Land grid cell over 1991 to 2020.",
     },
     comparison: {
       eyebrow: "Side-by-side season guide",
@@ -927,7 +927,7 @@ export const DICT = {
       recommendableMonths: "Empfehlenswerte Monate",
       notRecommended: "Nicht empfohlen: mindestens eine kritische Klimakomponente liegt unter der Schwelle",
       closedShort: "—",
-      closedNote: "Ein leerer Monat wird vom Empfehlungstest zurückgehalten; es fehlen keine Daten. Das Wort darunter nennt die Komponente, die unter der Schwelle liegt. Die Werte gelten für eine repräsentative ERA5-Land-Gitterzelle im Zeitraum 1991 bis 2020.",
+      closedNote: "Ein schattierter Monat wird nicht empfohlen; es fehlen keine Daten: Temperatur und Regen stehen weiterhin da, und das Wort darunter nennt die Komponente unter der Schwelle. Zurückgehalten wird nur der Wanderwert. Die Werte gelten für eine repräsentative ERA5-Land-Gitterzelle im Zeitraum 1991 bis 2020.",
     },
     comparison: {
       eyebrow: "Saisonaler Direktvergleich",

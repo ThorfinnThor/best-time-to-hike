@@ -18,9 +18,9 @@
         {"type":"number","minimum":0,"maximum":24}
       ],
       "items":false}},
-    "closed":{"type":"array","maxItems":12,"description":"Months the recommendation gate withholds, as [month, index into the six component keys], so the comparison grid can name what closed a month instead of showing a bare dash.","items":{
-      "type":"array","minItems":2,"maxItems":2,
-      "prefixItems":[{"type":"integer","minimum":1,"maximum":12},{"type":"integer","minimum":0,"maximum":5}],
+    "closed":{"type":"array","maxItems":12,"description":"Months the recommendation gate withholds, as [month, index into the six component keys, mean temperature, wet-day share]. The gate withholds a recommendation, not the record, so the measurements travel with the refusal.","items":{
+      "type":"array","minItems":4,"maxItems":4,
+      "prefixItems":[{"type":"integer","minimum":1,"maximum":12},{"type":"integer","minimum":0,"maximum":5},{"type":"number","minimum":-100,"maximum":70},{"$ref":"#/$defs/probability"}],
       "items":false}}
   },"additionalProperties":false},
   "$defs":{"slug":{"type":"string","pattern":"^[a-z0-9]+(?:-[a-z0-9]+)*$"},"score":{"type":"number","minimum":0,"maximum":100},"probability":{"type":"number","minimum":0,"maximum":1}}

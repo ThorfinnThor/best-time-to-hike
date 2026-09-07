@@ -49,16 +49,17 @@ const search: CompactSearchDestination[] = publicDestinations
     // Altitude is a first-class hiking criterion and costs one number per
     // destination, so the finder can filter on it without another request.
     elevationM: Math.round(destination.representativeCell.modelElevationM),
-    // The reason a month is missing, at two numbers each: the comparison grid
-    // showed a dash and a reader could not tell whether that meant bad, unknown
-    // or broken. Mallorca in July is 79% of days above 28 degrees, and saying
-    // "heat" costs almost nothing.
+    // Withheld months, with their measurements. The gate withholds a
+    // recommendation, not the record: Mallorca in July is 27.5 degrees with rain
+    // on 6% of days and 79% of days above 28, and a reader comparing it against
+    // Madeira wants to see that rather than a dash. Four numbers a month.
     closed: destination.months
       .filter((month) => !month.recommendationEligible && month.components !== null)
       .map((month) => {
         const worst = COMPONENT_KEYS.reduce((low, key) =>
           month.components![key] < month.components![low] ? key : low, COMPONENT_KEYS[0]);
-        return [month.month, COMPONENT_KEYS.indexOf(worst)] as [number, number];
+        return [month.month, COMPONENT_KEYS.indexOf(worst),
+          round2(month.metrics.temperatureHikingMeanC), round2(month.metrics.wetDayProbability)] as [number, number, number, number];
       }),
     monthly: destination.months
       .filter((month) => month.recommendationEligible && month.overallScore !== null)

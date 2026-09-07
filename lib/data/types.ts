@@ -131,11 +131,16 @@ export interface PublicDestination {
 export type CompactMonth = [number, number, number, number, number, number, number];
 
 /**
- * A month the gate withholds, as [month, component index into COMPONENT_KEYS].
- * Two small numbers so the comparison grid can say why a cell is blank instead
- * of printing a dash and leaving the reader to guess.
+ * A month the gate withholds, as
+ * [month, component index into COMPONENT_KEYS, mean temperature, wet-day share].
+ *
+ * It carries the measurements, not just the refusal. Every one of the 1,292
+ * withheld months has a complete published record; withholding a recommendation
+ * is not the same as having nothing to say, and the destination page has always
+ * shown these numbers. The comparison grid printing a bare dash beside them was
+ * the inconsistency.
  */
-export type CompactClosedMonth = [number, number];
+export type CompactClosedMonth = [number, number, number, number];
 
 export interface CompactSearchDestination {
   slug: string;
