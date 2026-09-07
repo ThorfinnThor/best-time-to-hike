@@ -1,0 +1,31 @@
+import { readFileSync } from "node:fs";
+import test from "node:test";
+import assert from "node:assert/strict";
+import replacements from "../data-config/sources/representative-cell-replacements-v1.json";
+
+test("replacement cells remain an evidence-only scientific staging set", () => {
+  assert.equal(replacements.schemaVersion, 1);
+  assert.equal(replacements.status, "science-staging");
+  assert.equal(replacements.approval, false);
+  assert.deepEqual(Object.keys(replacements.replacements).sort(), ["annapurna", "denali", "el-chalten", "garhwal", "zermatt"]);
+  assert.deepEqual(replacements.controls.destinations, ["hunza"]);
+  const cells = new Set<string>();
+  for (const [id, candidate] of Object.entries(replacements.replacements)) {
+    assert.ok(Number.isFinite(candidate.lat) && candidate.lat >= -90 && candidate.lat <= 90, id);
+    assert.ok(Number.isFinite(candidate.lon) && candidate.lon >= -180 && candidate.lon <= 180, id);
+    assert.ok(candidate.label.length > 10 && candidate.reason.includes("required before approval"), id);
+    assert.ok(candidate.evidence.length > 0, id);
+    for (const source of candidate.evidence) assert.match(source.url, /^https:\/\//, id);
+    const cell = `${candidate.lat.toFixed(1)}:${candidate.lon.toFixed(1)}`;
+    assert.equal(cells.has(cell), false, `${id} duplicates ${cell}`);
+    cells.add(cell);
+  }
+});
+
+test("replacement workflow cannot publish or push", () => {
+  const workflow = readFileSync(".github/workflows/stage-cell-replacements.yml", "utf8");
+  assert.match(workflow, /contents: read/);
+  assert.doesNotMatch(workflow, /git push|--publish|contents: write/);
+  assert.match(workflow, /hunza/);
+  assert.match(workflow, /data:cell-replacement-review/);
+});

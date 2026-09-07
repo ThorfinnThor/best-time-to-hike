@@ -1,0 +1,90 @@
+name: Stage representative-cell replacements
+
+# This workflow never publishes. It replaces five bad cells only in the runner,
+# re-downloads their official ERA5-Land series, and uploads the result for a
+# scientific review. Hunza is refreshed unchanged as a reproducibility control.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: stage-representative-cell-replacements
+  cancel-in-progress: false
+
+jobs:
+  stage:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    env:
+      BTH_CDS_CONCURRENCY: 5
+      BTH_DESTINATIONS: zermatt,el-chalten,garhwal,denali,annapurna,hunza
+      CDSAPI_KEY: ${{ secrets.CDSAPI_KEY }}
+      NEXT_PUBLIC_APP_URL: https://best-time-to-hike.pages.dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11.22.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-data.txt
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm data:setup-python
+
+      - name: Resolve and apply candidates inside the runner
+        run: pnpm data:cell-replacement-prepare -- --apply
+
+      - name: Restore canonical point-series cache
+        uses: actions/cache/restore@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-cell-replacements-v1-${{ github.run_id }}
+          restore-keys: |
+            era5-land-cell-replacements-v1-
+            era5-land-point-series-v2-
+
+      - name: Download six official 1991-2020 point series
+        run: pnpm data:era5 -- --provisional --refresh --download-only
+
+      - name: Save canonical point series before aggregation
+        if: ${{ always() }}
+        uses: actions/cache/save@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-cell-replacements-v1-${{ github.run_id }}
+
+      - name: Aggregate replacement candidates and control
+        run: pnpm data:era5 -- --provisional
+
+      - name: Rebuild public static data
+        run: pnpm data:rebuild
+
+      - name: Build scientific staging report
+        run: pnpm data:cell-replacement-review
+
+      - name: Upload review evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: representative-cell-replacements-${{ github.run_id }}
+          if-no-files-found: error
+          retention-days: 14
+          path: |
+            generated/intermediate/cell-replacements
+            generated/intermediate/era5-raw/*.meta.json
+            generated/reports/representative-cell-replacements-v1.json
+            data-config/sources/destinations.json
+            data-config/sources/representative-cell-overrides.json
+            data-config/geography/destination-areas.geojson
+            data-snapshots/dem/{zermatt,el-chalten,garhwal,denali,annapurna}.json
+            data-snapshots/sampling/{zermatt,el-chalten,garhwal,denali,annapurna}.json
+            data-snapshots/climate/{zermatt,el-chalten,garhwal,denali,annapurna,hunza}.json
+            public/data/hiking/destinations/{zermatt,el-chalten,garhwal,denali,annapurna,hunza}/index.json
