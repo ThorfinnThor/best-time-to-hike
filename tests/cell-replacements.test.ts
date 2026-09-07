@@ -1,7 +1,19 @@
 import { readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import test from "node:test";
 import assert from "node:assert/strict";
 import replacements from "../data-config/sources/representative-cell-replacements-v1.json";
+
+test("scoped review rejects empty, unknown and rejected candidates before reading climate", () => {
+  for (const scope of ["", "unknown-destination", "zermatt", "denali,unknown-destination"]) {
+    const result = spawnSync(process.execPath, ["--import", "tsx",
+      "scripts/validate/review-representative-cell-replacements.ts", `--only=${scope}`],
+    { encoding: "utf8" });
+    assert.equal(result.status, 1, scope);
+    assert.match(result.stderr, /CELL_REPLACEMENT_REVIEW001 --only must name active candidates/, scope);
+    assert.doesNotMatch(result.stderr, /ENOENT/, "must fail at scope validation, not missing evidence");
+  }
+});
 
 test("replacement cells remain an evidence-only scientific staging set", () => {
   assert.equal(replacements.schemaVersion, 1);
