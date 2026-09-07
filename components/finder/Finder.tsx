@@ -216,7 +216,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
 
     <div className="finder-presets" aria-label={copy.finder.presetsAria}>
       {PRESETS.map((preset, index) => <button type="button" key={copy.finder.presets[index]} onClick={() => applyPreset(preset)}>{copy.finder.presets[index]}</button>)}
-      {!compact ? <button type="button" onClick={() => {setPreferences(defaultPreferences);}}>{copy.finder.reset}</button> : null}
+      {!compact ? <button type="button" onClick={() => {setPreferences(defaultPreferences); setSavedOnly(false); setVisible(PAGE);}}>{copy.finder.reset}</button> : null}
     </div>
 
     {showResults ? <>
@@ -225,8 +225,8 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
         {savedReady && saved.length > 1 ? <Link className="compare-saved-link" href={`${links.compareIndex(locale)}?d=${saved.slice(0, 4).join(",")}`}>
           {copy.finder.compareSaved(Math.min(saved.length, 4))}
         </Link> : null}
-        {savedReady && saved.length ? <button type="button" className={savedOnly ? "toggle active saved-toggle" : "toggle saved-toggle"}
-          aria-pressed={savedOnly} onClick={() => {setSavedOnly(!savedOnly); setVisible(PAGE);}}>
+        {savedReady && (saved.length > 0 || savedOnly) ? <button type="button" className={savedOnly ? "toggle active saved-toggle" : "toggle saved-toggle"}
+          aria-pressed={savedOnly} onClick={() => {setSavedOnly((current) => !current); setVisible(PAGE);}}>
           ★ {copy.finder.savedOnly} <span>{saved.length}</span>
         </button> : null}
         {matches.length ? <label className="finder-sort"><span>{copy.finder.sort}</span>

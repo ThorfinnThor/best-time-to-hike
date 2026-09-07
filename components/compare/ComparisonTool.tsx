@@ -8,8 +8,7 @@ import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
 import { COMPONENT_KEYS } from "@/lib/scoring/recommendations";
-
-const MAX = 4;
+import { comparisonSelection, MAX_COMPARISON_DESTINATIONS as MAX } from "@/lib/compare/selection";
 
 /**
  * Compare destinations the reader chooses.
@@ -44,9 +43,9 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
     if (typeof window === "undefined") return;
     const requested = new URLSearchParams(window.location.search).get("d");
     if (!requested) return;
-    const asked = requested.split(",").map((slug) => slug.trim()).filter(Boolean);
-    setChosen(asked.filter((slug) => bySlug.has(slug)).slice(0, MAX));
-    setDropped(asked.filter((slug) => !bySlug.has(slug)));
+    const selection = comparisonSelection(requested.split(","), bySlug);
+    setChosen(selection.chosen);
+    setDropped(selection.dropped);
   }, [bySlug]);
 
   useEffect(() => {
@@ -64,8 +63,9 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
   }, [query, destinations, chosen]);
 
   const picked = chosen.map((slug) => bySlug.get(slug)).filter((value): value is CompactSearchDestination => Boolean(value));
-  const add = (slug: string) => { if (picked.length < MAX) setChosen([...chosen, slug]); setQuery(""); };
-  const remove = (slug: string) => setChosen(chosen.filter((value) => value !== slug));
+  const add = (slug: string) => { setChosen((current) => comparisonSelection([...current, slug], bySlug).chosen); setQuery(""); };
+  const remove = (slug: string) => setChosen((current) => current.filter((value) => value !== slug));
+  const savedSelection = comparisonSelection(saved, bySlug).chosen;
   const monthEntry = (destination: CompactSearchDestination, month: number) => destination.monthly.find(([m]) => m === month);
 
   return <section className="compare-tool" aria-label={copy.compare.aria}>
@@ -83,9 +83,9 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
         </li>)}
       </ul> : null}
       {dropped.length ? <p className="compare-dropped" role="status">{copy.compare.dropped(dropped.length)}</p> : null}
-      {savedReady && saved.length > 1 && !chosen.length ? <button type="button" className="compare-from-saved"
-        onClick={() => setChosen(saved.filter((slug) => bySlug.has(slug)).slice(0, MAX))}>
-        {copy.compare.fromShortlist(Math.min(saved.length, MAX))}
+      {savedReady && savedSelection.length > 1 && !chosen.length ? <button type="button" className="compare-from-saved"
+        onClick={() => setChosen(savedSelection)}>
+        {copy.compare.fromShortlist(savedSelection.length)}
       </button> : null}
     </div>
 
