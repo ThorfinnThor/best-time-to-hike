@@ -32,7 +32,9 @@ if (scoredCount !== configuredCount) {
 }
 
 const before = snapshot();
-execFileSync(join(ROOT,"node_modules/.bin/tsx"), ["scripts/export/export.ts"], { cwd: ROOT, stdio: "inherit" });
+// Use Node's loader directly. The tsx CLI opens an IPC socket, which is not
+// available in every CI/sandbox even though TypeScript execution itself is.
+execFileSync(process.execPath, ["--import", "tsx", "scripts/export/export.ts"], { cwd: ROOT, stdio: "inherit" });
 const after = snapshot();
 if (JSON.stringify(before) !== JSON.stringify(after)) {
   const changed = [...new Set([...Object.keys(before), ...Object.keys(after)])].filter((path) => before[path] !== after[path]);

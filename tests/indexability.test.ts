@@ -4,11 +4,21 @@ import { evaluateIndexability } from "../lib/seo/indexability";
 import { routeCatalog } from "../lib/seo/route-catalog";
 import { resolvePageId } from "../lib/i18n/resolve";
 import { pageSeo } from "../lib/seo/page-seo";
+import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../lib/seo/crawl-policy";
 const complete={resultCount:5,dataCompleteness:.99,confidence:90,uniqueInsightCount:3,hasUniqueTitle:true,hasUniqueH1:true,hasCanonical:true,internalLinkCount:4,createsCannibalization:false,containsUnsupportedClaims:false,datasetStatus:"production" as const};
 test("production quality page can be indexable",()=>assert.deepEqual(evaluateIndexability(complete),{indexable:true,reasons:[]}));
 test("non-production content is always noindex",()=>{
   assert.deepEqual(evaluateIndexability({...complete,datasetStatus:"fixture"}),{indexable:false,reasons:["non-production-dataset"]});
   assert.deepEqual(evaluateIndexability({...complete,datasetStatus:"provisional"}),{indexable:false,reasons:["non-production-dataset"]});
+});
+
+test("the shared crawler policy locks every non-production dataset", () => {
+  for (const status of ["fixture", "provisional"] as const) {
+    assert.equal(datasetMayBeIndexed(status), false);
+    assert.equal(robotsDisallowEverything(robotsForDataset(status, "https://example.test/sitemap.xml")), true);
+  }
+  assert.equal(datasetMayBeIndexed("production"), true);
+  assert.equal(robotsDisallowEverything(robotsForDataset("production", "https://example.test/sitemap.xml")), false);
 });
 
 /**

@@ -511,6 +511,8 @@ export const DICT = {
             "Content and works created by the operator on these pages are subject to German copyright law. Reproduction, adaptation, distribution and any form of exploitation beyond the limits of copyright require the written consent of the respective author or creator.",
             "Destination photographs come from Wikimedia Commons and are used only under licences permitting commercial use: public domain, CC0, CC BY and CC BY-SA. The author, licence and source file of every photograph are listed in full on the image credits page.",
             "The underlying climate data is ERA5-Land from the Copernicus Climate Change Service (C3S), DOI 10.24381/ee82e357. Neither the European Commission nor ECMWF is responsible for the use made of it here.",
+            "Produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved.",
+            "The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.",
           ]},
           {heading: "Consumer dispute resolution", paragraphs: [
             "The European Commission shut down its online dispute resolution platform on 20 July 2025, so no link to it is given.",
@@ -1024,6 +1026,8 @@ export const DICT = {
             "Die durch den Betreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.",
             "Die Zielfotografien stammen von Wikimedia Commons und werden ausschließlich unter Lizenzen genutzt, die eine kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Urheber, Lizenz und Quelldatei jedes Bildes sind auf der Seite Bildnachweis vollständig aufgeführt.",
             "Die zugrunde liegenden Klimadaten stammen aus ERA5-Land des Copernicus Climate Change Service (C3S), DOI 10.24381/ee82e357. Weder die Europäische Kommission noch ECMWF haften für die hier vorgenommene Weiterverarbeitung.",
+            "Produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved.",
+            "Die kraft Gesetzes oder durch Übertragung für das Copernicus-Programm zuständigen Organisationen haften nicht für die Nutzung des Copernicus WorldDEM-30.",
           ]},
           {heading: "Verbraucherstreitbeilegung", paragraphs: [
             "Die Europäische Kommission hat ihre Plattform zur Online-Streitbeilegung zum 20. Juli 2025 eingestellt; ein Link darauf entfällt daher.",

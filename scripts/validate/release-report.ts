@@ -1,12 +1,21 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { PublicDestination } from "../../lib/data/types";
+import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../../lib/seo/crawl-policy";
+import { routeCatalog } from "../../lib/seo/route-catalog";
+import { pageSeo } from "../../lib/seo/page-seo";
+import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
 const releaseApprovals = readJson<any>("data-config/methodology/release-approvals.json");
-const golden = readJson<{status:string;cases:unknown[]}>("tests/fixtures/known-hiking-seasons.json");
+interface GoldenCase {
+  approvedBy: string | null;
+  approvedAt: string | null;
+  acceptedDeviation?: {reason:string;recordedBy:string;recordedAt:string;engineMonths:number[]};
+}
+const golden = readJson<{status:string;cases:GoldenCase[]}>("tests/fixtures/known-hiking-seasons.json");
 const configFiles = [
   "data-config/methodology/climate-aggregation-v1.json",
   "data-config/methodology/confidence-v1.json",
@@ -38,24 +47,41 @@ const samplingPoints = samplingFiles.flatMap((file) => {
   const snapshot = readJson<any>(`data-snapshots/sampling/${file}`);
   return Object.values(snapshot.bands as Record<string, any>).flatMap((band) => band.points);
 });
-const nonProductionIndexabilityLocked = manifest.datasetStatus === "production" || (
-  manifest.rankingIds.every((id:string)=>readJson<any>(`public/data/hiking/rankings/${id}.json`).indexable===false) &&
-  readdirSync(join(ROOT,"public/data/hiking/comparisons")).filter((file)=>file!=="comparison-index.json").every((file)=>readJson<any>(`public/data/hiking/comparisons/${file}`).indexable===false) &&
-  readFileSync(join(ROOT,"app/robots.ts"),"utf8").includes('disallow:"/"') &&
-  readFileSync(join(ROOT,"app/sitemap.ts"),"utf8").includes("return []")
-);
+const crawlerPolicy = robotsForDataset(manifest.datasetStatus, "https://example.invalid/sitemap.xml");
+const crawlLockLayers = {
+  robotsDisallowAll: robotsDisallowEverything(crawlerPolicy),
+  sitemapEmpty: !datasetMayBeIndexed(manifest.datasetStatus),
+  pageMetadataNoIndex: routeCatalog().every((route) => {
+    const page = resolvePageId(route.locale, route.segments);
+    return page === null || pageSeo(page, route.locale).index === false;
+  }),
+  rankingsNoIndex: manifest.rankingIds.every((id:string)=>readJson<any>(`public/data/hiking/rankings/${id}.json`).indexable===false),
+  comparisonsNoIndex: readdirSync(join(ROOT,"public/data/hiking/comparisons")).filter((file)=>file!=="comparison-index.json").every((file)=>readJson<any>(`public/data/hiking/comparisons/${file}`).indexable===false),
+};
+const nonProductionIndexabilityLocked = manifest.datasetStatus === "production"
+  || Object.values(crawlLockLayers).every(Boolean);
+const goldenSignedCases = golden.cases.filter((item) => Boolean(item.approvedBy) && Number.isFinite(new Date(item.approvedAt ?? "").getTime()));
+const goldenDeviationCases = golden.cases.filter((item) => item.acceptedDeviation);
+const goldenMetadataValid = goldenSignedCases.length === golden.cases.length
+  && goldenDeviationCases.every((item) => {
+    const deviation = item.acceptedDeviation!;
+    return deviation.reason.length > 60 && Boolean(deviation.recordedBy)
+      && Number.isFinite(new Date(deviation.recordedAt).getTime()) && Array.isArray(deviation.engineMonths);
+  });
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
   nonProductionIndexabilityLocked,
   realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
   destinationMinimumMet: manifest.destinationCount >= 50,
-  goldenMinimumMet: golden.status === "APPROVED" && golden.cases.length >= 30,
+  goldenMinimumMet: golden.status === "APPROVED" && golden.cases.length >= 30
+    && goldenMetadataValid && goldenDeviationCases.length <= golden.cases.length / 4,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
   climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2020,
   releaseApprovals: Object.fromEntries(Object.entries(releaseApprovals.approvals).map(([key,value]:[string,any])=>[key,value.approved===true&&Boolean(value.approvedBy)&&Number.isFinite(new Date(value.approvedAt).getTime())]))
 };
 const approvalBlockers=Object.entries(checks.releaseApprovals).filter(([,approved])=>!approved).map(([key])=>`BLOCKED_APPROVAL_${key.replace(/([a-z])([A-Z])/g,"$1_$2").toUpperCase()}`);
 const blockers = [
+  ...(!checks.nonProductionIndexabilityLocked ? ["BLOCKED_NON_PRODUCTION_INDEXABILITY"] : []),
   ...(!checks.realSourcesApproved ? ["BLOCKED_SOURCE_SEMANTICS"] : []),
   ...(!checks.destinationMinimumMet ? ["BLOCKED_DESTINATION_MINIMUM"] : []),
   ...(!checks.goldenMinimumMet ? ["BLOCKED_GOLDEN_LABEL"] : []),
@@ -76,6 +102,13 @@ const report = {
     publicBytes: statSync(join(ROOT, "public/data/hiking/manifest.json")).size + manifest.totalBytes,
     goldenCases: golden.cases.length
   },
+  goldenReview: {
+    status: golden.status,
+    signedCases: goldenSignedCases.length,
+    acceptedDeviations: goldenDeviationCases.length,
+    maximumAcceptedDeviations: Math.floor(golden.cases.length / 4),
+  },
+  crawlLockLayers,
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },
   recommendationPolicy: {
     eligibleMonths: recommendationMonths.length,

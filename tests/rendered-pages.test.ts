@@ -93,6 +93,25 @@ test("the data notice says nothing about a beta", {skip: !built}, () => {
   }
 });
 
+test("a provisional export is blocked from indexing at every rendered layer", {skip: !built}, () => {
+  const manifest = JSON.parse(readFileSync("public/data/hiking/manifest.json", "utf8"));
+  if (manifest.datasetStatus === "production") return;
+  assert.match(page("robots.txt"), /User-Agent: \*\s+Disallow: \//);
+  assert.doesNotMatch(page("sitemap.xml"), /<url>/);
+  for (const path of PAGES) {
+    assert.match(page(path), /<meta name="robots" content="noindex, follow"\/>/, `${path} is not noindex`);
+  }
+});
+
+test("both imprint pages carry the mandatory Copernicus DEM notices", {skip: !built}, () => {
+  for (const path of ["en/imprint/index.html", "de/impressum/index.html"]) {
+    const text = visible(page(path));
+    assert.match(text, /Produced using Copernicus WorldDEM-30 © DLR e\.V\. 2010-2014/);
+    assert.match(text, /Copernicus programme|Copernicus-Programm/);
+    assert.match(text, /do not incur any liability|haften nicht/);
+  }
+});
+
 test("hreflang alternates point at pages that link back", {skip: !built}, () => {
   for (const path of PAGES) {
     for (const [, href] of page(path).matchAll(/hrefLang="de" href="https:\/\/besttimetohike\.com([^"]*)"/g)) {

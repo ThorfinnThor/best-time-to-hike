@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { readJson, ROOT } from "../lib/io";
+import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../../lib/seo/crawl-policy";
 
 const errors: string[] = [];
 const assert = (condition: unknown, message: string) => { if (!condition) errors.push(message); };
@@ -32,14 +33,16 @@ for (const root of runtimeRoots) {
 
 const nextConfig = readFileSync(join(ROOT, "next.config.ts"), "utf8");
 const wranglerConfig = readFileSync(join(ROOT, "wrangler.jsonc"), "utf8");
-const robotsSource = readFileSync(join(ROOT, "app/robots.ts"), "utf8");
 const sitemapSource = readFileSync(join(ROOT, "app/sitemap.ts"), "utf8");
 assert(/output:\s*["']export["']/.test(nextConfig), "Next.js must remain a static export");
 assert(/images:\s*\{\s*unoptimized:\s*true/.test(nextConfig), "Static export must keep Next images unoptimized");
 assert(packageJson.devDependencies.tsx!==undefined&&readFileSync(join(ROOT,"package.json"),"utf8").includes('"postbuild": "tsx scripts/export/fix-static-languages.ts"'),"Static locale post-build must remain enabled");
 assert(/pages_build_output_dir\s*["']?\s*:\s*["']\.\/out["']/.test(wranglerConfig), "Cloudflare Pages output must be ./out");
-// Semantics, not whitespace: the rule must exist, however it is formatted.
-assert(/disallow:\s*\[?\s*["']\/["']/.test(robotsSource), "Fixture robots policy must disallow crawling");
+// Execute the shared policy rather than recognizing one spelling of its source.
+assert(!datasetMayBeIndexed("fixture") && !datasetMayBeIndexed("provisional")
+  && robotsDisallowEverything(robotsForDataset("fixture", "https://example.invalid/sitemap.xml"))
+  && robotsDisallowEverything(robotsForDataset("provisional", "https://example.invalid/sitemap.xml")),
+"Non-production robots policy must disallow crawling");
 assert(sitemapSource.includes("return []"), "Fixture sitemap policy must emit no URLs");
 assert(invariants.runtimeDatabase === false && invariants.runtimeClimateApi === false && invariants.runtimeDemApi === false, "Runtime data-source invariants must remain disabled");
 
