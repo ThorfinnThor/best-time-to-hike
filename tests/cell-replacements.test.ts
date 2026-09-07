@@ -24,7 +24,7 @@ test("replacement cells remain an evidence-only scientific staging set", () => {
   assert.match(replacements.replacements.zermatt.rejectionReason, /10 m glacier-indicator/);
   assert.deepEqual(
     Object.entries(replacements.replacements).filter(([, candidate]) => candidate.stagingDisposition === "candidate").map(([id]) => id).sort(),
-    ["annapurna", "denali", "el-chalten", "garhwal"],
+    ["annapurna", "denali", "garhwal"],
   );
   assert.deepEqual(replacements.controls.destinations, ["hunza"]);
   const cells = new Set<string>();
@@ -66,10 +66,12 @@ test("replacement workflow cannot publish or push", () => {
   assert.match(workflow, /destinations\/ar\/el-chalten\.json/);
 });
 
-test("El Chalten stages the route-supported cell and preserves the rejected proposal", () => {
+test("El Chalten preserves both rejected proposals without granting approval", () => {
   const candidate = replacements.replacements["el-chalten"];
   assert.equal(candidate.approval, false);
-  assert.equal(candidate.stagingDisposition, "candidate");
+  assert.equal(candidate.stagingDisposition, "rejected");
+  assert.match(candidate.rejectionReason, /34139951879/);
+  assert.match(candidate.rejectionReason, /persistent-snow/);
   assert.deepEqual([candidate.lat, candidate.lon], [-49.3, -72.9]);
   assert.deepEqual([candidate.rejectedCandidate.lat, candidate.rejectedCandidate.lon], [-49.4, -72.7]);
   assert.match(candidate.rejectedCandidate.reason, /15 route bounding boxes/);

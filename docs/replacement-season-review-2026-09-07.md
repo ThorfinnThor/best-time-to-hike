@@ -113,3 +113,27 @@ The next staging workflow is scoped to El Chalten plus the existing Hunza contro
 It does not re-download Denali, Annapurna or Garhwal. The artifact now includes
 the exact candidate config, Golden fixture and destination index so its report
 can be reproduced without reconstructing these inputs manually.
+
+## Result of revised candidate: rejected for persistent snow
+
+GitHub run https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/34139951879
+completed successfully using commit `22e8f8c`. Its report is nevertheless
+`blocked-candidate-climate`, with zero eligible months. All 262,992 expected
+hourly records were retrieved; all 12 monthly snow-day probabilities equal 1.
+Monthly snow depth on snow days ranges from 6.0 to 7.7 m. The original hourly
+`sde` range is 2.3232421875 to 9.09765625 m: the >=10 m glacier indicator was
+**not** triggered. Rejection follows the separate persistent-snow rule.
+
+Raw NetCDF SHA256: `891537d82751b9f2d651c2c206e585efe8415cd054356bd45f882552ec10f661`.
+Canonical observations SHA256: `81891306be029e1a0cbdf792ad6a73fbad0022ecc243b0c33a7dff41e3639c59`.
+Resolved source coordinate is -49.29999999999959, -72.90000000000322;
+the imported variable is `sde`, units metres, not water-equivalent `sd`.
+Hunza again reproduces the committed aggregates exactly.
+
+The config now rejects this second candidate while retaining the previous
+spatial rejection. Repeating the current workflow fails at preparation, before
+a climate download. No scoring thresholds, accepted Golden deviations,
+published snapshots or approvals were changed. Route intersection alone cannot
+establish that this coarse model cell represents the intended walking climate.
+Further work must address snow representativeness and the intended trail scope;
+selecting another cell merely for a more attractive season is not acceptable.
