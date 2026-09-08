@@ -23,12 +23,13 @@ jobs:
           key: era5-land-cell-replacements-v1-34139951879
           fail-on-cache-miss: true
       - run: pnpm exec tsc --noEmit && node --import tsx --test tests/climate-validity.test.ts tests/snow-screening.test.ts
-      - name: Compare the two reviewed pilot points
+      - name: Inventory and compare the bounded cache-only sample
         run: |
-          for destination in hunza el-chalten; do
+          node --import tsx scripts/validate/inventory-validity-cache.ts > generated/intermediate/validity-destinations.txt
+          while read -r destination; do
             node --import tsx scripts/validate/prepare-cached-validity-input.ts "$destination"
             node --import tsx scripts/validate/compare-observation-validity.ts "generated/intermediate/validity-pilot/$destination-input.json" "generated/intermediate/validity-pilot/$destination-report.json"
-          done
+          done < generated/intermediate/validity-destinations.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -38,3 +39,4 @@ jobs:
           path: |
             generated/intermediate/validity-pilot/*-report.json
             generated/intermediate/validity-pilot/*-source-evidence.json
+            generated/intermediate/validity-pilot/cache-inventory.json

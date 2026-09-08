@@ -2,10 +2,11 @@ import { createReadStream, readFileSync, writeFileSync, mkdirSync } from 'node:f
 import { createGunzip } from 'node:zlib';
 import { createInterface } from 'node:readline';
 import { createHash } from 'node:crypto';
+import scope from '../../data-config/methodology/validity-comparison-scope-v1.json';
 
 async function main() {
 const id=process.argv[2];
-if(!['hunza','el-chalten'].includes(id)) throw Error('Only the reviewed Hunza and El Chalten pilot is allowed');
+if(!scope.destinations.includes(id)) throw Error('Destination outside the bounded cache-comparison scope');
 const json=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
 const climate=json(`data-snapshots/climate/${id}.json`);
 const sampling=json(`data-snapshots/sampling/${id}.json`);
@@ -19,7 +20,7 @@ const raw=readFileSync(`${path}.ndjson.gz`);
 const hash=createHash('sha256').update(raw).digest('hex');
 if(hash!==metadata.canonicalObservation?.sha256 || metadata.canonicalObservation?.encoding!=='gzip-ndjson-utf8') throw Error('Cache integrity mismatch');
 if(JSON.stringify(metadata.request)!==JSON.stringify(source.request)) throw Error('Cached request differs from published point request');
-for(const key of ['latitude','longitude']) if(Math.abs(metadata.resolvedLocation[key]-source.resolvedLocation[key])>1e-4) throw Error('Cached point differs');
+for(const key of ['latitude','longitude']) if(!Number.isFinite(metadata.resolvedLocation?.[key])||Math.abs(metadata.resolvedLocation[key]-source.resolvedLocation[key])>1e-4) throw Error('Cached point differs');
 if(metadata.variables?.snowDepthM?.netcdfVariable!=='sde'||metadata.variables?.snowDepthM?.canonicalUnit!=='m'||metadata.variables?.snowCover?.normalization!=='PERCENT_TO_FRACTION') throw Error('Unexpected snow semantics');
 const observations=[];
 const lines=createInterface({input:createReadStream(`${path}.ndjson.gz`).pipe(createGunzip()),crlfDelay:Infinity});

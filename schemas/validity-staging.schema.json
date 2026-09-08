@@ -1,0 +1,30 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object",
+  "required":["schemaVersion","datasetStatus","aggregationPolicyVersion","destinationId","holdReasons","months","bestMonths","productionReleaseApproval"],
+  "additionalProperties":false,
+  "properties":{
+    "schemaVersion":{"const":1},"datasetStatus":{"const":"staging-only"},
+    "aggregationPolicyVersion":{"const":"observation-validity-v1"},
+    "destinationId":{"type":"string","pattern":"^[a-z0-9-]+$"},
+    "holdReasons":{"type":"array","items":{"type":"string"}},
+    "productionReleaseApproval":{"const":false},
+    "bestMonths":{"type":"array","maxItems":3,"uniqueItems":true,"items":{"type":"integer","minimum":1,"maximum":12}},
+    "months":{"type":"array","minItems":12,"maxItems":12,"items":{
+      "type":"object","required":["month","recommendationEligible","overallScore","scoreLevel","components","missingScoringInputs","reason","metrics","coverage"],
+      "allOf":[
+        {"if":{"properties":{"reason":{"type":"string"}}},"then":{"properties":{"overallScore":{"const":null},"scoreLevel":{"const":null},"components":{"const":null},"recommendationEligible":{"const":false}}}},
+        {"if":{"properties":{"recommendationEligible":{"const":true}}},"then":{"properties":{"overallScore":{"type":"number"},"components":{"type":"object"},"reason":{"const":null},"missingScoringInputs":{"maxItems":0}}}}
+      ],
+      "properties":{
+        "month":{"type":"integer","minimum":1,"maximum":12},"recommendationEligible":{"type":"boolean"},
+        "overallScore":{"type":["number","null"],"minimum":0,"maximum":100},
+        "scoreLevel":{"enum":[null,"excellent","very-good","good","fair","poor"]},
+        "components":{"type":["object","null"],"additionalProperties":{"type":"number","minimum":0,"maximum":100}},
+        "missingScoringInputs":{"type":"array","items":{"type":"string"}},"reason":{"type":["string","null"]},
+        "metrics":{"type":"object","additionalProperties":{"type":["number","null"]}},
+        "coverage":{"type":"object","required":["validYearsByMetric","years"]}
+      }
+    }}
+  }
+}

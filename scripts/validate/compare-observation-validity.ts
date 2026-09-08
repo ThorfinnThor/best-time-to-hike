@@ -1,4 +1,4 @@
-import { readFileSync, mkdirSync, writeFileSync, realpathSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync, realpathSync, existsSync } from 'node:fs';
 import { resolve, relative, dirname } from 'node:path';
 import { createHash } from 'node:crypto';
 import Ajv2020 from 'ajv/dist/2020';
@@ -7,6 +7,7 @@ import { aggregateValidDays, aggregateValidMonth } from '../../lib/hiking/climat
 import { screenPhysicalSnow } from '../../lib/hiking/snow-screening';
 import { interpolate, type Curve } from '../../lib/scoring';
 import curves from '../../data-config/scoring/curves.json';
+import { stageValidityExport } from '../../lib/hiking/validity-export';
 
 // Explicit staging command only. No imports from this file in any public pipeline.
 const [input,output]=process.argv.slice(2);
@@ -30,9 +31,17 @@ for(const month of old.monthly) if(month.temperatureUtilitySamplesC.length)
   month.temperatureUtilityScore=month.temperatureUtilitySamplesC.reduce((sum,value)=>sum+interpolate(value,curves.temperature as Curve),0)/month.temperatureUtilitySamplesC.length;
 const daily=aggregateValidDays(records,options);
 const monthly=Array.from({length:12},(_,i)=>aggregateValidMonth(daily,i+1));
+const snowScreen=screenPhysicalSnow(records.map(r=>r.snowDepthM),monthly.map(m=>m.metrics.snowDayProbability));
+const destination=JSON.parse(readFileSync('data-config/sources/destinations.json','utf8')).find((d:{id:string})=>d.id===snapshot.destinationId);
+const publishedPath=destination?`public/data/hiking/destinations/${destination.countryCode.toLowerCase()}/${destination.slug}.json`:null;
+const publishedHold=publishedPath&&existsSync(publishedPath)?JSON.parse(readFileSync(publishedPath,'utf8')).recommendationHoldReason:null;
+const holdReasons=[...snowScreen.reasons,...(publishedHold?['existing-published-hold']:[])];
+const stagingExport=stageValidityExport(snapshot.destinationId,monthly,holdReasons);
+const validateExport=new Ajv2020({strict:false}).compile(JSON.parse(readFileSync('schemas/validity-staging.schema.json','utf8')));
+if(!validateExport(stagingExport)) throw Error(`Invalid staging export: ${JSON.stringify(validateExport.errors)}`);
 const report={status:'staging-only-not-for-publication',sourceSha256:createHash('sha256').update(raw).digest('hex'),destinationId:snapshot.destinationId,
   monthly,changes:monthly.map((m,i)=>({month:i+1,metrics:Object.fromEntries(Object.entries(m.metrics).map(([key,value])=>[key,{before:(old.monthly[i] as unknown as Record<string,unknown>)[key]??null,after:value}]))})),
-  snowScreen:screenPhysicalSnow(records.map(r=>r.snowDepthM),monthly.map(m=>m.metrics.snowDayProbability)),
+  snowScreen,stagingExport,
   dailyCoverage:daily.map(d=>({localDate:d.localDate,...d.validity})),
   limitations:['No production activation','No new Golden approval','Requires separate downstream score/export migration and review']};
 // Exclusive creation prevents following a pre-existing output symlink or overwriting evidence.
