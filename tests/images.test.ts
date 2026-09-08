@@ -4,11 +4,18 @@ import { readFileSync } from "node:fs";
 import { existsSync } from "node:fs";
 import manifest from "../data-config/sources/destination-images.json";
 import { normaliseLicence } from "../lib/media/licence";
+import { imageFor, allImages } from "../lib/media/images";
 import type { DestinationConfig } from "../lib/data/types";
 
 const images = manifest.images as Array<{slug: string; file: string; sourceFile: string; author: string; licenceId: string; attribution: string}>;
 const destinations = JSON.parse(readFileSync("data-config/sources/destinations.json", "utf8")) as DestinationConfig[];
 const slugs = new Set(destinations.map((destination) => destination.slug));
+
+test("a photo with an unresolved usage restriction is withheld from display and credits", () => {
+  assert.equal(imageFor("supramonte"), null);
+  assert.equal(allImages().some(image => image.slug === "supramonte"), false);
+  assert.ok(imageFor("dachstein")?.licenceUrl?.includes("/3.0/de/"));
+});
 
 test("every published image carries a commercially usable licence", () => {
   const refused = images.filter((image) => normaliseLicence(image.licenceId) === null);

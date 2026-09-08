@@ -1,6 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ALLOWED_LICENCES, isAllowedLicence, normaliseLicence } from "../lib/media/licence";
+import { ALLOWED_LICENCES, isAllowedLicence, normaliseLicence, sourceLicenceUrl } from "../lib/media/licence";
+
+test("source licences preserve jurisdictions and reject mismatched or unsafe links", () => {
+  assert.equal(sourceLicenceUrl("cc-by-sa-3.0", "http://creativecommons.org/licenses/by-sa/3.0/de/deed.en"), "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en");
+  for (const url of ["https://creativecommons.org/licenses/by/3.0/", "https://example.com/licenses/by-sa/3.0/", "javascript:alert(1)", "https://creativecommons.org/licenses/by-sa/4.0/"]) {
+    assert.equal(sourceLicenceUrl("cc-by-sa-3.0", url), null);
+  }
+  assert.equal(sourceLicenceUrl("pd", "https://creativecommons.org/publicdomain/mark/1.0/"), null);
+});
 
 /**
  * The operator rule is open licence or commercially usable, nothing else.

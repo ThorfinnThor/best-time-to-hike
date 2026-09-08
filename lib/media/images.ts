@@ -9,6 +9,8 @@ export interface DestinationImage {
   author: string;
   licenceId: string;
   licenceName: string;
+  licenceUrl?: string;
+  usageHoldReason?: string;
   attribution: string;
 }
 
@@ -19,7 +21,7 @@ const RECORDS = manifest.images as DestinationImage[];
  * Checking here as well as at fetch time means a manifest edited by hand, or
  * carried over from an older policy, cannot put a non-commercial file on a page.
  */
-const usable = RECORDS.filter((image) => normaliseLicence(image.licenceId) !== null);
+const usable = RECORDS.filter((image) => !image.usageHoldReason && normaliseLicence(image.licenceId) !== null);
 const BY_SLUG = new Map(usable.map((image) => [image.slug, image]));
 
 export const imageFor = (slug: string): DestinationImage | null => BY_SLUG.get(slug) ?? null;

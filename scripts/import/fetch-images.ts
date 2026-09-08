@@ -20,7 +20,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import sharp from "sharp";
 import type { DestinationConfig } from "../../lib/data/types";
-import { normaliseLicence } from "../../lib/media/licence";
+import { normaliseLicence, sourceLicenceUrl } from "../../lib/media/licence";
 
 const API = "https://commons.wikimedia.org/w/api.php";
 const UA = "BestTimeToHike/0.1 (https://besttimetohike.com; data pipeline)";
@@ -39,6 +39,7 @@ interface ImageRecord {
   author: string;
   licenceId: string;
   licenceName: string;
+  licenceUrl?: string;
   attribution: string;
   fetchedAt: string;
 }
@@ -180,6 +181,8 @@ function acceptable(page: any): Candidate | null {
   if (REJECT_TITLE.test(strip(meta.ObjectName?.value ?? ""))) return null;
   const licence = normaliseLicence(strip(meta.LicenseShortName?.value ?? ""));
   if (!licence) return null;
+  if (strip(meta.Restrictions?.value ?? "")) return null;
+  if (licence.id !== "pd" && !sourceLicenceUrl(licence.id, meta.LicenseUrl?.value ?? "")) return null;
 
   const dated = strip(meta.DateTimeOriginal?.value ?? "");
   const year = Number((/\b(1[89]\d\d|20\d\d)\b/.exec(dated) ?? [])[1]);
@@ -216,8 +219,10 @@ async function fetchFor(destination: DestinationConfig, taken: Set<string>): Pro
         sourceFile: String(page.title ?? "").replace(/^File:/, ""),
         author: candidate.author,
         licenceId: licence.id,
-        licenceName: licence.name,
-        attribution: licence.requiresAttribution ? `${candidate.author}, ${licence.name}, via Wikimedia Commons` : `${licence.name}, via Wikimedia Commons`,
+        licenceName: strip(candidate.info.extmetadata.LicenseShortName?.value ?? licence.name),
+        ...(sourceLicenceUrl(licence.id, candidate.info.extmetadata.LicenseUrl?.value ?? "")
+          ? {licenceUrl: sourceLicenceUrl(licence.id, candidate.info.extmetadata.LicenseUrl.value)!} : {}),
+        attribution: `${candidate.author}${candidate.info.extmetadata.Attribution?.value ? `; ${strip(candidate.info.extmetadata.Attribution.value)}` : ""}, ${strip(candidate.info.extmetadata.LicenseShortName?.value ?? licence.name)}, via Wikimedia Commons`,
         fetchedAt: new Date().toISOString(),
       };
     }

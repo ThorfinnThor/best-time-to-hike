@@ -63,3 +63,18 @@ export function licenceUrl(id: string): string | null {
   const match = /^cc-(by(?:-sa)?)-(\d\.\d)$/.exec(id);
   return match ? `https://creativecommons.org/licenses/${match[1]}/${match[2]}/` : null;
 }
+
+/** Keep jurisdiction-specific deeds instead of silently replacing them with an unported licence. */
+export function sourceLicenceUrl(id: string, raw: string): string | null {
+  const base = licenceUrl(id);
+  if (!base || !raw) return null;
+  try {
+    const url = new URL(raw);
+    const root = new URL(base).pathname.replace(/\/$/, "");
+    if (!["http:", "https:"].includes(url.protocol) || url.hostname !== "creativecommons.org"
+      || url.username || url.password || url.port
+      || !(url.pathname === root || url.pathname.startsWith(`${root}/`))) return null;
+    url.protocol = "https:";
+    return url.href;
+  } catch { return null; }
+}

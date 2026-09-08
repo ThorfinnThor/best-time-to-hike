@@ -56,7 +56,7 @@ No evidence currently establishes that a published download suffered this defect
 | --- | --- | --- |
 | Source semantics | Core ERA5 conversions corroborated; production flag remains false | The new cross-group check has not been replayed against all original grouped responses; the DEM processing limitations below remain unresolved. A conversion review is not approval of the entire ingestion source contract. |
 | Geometry/elevation | Not approved | Catalogue-wide named trail scope and reviewed coordinate/elevation evidence remain missing; Garhwal supplies a concrete unsupported example. |
-| Licensing/attribution | Not approved | 313 image records have allowed licence IDs and credits. Direct licence links, modification notices and same-licence treatment of adapted CC images have now been added. 199 images have ShareAlike licences; original source notices and exact licence variants still need verification. |
+| Licensing/attribution | Not approved | All 313 image licence metadata records were compared with Commons. Seven jurisdiction-specific licences and one additional usage restriction were identified and handled below. Remaining scope: notices beyond the exported metadata and a complete attribution review across climate, DEM and geographic sources. |
 | Science/data audit | Not approved | 31 Golden cases contain 25 agreements, four partial agreements and two no-answers, with six accepted exceptions. Five named cases above remain subject to restrictions or further evidence. Golden acceptance is not field validation. |
 
 The [Copernicus DEM documentation](https://dataspace.copernicus.eu/explore-data/data-collections/copernicus-contributing-missions/collections-description/COP-DEM)
@@ -86,12 +86,43 @@ setting has been changed to manufacture a passing result.
 
 ## Verification
 
-175 TypeScript test cases pass (including the Python importer suite), TypeScript
+177 TypeScript test cases pass (including the Python importer suite), TypeScript
 checks pass, Next generates 5,801 static pages and all eight sampled rendered-page
-checks pass. Both generated credits pages contain 271 direct Creative Commons
+checks pass. Both generated credits pages contain 270 direct Creative Commons
 links and the modification notice; the remaining 42 public-domain images link to
 their source evidence. All 370 public data files reproduce byte-for-byte, with
 315 destinations and 3,780 months. Architecture, CSS, cell and deployment-budget
 checks pass; Hunza remains the single quality warning and seven release blockers
 remain. The sandbox blocks the tsx CLI's IPC socket, so equivalent scripts were
 executed with `node --import tsx`, including the postbuild language step.
+
+## Full image metadata follow-up
+
+Queried Commons `action=query&prop=imageinfo&iiprop=extmetadata` for all 313
+source titles, following normalization and redirects. Every source returned a
+licence record. A later retrieval was rate-limited and resumed with backoff;
+the final local evidence file is
+`generated/reports/image-license-review-2026-09-08.json`.
+
+Seven stored generic licence names omitted jurisdiction/organisation variants:
+Benasque (3.0 es), Cajas (2.0 fr), Dachstein (3.0 de), Maramures (3.0 at),
+Revelstoke (2.0 ca), Swiss Jura (3.0 igo), Vanoise (2.0 fr), all BY-SA.
+The manifest now retains the original full licence name and URL for every CC
+image, including these variants. The credits use those URLs, and the importer
+preserves them on future downloads. Links are restricted to the matching
+Creative Commons licence family/version. Original preferred attribution text
+is retained as plain text alongside the existing author where needed.
+
+Supramonte's [source photograph](https://commons.wikimedia.org/wiki/File:Supramonte_nuragico.jpg)
+has `Restrictions=ita-mibac` in Commons metadata. The photo is now withheld from
+display through `usageHoldReason`; its original file and metadata remain
+recoverable in the repository. The placeholder is shown instead. This is a
+precautionary usage decision, not a legal interpretation of the Italian rule.
+The image importer now refuses additional usage restrictions for new selections.
+312 photographs are displayed, with 313 evidence records retained. Regression
+tests cover the hold and preservation of jurisdiction-specific licence links.
+
+These fixes reduce the licensing gaps but do not convert metadata availability
+into proof that every original source notice has been carried through. Climate,
+DEM and geographic-source attribution still require the complete release-level
+review before that shared approval flag can be set.
