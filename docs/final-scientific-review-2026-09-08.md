@@ -1,5 +1,7 @@
 # Finale wissenschaftliche Prüfung, 2026-09-08
 
+> Diese Vorprüfung wird durch den [formalen wissenschaftlichen Audit](./final-scientific-audit-2026-09-08.md) ergänzt. Dessen maschinenlesbare 315-Ziele-Prüfung und unabhängige Klimadiagnose sind für die Freigabeentscheidung maßgeblich.
+
 Prüfstand: Commit `bada66c`, 315 Destinationen. Entscheidung: **keine uneingeschränkte wissenschaftliche Produktionsfreigabe**. Die vorhandenen Daten sind als vorläufige, modellbasierte Klimaorientierung nutzbar, nicht als validierte Aussage über konkrete Wanderwege oder deren Sicherheit. Keine Freigaben, Schwellen, Scores oder Veröffentlichungszustände wurden durch diese Prüfung geändert.
 
 ## Nachgeprüfte Ergebnisse

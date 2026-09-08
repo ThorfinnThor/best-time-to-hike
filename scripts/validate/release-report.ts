@@ -20,6 +20,7 @@ const configFiles = [
   "data-config/methodology/release-approvals.json",
   "data-config/methodology/recommendation-eligibility-v1.json",
   "data-config/methodology/sampling-v1.json",
+  "data-config/methodology/science-audit-v1.json",
   "data-config/methodology/source-semantics.json",
   "data-config/scoring/curves.json",
   "data-config/scoring/weights.json",
@@ -32,6 +33,7 @@ const destinationFiles = readdirSync(destinationRoot, { withFileTypes: true }).f
 );
 const destinations = destinationFiles.map((file) => JSON.parse(readFileSync(file, "utf8")) as PublicDestination);
 const dataQuality = readJson<{warningCount:number;warnings:unknown[]}>("generated/reports/data-quality.json");
+const scienceAudit = readJson<any>("generated/reports/science-audit.json");
 const months = destinations.flatMap((destination) => destination.months);
 const bands = months.flatMap((month) => month.bands);
 const recommendationMonths = months.filter((month) => month.recommendationEligible);
@@ -97,6 +99,14 @@ const report = {
   },
   crawlLockLayers,
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },
+  scienceAudit: {
+    status: scienceAudit.status,
+    productionReleaseApproval: scienceAudit.productionReleaseApproval,
+    scientificProductionBlockers: scienceAudit.productionBlockers,
+    internalIntegrityPassed: scienceAudit.internalIntegrity.passed,
+    externalTemperatureReviewFlags: scienceAudit.independentClimateDiagnostic.temperatureReviewFlags,
+    externalPrecipitationReviewFlags: scienceAudit.independentClimateDiagnostic.precipitationReviewFlags,
+  },
   recommendationPolicy: {
     eligibleMonths: recommendationMonths.length,
     ineligibleMonths: months.length - recommendationMonths.length,
