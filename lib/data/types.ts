@@ -122,7 +122,7 @@ export interface PublicDestination {
   representativeCell: { lat: number; lon: number; modelElevationM: number; overrideLabel?: string; overrideReason?: string };
   months: PublicMonth[];
   recommendationEligible: boolean;
-  recommendationHoldReason?: "persistent-snow";
+  recommendationHoldReason?: "persistent-snow" | "precipitation-validation";
   bestMonths: number[];
   alternatives: string[];
   provenance: Record<string, string>;

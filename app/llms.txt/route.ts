@@ -36,6 +36,8 @@ export function GET() {
     ...withheld.map((destination) => {
       const reason = destination.recommendationHoldReason === "persistent-snow"
         ? "snow in all twelve months at the selected cell"
+        : destination.recommendationHoldReason === "precipitation-validation"
+          ? "precipitation requires independent validation"
         : `no month clears every critical component (${profileFor(destination).limitingFactor ?? "mixed"})`;
       return `- ${destination.name} (${destination.countryName}): ${reason}`;
     }),

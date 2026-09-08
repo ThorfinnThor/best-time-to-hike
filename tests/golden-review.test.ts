@@ -7,8 +7,9 @@ function fixture() {
     slug: `destination-${index}`, expectedMonths: [6, 7, 8],
     approvedBy: "reviewer", approvedAt: "2026-09-07",
   }));
-  return { golden: { status: "APPROVED", cases },
-    destinations: cases.map((item) => ({ slug: item.slug, bestMonths: [6, 7, 8] })) };
+  const destinations: Array<{slug:string;bestMonths:number[];recommendationHoldReason?:string}> =
+    cases.map((item) => ({ slug: item.slug, bestMonths: [6, 7, 8] }));
+  return { golden: { status: "APPROVED", cases }, destinations };
 }
 
 test("all independent reference cases may agree without requiring an artificial failure", () => {
@@ -43,4 +44,15 @@ test("duplicate cases cannot satisfy the thirty-destination minimum", () => {
   const { golden, destinations } = fixture();
   golden.cases[1] = { ...golden.cases[0] };
   assert.equal(reviewGoldenCases(golden, destinations).passed, false);
+});
+
+test("a scientific review hold quarantines the engine answer without rewriting the signed label", () => {
+  const { golden, destinations } = fixture();
+  destinations[0] = { ...destinations[0], bestMonths: [], recommendationHoldReason: "precipitation-validation" };
+  const review = reviewGoldenCases(golden, destinations);
+  assert.equal(review.passed, true);
+  assert.equal(review.reviewedCaseCount, 29);
+  assert.deepEqual(review.excludedForScientificReview, ["destination-0"]);
+  assert.deepEqual(review.cases[0].expectedMonths, [6, 7, 8]);
+  assert.deepEqual(review.cases[0].errors, []);
 });

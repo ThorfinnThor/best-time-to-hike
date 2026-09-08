@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import type { ComponentScores, PublicDestination } from "../../lib/data/types";
 import { roundHalfAwayFromZero, scoreComponents } from "../../lib/scoring";
-import { COMPONENT_KEYS, CRITICAL_COMPONENT_KEYS } from "../../lib/scoring/recommendations";
+import { BEST_MONTH_COMPONENT_KEYS, COMPONENT_KEYS, CRITICAL_COMPONENT_KEYS } from "../../lib/scoring/recommendations";
 import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 
@@ -10,6 +10,9 @@ type ExternalEntry = {destinationId:string;requestedCoordinates:{lat:number;lon:
 
 const config=readJson<any>("data-config/methodology/science-audit-v1.json");
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
+const releaseProfile=readJson<any>("data-config/methodology/scientific-release-profile-v1.json");
+const precipitationHoldConfig=readJson<any>("data-config/methodology/independent-climate-review-holds-v1.json");
+const calibration=readJson<any>("generated/reports/season-alignment-calibration.json");
 const weights=readJson<any>("data-config/scoring/weights.json").overall as Record<keyof ComponentScores,number>;
 const destinations=readJson<Destination[]>("data-config/sources/destinations.json");
 const geojson=readJson<any>("data-config/geography/destination-areas.geojson");
@@ -20,6 +23,8 @@ const knownHolds=new Set(readJson<{destinationIds:string[]}>("data-config/source
 const featureById=new Map(geojson.features.map((feature:any)=>[feature.properties.destinationId,feature]));
 const externalById=new Map<string,ExternalEntry>(external.entries.map((entry:ExternalEntry)=>[entry.destinationId,entry]));
 const exactComponentsById=new Map<string,Array<{month:number;components:ComponentScores}>>();
+const precipitationHolds=new Set<string>(precipitationHoldConfig.destinationIds);
+const fileSha=(path:string)=>sha256(readFileSync(path,"utf8"));
 
 const haversineKm=(a:{lat:number;lon:number},b:{lat:number;lon:number})=>{
   const radians=(value:number)=>value*Math.PI/180;
@@ -51,7 +56,7 @@ const bestForScenario=(destination:PublicDestination,scenarioWeights:Record<keyo
     const published=destination.months[month.month-1];
     return !knownHolds.has(destination.id)&&published.components!==null
     && CRITICAL_COMPONENT_KEYS.every((key)=>month.components[key]>criticalFloor)
-    && COMPONENT_KEYS.every((key)=>published.components![key]>bestFloor);
+    && BEST_MONTH_COMPONENT_KEYS.every((key)=>published.components![key]>bestFloor);
   })
   .map((month)=>({month:month.month,score:roundHalfAwayFromZero(scoreWith(month.components,scenarioWeights))}))
   .sort((a,b)=>b.score-a.score||a.month-b.month).slice(0,3).map((item)=>item.month).sort((a,b)=>a-b);
@@ -135,30 +140,36 @@ const independentRouteEvidenceCount=coordinateRows.filter((row)=>row.independent
 const legacySnapshotCount=publicDestinations.filter((destination)=>destination.aggregationPolicyVersion==="legacy-climate-aggregation-v1").length;
 const externalPrecipitationFlags=externalComparisons.filter((item)=>item.flags.includes("annual-precipitation-disagreement"));
 const externalTemperatureFlags=externalComparisons.filter((item)=>item.flags.includes("temperature-seasonal-jump-disagreement"));
+const cellScopeEnforced=publicDestinations.every(destination=>destination.provenance.scope===releaseProfile.requiredPublicScopeText);
+const unmitigatedPrecipitationFlags=externalPrecipitationFlags.filter(item=>!precipitationHolds.has(item.destinationId));
+const precipitationHoldsPublished=publicDestinations.filter(destination=>precipitationHolds.has(destination.id)).every(destination=>destination.recommendationHoldReason==="precipitation-validation"&&!destination.recommendationEligible&&destination.bestMonths.length===0);
+const windExcludedFromDecision=weights.wind===0&&!CRITICAL_COMPONENT_KEYS.includes("wind")&&!BEST_MONTH_COMPONENT_KEYS.includes("wind")&&publicDestinations.every(destination=>destination.provenance.wind.includes("excluded from the score"));
+const calibrationAccepted=calibration.status==="season-alignment-calibration-not-safety-validation"&&calibration.decision?.adoptedCandidate==="baseline"&&calibration.selected.validationF1>=calibration.baseline.validationF1&&releaseProfile.prohibitedClaims.includes("trail-safety-or-go-no-go-advice")&&releaseProfile.prohibitedClaims.includes("empirically-calibrated-probability");
 const productionBlockers=[
-  ...(independentRouteEvidenceCount<destinations.length?[`${destinations.length-independentRouteEvidenceCount} destinations lack independent named-route geometry/elevation evidence`]:[]),
+  ...(!cellScopeEnforced?["selected-model-cell claim restriction is not enforced in every public destination"]:[]),
   ...(legacySnapshotCount?[`${legacySnapshotCount} destinations retain the legacy monthly aggregation without observation-validity audit fields`]:[]),
-  ...(externalPrecipitationFlags.length?[`${externalPrecipitationFlags.length} destinations exceed the predeclared independent precipitation review ratio`]:[]),
-  "ERA5-Land grid wind is not validated as exposed-trail wind or gust hazard",
-  "Scoring weights and thresholds are transparent local product policy, not an empirically calibrated safety model",
+  ...(unmitigatedPrecipitationFlags.length||!precipitationHoldsPublished?[`${unmitigatedPrecipitationFlags.length} precipitation review flags remain without a complete public recommendation hold`]:[]),
+  ...(!windExcludedFromDecision?["unvalidated ERA5-Land grid wind still affects a score, gate or best-month decision"]:[]),
+  ...(!calibrationAccepted?["season-alignment calibration or the prohibition on safety/probability claims is incomplete"]:[]),
 ];
 
 const report={
   reportVersion:1,
   auditDate:config.auditDate,
-  status:errors.length?"failed-internal-integrity":"completed-with-production-restrictions",
+  status:errors.length?"failed-internal-integrity":productionBlockers.length?"completed-with-production-restrictions":"scientific-evidence-gate-passed-with-claim-restrictions",
   productionReleaseApproval:false,
+  scientificEvidenceGatePassed:errors.length===0&&productionBlockers.length===0,
   scope:config.scope,
   inventory:{destinations:destinations.length,months:publicDestinations.length*12,climateDownloads:destinations.length,externalDiagnosticPoints:external.entries.length,observationValiditySnapshots:destinations.length-legacySnapshotCount,legacyAggregationSnapshots:legacySnapshotCount},
   internalIntegrity:{passed:errors.length===0,errorCount:errors.length,errors,coordinateChainPassed:coordinateRows.filter((row)=>row.internalCoordinateChainPassed).length,sourceObservationCountPassed:coordinateRows.filter((row)=>row.sourceObservationCountPassed).length},
-  spatialAudit:{independentNamedRouteEvidence:independentRouteEvidenceCount,selectedModelCellOnly:destinations.length-independentRouteEvidenceCount,centroidToCellDistanceKm:{min:distances[0],median:percentile(distances,.5),p95:percentile(distances,.95),max:distances.at(-1)},reviewDistanceExceeded:coordinateRows.filter((row)=>row.centroidToCellKm>config.spatialPolicy.centroidDistanceReviewKm).map((row)=>row.destinationId),destinations:coordinateRows},
-  sourceAndMethodAudit:{...config.sourceDecisions,era5LandDownloadsWithExactNormalAndObservationCount:coordinateRows.filter((row)=>row.sourceObservationCountPassed).length,methodologyChecksums:{scienceAudit:sha256(readFileSync("data-config/methodology/science-audit-v1.json")),climateAggregation:sha256(readFileSync("data-config/methodology/climate-aggregation-v1.json")),observationValidity:sha256(readFileSync("data-config/methodology/observation-validity-v1.json")),recommendationEligibility:sha256(readFileSync("data-config/methodology/recommendation-eligibility-v1.json")),scoringWeights:sha256(readFileSync("data-config/scoring/weights.json")),scoringCurves:sha256(readFileSync("data-config/scoring/curves.json")),externalSnapshot:sha256(readFileSync("data-snapshots/external-audit/nasa-power-1991-2020.json"))}},
+  spatialAudit:{releaseClass:releaseProfile.releaseClass,cellScopeEnforced,independentNamedRouteEvidence:independentRouteEvidenceCount,selectedModelCellOnly:destinations.length-independentRouteEvidenceCount,regionalOrRouteClaimsApproved:false,centroidToCellDistanceKm:{min:distances[0],median:percentile(distances,.5),p95:percentile(distances,.95),max:distances.at(-1)},reviewDistanceExceeded:coordinateRows.filter((row)=>row.centroidToCellKm>config.spatialPolicy.centroidDistanceReviewKm).map((row)=>row.destinationId),destinations:coordinateRows},
+  sourceAndMethodAudit:{...config.sourceDecisions,era5LandDownloadsWithExactNormalAndObservationCount:coordinateRows.filter((row)=>row.sourceObservationCountPassed).length,windExcludedFromDecision,precipitationReviewHoldsPublished:precipitationHoldsPublished,seasonAlignmentCalibration:{accepted:calibrationAccepted,eligibleCases:calibration.inventory.eligibleCases,trainingCases:calibration.inventory.trainingCases,validationCases:calibration.inventory.validationCases,candidateCount:calibration.candidateCount,baselineValidationF1:calibration.baseline.validationF1,selectedValidationF1:calibration.selected.validationF1,decision:calibration.decision,scope:"season alignment only; not safety or probability"},methodologyChecksums:{scienceAudit:fileSha("data-config/methodology/science-audit-v1.json"),scientificReleaseProfile:fileSha("data-config/methodology/scientific-release-profile-v1.json"),climateAggregation:fileSha("data-config/methodology/climate-aggregation-v1.json"),observationValidity:fileSha("data-config/methodology/observation-validity-v1.json"),recommendationEligibility:fileSha("data-config/methodology/recommendation-eligibility-v1.json"),precipitationHolds:fileSha("data-config/methodology/independent-climate-review-holds-v1.json"),seasonCalibration:fileSha("data-config/methodology/season-alignment-calibration-v1.json"),scoringWeights:fileSha("data-config/scoring/weights.json"),scoringCurves:fileSha("data-config/scoring/curves.json"),externalSnapshot:fileSha("data-snapshots/external-audit/nasa-power-1991-2020.json")}},
   hunzaFinding:{classification:"source-reproduced-and-directionally-corroborated-magnitude-not-independently-validated",era5LandSeptemberToOctoberDeltaC:round(publicDestinations.find((item)=>item.id==="hunza")!.months[9].metrics.temperatureHikingMeanC-publicDestinations.find((item)=>item.id==="hunza")!.months[8].metrics.temperatureHikingMeanC,1),independentAllDaySeptemberToOctoberDeltaC:round(externalById.get("hunza")!.temperatureMeanC[9]-externalById.get("hunza")!.temperatureMeanC[8],1),comparison:hunza,decision:"Retain the source values and quality warning. Do not smooth or call the 13.3 C magnitude station-validated; the series describes this ERA5-Land cell only."},
   independentClimateDiagnostic:{status:external.status,limitations:external.interpretation,temperatureReviewFlags:externalTemperatureFlags.length,precipitationReviewFlags:externalPrecipitationFlags.length,largestPrecipitationRatios:[...externalComparisons].sort((a,b)=>b.era5ToIndependentPrecipitationRatio-a.era5ToIndependentPrecipitationRatio).slice(0,20),comparisons:externalComparisons},
   goldenCases:{...goldenReview,exactMonthSetMatches:goldenReview.cases.filter((item)=>sameMonths(item.expectedMonths,item.engineMonths)).length,interpretation:"All 31 signed labels are independent of the scoring calculation. Agreement means selected best months stay inside the labelled season; it is not full season recall. Accepted deviations remain discrepancies, not validation successes."},
   sensitivity:{scenarios:sensitivityScenarios,maximumChangedDestinationCount:Math.max(...sensitivityScenarios.map((item)=>item.changedDestinationCount)),interpretation:"Changes identify policy-sensitive answers. They do not select a better parameter value and were not used to alter the Golden labels."},
   productionBlockers,
-  formalDecision:"Scientific audit execution is complete, but production science approval is refused until the listed evidence gaps are resolved. The current data remain provisional, low-confidence selected-model-cell climatology.",
+  formalDecision:productionBlockers.length?"Scientific evidence blockers remain. The current data stay provisional, low-confidence selected-model-cell climatology.":"The automated scientific evidence gate passes only for selected-model-cell climatology with explicit review holds and prohibited safety, forecast, route and whole-region claims. Independent operator production approval remains separate and has not been granted.",
 };
 writeJson("generated/reports/science-audit.json",report);
 console.log(`Science audit: ${report.status}; ${destinations.length} destinations; ${productionBlockers.length} scientific production blocker(s); generated/reports/science-audit.json`);

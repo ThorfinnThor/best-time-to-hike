@@ -8,8 +8,8 @@ import { readFileSync } from "node:fs";
 test("science audit remains explicit and fail-closed for production",()=>{
   assert.equal(auditConfig.status,"completed-with-production-restrictions");
   assert.equal(auditConfig.productionReleaseApproval,false);
-  assert.equal(auditConfig.sourceDecisions.scoringWeightsAndThresholds,"transparent-local-product-policy-not-empirically-calibrated");
-  assert.equal(auditConfig.sourceDecisions.gridWind,"not-validated-for-trail-exposure-or-gusts");
+  assert.equal(auditConfig.sourceDecisions.scoringWeightsAndThresholds,"season-alignment-calibrated-for-descriptive-fit-not-safety-or-probability");
+  assert.equal(auditConfig.sourceDecisions.gridWind,"excluded-from-score-gates-and-best-month-decisions");
 });
 
 test("independent climate diagnostic covers every current destination exactly once",()=>{

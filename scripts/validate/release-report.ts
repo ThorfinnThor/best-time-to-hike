@@ -19,6 +19,9 @@ const configFiles = [
   "data-config/methodology/rounding-v1.json",
   "data-config/methodology/release-approvals.json",
   "data-config/methodology/recommendation-eligibility-v1.json",
+  "data-config/methodology/independent-climate-review-holds-v1.json",
+  "data-config/methodology/scientific-release-profile-v1.json",
+  "data-config/methodology/season-alignment-calibration-v1.json",
   "data-config/methodology/sampling-v1.json",
   "data-config/methodology/science-audit-v1.json",
   "data-config/methodology/source-semantics.json",
@@ -37,7 +40,7 @@ const scienceAudit = readJson<any>("generated/reports/science-audit.json");
 const months = destinations.flatMap((destination) => destination.months);
 const bands = months.flatMap((month) => month.bands);
 const recommendationMonths = months.filter((month) => month.recommendationEligible);
-const heldDestinations = destinations.filter((destination) => destination.recommendationHoldReason === "persistent-snow");
+const heldDestinations = destinations.filter((destination) => Boolean(destination.recommendationHoldReason));
 const confidenceCappedMonths = months.filter((month) => month.confidenceScore !== null && month.confidenceScore <= 64 && month.confidenceLevel === "low");
 const scores = months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore]).sort((a, b) => a - b);
 const completeness = bands.map((band) => band.dataCompleteness).sort((a, b) => a - b);
@@ -65,7 +68,7 @@ const checks = {
   nonProductionIndexabilityLocked,
   realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
   destinationMinimumMet: manifest.destinationCount >= 50,
-  goldenMinimumMet: goldenReview.passed,
+  goldenMinimumMet: goldenReview.passed && goldenReview.reviewedCaseCount >= 30,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
   climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2020,
   releaseApprovals: Object.fromEntries(Object.entries(releaseApprovals.approvals).map(([key,value]:[string,any])=>[key,value.approved===true&&Boolean(value.approvedBy)&&Number.isFinite(new Date(value.approvedAt).getTime())]))
@@ -111,6 +114,10 @@ const report = {
     eligibleMonths: recommendationMonths.length,
     ineligibleMonths: months.length - recommendationMonths.length,
     heldDestinations: heldDestinations.map((destination) => destination.slug).sort(),
+    heldDestinationCountsByReason: Object.fromEntries(["persistent-snow", "precipitation-validation"].map((reason) => [
+      reason,
+      heldDestinations.filter((destination) => destination.recommendationHoldReason === reason).length,
+    ])),
     confidenceCappedMonths: confidenceCappedMonths.length,
     unvalidatedGridWindCaveatMonths: months.filter((month) => month.caveats.includes("unvalidated-grid-wind")).length
   },

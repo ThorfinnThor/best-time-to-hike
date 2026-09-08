@@ -169,6 +169,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
  */
 function withheldReason(destination: PublicDestination, copy: ReturnType<typeof t>): string {
   if (destination.recommendationHoldReason === "persistent-snow") return copy.withheld.reasonSnow;
+  if (destination.recommendationHoldReason === "precipitation-validation") return copy.withheld.reasonPrecipitation;
   const blocking = blockingComponents(destination.months);
   if (!blocking.length) return copy.withheld.reasonNoMonth;
   return copy.withheld.reasonComponent(blocking.map((key) => copy.components[key]).join(", "));
