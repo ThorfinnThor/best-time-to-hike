@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "decisionDate": "2026-09-08",
+  "reviewType": "AI-assisted methodology review, not independent expert certification",
+  "decisionStatus": "approved-for-scoped-provisional-migration",
+  "productionReleaseApproval": false,
+  "overrideExistingReleaseGates": false,
+  "approvedImplementationCommit": "33a9cf7",
+  "aggregationPolicy": "observation-validity-v1",
+  "targetDatasetStatus": "provisional",
+  "scope": ["annapurna", "denali", "dolomites", "el-chalten", "hunza", "kakadu", "langtang", "madeira", "sikkim", "zermatt"],
+  "decisions": {
+    "calendarBasedCoverage": "accepted as a conservative local missingness policy; no statistical calibration claim",
+    "equalValidYearWeighting": "accepted for the explicitly defined historical normal; preserve conditional snow-depth interpretation",
+    "midnightCrossingDaylight": "accepted bug correction; sampling must include daytime hours when sunset wraps past midnight",
+    "denaliJuneTemperature": "accept the recomputed 10.364046979437957 C as the output of the corrected model-cell calculation, not as an independently validated station or trail temperature",
+    "rounding": "retain the existing raw eligibility decision followed by published rounding and existing best-month selection; changing threshold or rounding order requires a separate decision",
+    "snowReviewThreshold": "retain conservative local screening and existing holds; no glacier-classification or hold-release authority"
+  },
+  "migrationConditions": [
+    "Use only the hash-pinned reports below and verify their canonical source hashes against the published sources; do not use the superseded Denali report from the ten-point run.",
+    "Retain null metrics and per-metric coverage through the versioned snapshot/schema/export chain; no fabricated samples, imputation or weight redistribution.",
+    "Do not copy historical confidence or interannual variability into a newly processed snapshot as though recomputed. Recompute them consistently or explicitly retain an unavailable/provisional status without overstating confidence.",
+    "Preserve all existing destination holds, caveats, noindex status and false release approvals. No new route-safety or whole-region claims.",
+    "Retain the other 305 destinations unchanged and identify each destination's actual aggregation version; never label the whole catalogue as migrated.",
+    "Validate public output, provenance, deterministic reproduction, tests and build before any deployment. Recommendation eligibility and best-month sets must match the reviewed result; unexpected changes return to review.",
+    "Store durable evidence or a durable lossless equivalent before temporary Actions artifacts expire; link original hashes and processing versions."
+  ],
+  "evidence": {
+    "expandedRun": 34211326609,
+    "correctedDenaliRun": 34212040519,
+    "finalCodeCiRun": 34212268930,
+    "reportSha256": {
+      "annapurna": "031f9e2d742405cb4a9cd1698250803c12ed4d3c4f989395a067e6426a0b8dcb",
+      "denali": "b7509a2509bd109ff2e324ccac250aa5e0bcd1a604957935f38d977c334f36ba",
+      "dolomites": "28e2d7de374a773c13e8f91eccd4646750486d90cc2d5bbe9365756962eea694",
+      "el-chalten": "0895da75610a5a407d3ae1e794251e600b0c6a04536245d27334b910e17e0a36",
+      "hunza": "117356561ed9e02be0ae61e6300d0175165466f30a88e6cab31479075f12dce5",
+      "kakadu": "6f30223efe21720e1600be414a413ba783c0cda9075e3e0481c99f07cc6b6ac8",
+      "langtang": "cc6c16b9a0bbb2bde32b6225791ffd7b3259fefcb6ebebbf81beba6e28720c48",
+      "madeira": "3b2fc0b533acda5e128d4a4d26e05784790bb3be83f8f652139b40264a3ccf2a",
+      "sikkim": "52bdec4e885abc0d90033035a7cffdf8e0326d9cd4a6123d9450c0079e4b70f0",
+      "zermatt": "d76a1068a56829ce0129c64b41145a1c1d3e8c082ae70393d7ef096d832df983"
+    }
+  },
+  "independentContextSources": [
+    "https://www.nps.gov/dena/learn/management/statistics.htm",
+    "https://www.nps.gov/dena/learn/nature/climate.htm"
+  ],
+  "notApproved": ["global 315-destination activation", "production science approval", "removal of persistent-snow holds", "independent validation of the 10.364 C model estimate", "resolution of the Hunza temperature discontinuity", "new score thresholds or confidence calibration"]
+}
