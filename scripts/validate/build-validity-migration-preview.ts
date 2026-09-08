@@ -3,6 +3,7 @@ import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {dirname,join} from 'node:path';
 import Ajv2020 from 'ajv/dist/2020';
 import decision from '../../data-config/methodology/validity-migration-decision-v1.json';
+import comparisonScope from '../../data-config/methodology/validity-comparison-scope-v1.json';
 import {stageValidityExport} from '../../lib/hiking/validity-export';
 
 const [expandedDirectory,denaliDirectory,output='generated/reports/validity-migration-preview.json']=process.argv.slice(2);
@@ -15,7 +16,8 @@ const scientificCore=(report:any)=>({destinationId:report.destinationId,sourceSh
 const objectSha=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const changed=(before:unknown,after:unknown)=>JSON.stringify(before)!==JSON.stringify(after);
 
-const results=decision.scope.map(id=>{
+const results=comparisonScope.destinations.map(id=>{
+  if(!decision.scope.includes(id))throw Error(`${id}: pilot preview is outside the approved migration scope`);
   const directory=id==='denali'?denaliDirectory:expandedDirectory;
   const reportPath=join(directory,`${id}-report.json`);
   const report=read(reportPath);
