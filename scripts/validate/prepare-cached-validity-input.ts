@@ -3,6 +3,7 @@ import { createGunzip } from 'node:zlib';
 import { createInterface } from 'node:readline';
 import { createHash } from 'node:crypto';
 
+async function main() {
 const id=process.argv[2];
 if(!['hunza','el-chalten'].includes(id)) throw Error('Only the reviewed Hunza and El Chalten pilot is allowed');
 const json=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
@@ -29,3 +30,5 @@ const output='generated/intermediate/validity-pilot';mkdirSync(output,{recursive
 writeFileSync(`${output}/${id}-input.json`,JSON.stringify({schemaVersion:2,datasetStatus:'provisional',source:'era5Land',destinationId:id,samplePointId:`${id}-representative-1`,timezone:destination.timezone,coordinates:{lat:source.resolvedLocation.latitude,lon:source.resolvedLocation.longitude},era5LandGridElevationM:source.era5LandGridElevationM,targetElevationM:sampling.bands.representative.targetElevationM,precipitationSemantics:'INCREMENTAL_PER_TIMESTEP_M',climateNormal:{startYear:1991,endYear:2020},observations}),{flag:'wx'});
 writeFileSync(`${output}/${id}-source-evidence.json`,JSON.stringify({destinationId:id,cacheSha256:hash,publishedCanonicalSha256:source.canonicalObservation.sha256,identicalToPublishedCanonical:hash===source.canonicalObservation.sha256,request:metadata.request,resolvedLocation:metadata.resolvedLocation,observationCount:observations.length,comparisonScope:'Both algorithms use this exact cached source; a differing published hash is not silently treated as identical source data.'},null,2),{flag:'wx'});
 console.log(`${id}: verified ${observations.length} cached hours; source matches published hash: ${hash===source.canonicalObservation.sha256}`);
+}
+main().catch(error=>{console.error(error);process.exitCode=1;});

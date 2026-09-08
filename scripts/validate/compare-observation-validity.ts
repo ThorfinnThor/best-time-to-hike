@@ -5,6 +5,8 @@ import Ajv2020 from 'ajv/dist/2020';
 import { aggregatePointClimate, type HourlyClimateObservation, type PrecipitationSemantics } from '../../lib/hiking/climate';
 import { aggregateValidDays, aggregateValidMonth } from '../../lib/hiking/climate-validity';
 import { screenPhysicalSnow } from '../../lib/hiking/snow-screening';
+import { interpolate, type Curve } from '../../lib/scoring';
+import curves from '../../data-config/scoring/curves.json';
 
 // Explicit staging command only. No imports from this file in any public pipeline.
 const [input,output]=process.argv.slice(2);
@@ -24,6 +26,8 @@ if(snapshot.climateNormal.startYear!==1991||snapshot.climateNormal.endYear!==202
 const records:HourlyClimateObservation[]=snapshot.observations;
 const options={timezone:snapshot.timezone,lat:snapshot.coordinates.lat,lon:snapshot.coordinates.lon,era5LandGridElevationM:snapshot.era5LandGridElevationM,targetElevationM:snapshot.targetElevationM,precipitationSemantics:snapshot.precipitationSemantics as PrecipitationSemantics};
 const old=aggregatePointClimate(records,options);
+for(const month of old.monthly) if(month.temperatureUtilitySamplesC.length)
+  month.temperatureUtilityScore=month.temperatureUtilitySamplesC.reduce((sum,value)=>sum+interpolate(value,curves.temperature as Curve),0)/month.temperatureUtilitySamplesC.length;
 const daily=aggregateValidDays(records,options);
 const monthly=Array.from({length:12},(_,i)=>aggregateValidMonth(daily,i+1));
 const report={status:'staging-only-not-for-publication',sourceSha256:createHash('sha256').update(raw).digest('hex'),destinationId:snapshot.destinationId,
