@@ -22,3 +22,14 @@ test('global cache recomputation is sharded, cache-only and fail-closed',()=>{
   assert.match(workflow,/actions\/cache\/restore@v4/);
   assert.doesNotMatch(workflow,/CDSAPI_KEY|download_era5|fetch-era5/);
 });
+
+test('global migration review requires all 315 exact cached sources and keeps production locked',()=>{
+  const source=readFileSync('scripts/validate/review-global-validity-migration.ts','utf8');
+  assert.match(source,/destinations\.length!==315/);
+  assert.match(source,/reports\.size!==destinations\.length\|\|sources\.size!==destinations\.length/);
+  assert.match(source,/source\.cacheSha256!==source\.publishedCanonicalSha256/);
+  assert.match(source,/source\.publishedCanonicalSha256!==download\?\.canonicalObservation\?\.sha256/);
+  assert.match(source,/month\.scoringInputsAvailable!==true/);
+  assert.match(source,/productionReleaseApproval:false/);
+  assert.match(source,/not independent expert certification/);
+});
