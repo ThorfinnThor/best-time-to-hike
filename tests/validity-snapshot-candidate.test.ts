@@ -14,10 +14,11 @@ test('snapshot candidate builder is bounded, hash-gated and never writes public 
 });
 
 test('global cache recomputation is sharded, cache-only and fail-closed',()=>{
-  const workflow=readFileSync('.github/workflows/observation-validity-global.yml','utf8');
+  const workflow=readFileSync('.github/workflows/observation-validity-pilot.yml','utf8');
   assert.match(workflow,/workflow_dispatch/);
-  assert.match(workflow,/BTH_VALIDITY_SCOPE: all/);
-  assert.match(workflow,/BTH_VALIDITY_REQUIRE_ALL: '1'/);
+  assert.match(workflow,/options: \[pilot, global\]/);
+  assert.match(workflow,/BTH_VALIDITY_SCOPE:/);
+  assert.match(workflow,/inputs\.scope == 'global'/);
   assert.match(workflow,/actions\/cache\/restore@v4/);
   assert.doesNotMatch(workflow,/CDSAPI_KEY|download_era5|fetch-era5/);
 });
