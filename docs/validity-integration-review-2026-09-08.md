@@ -38,6 +38,8 @@ Die korrigierte Denali-Auswertung ersetzt allein den Denali-Eintrag des ersten L
 
 Der schema-geprüfte Migrations-Preview vergleicht alle 120 Monatsobjekte nach der korrigierten Exportregel: keine Änderung an Empfehlungsgültigkeit oder Best Months, keine fehlenden Score-Eingänge. Vier gerundete Scores ändern sich: Annapurna April 48 auf 47, Denali Juni 79 auf 82, Dolomiten Juni 72 auf 74 und Hunza Oktober 48 auf 49. Held-Monate bleiben ohne Score und erscheinen nicht als numerische Nulländerung.
 
+Spätere Berichtsversionen ergänzen abgeleitete Exportfelder und sind daher nicht bytegleich mit den ursprünglich freigegebenen Gesamtberichten. Für die Wiederholungsprüfung wird zusätzlich ein stabiler wissenschaftlicher Kern gehasht: Ziel-ID, Quellenhash, Monatsaggregation, Schneeprüfung und tägliche Abdeckung. Diese Kernhashes stimmen für alle zehn Ziele zwischen den freigegebenen und neu erzeugten Berichten überein. Quellenbelege müssen außerdem weiterhin Cache- und veröffentlichten kanonischen Hash als identisch ausweisen; der Preview setzt diese Aussage nicht ungeprüft voraus.
+
 ## Verifikation und Freigabegrenze
 
 198 lokale Tests bestanden, TypeScript bestanden. Die bisherige öffentliche Exportstrecke reproduziert alle 370 Dateien bytegenau. Vollständige CI für `18a01ed`, `a87ac2f` und die letzte Exportkorrektur `33a9cf7` erfolgreich ([CI 34212268930](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/34212268930)).

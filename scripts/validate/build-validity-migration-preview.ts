@@ -11,15 +11,19 @@ if(output!=='generated/reports/validity-migration-preview.json') throw Error('Pr
 const read=(path:string)=>JSON.parse(readFileSync(path,'utf8'));
 const destinations=read('data-config/sources/destinations.json');
 const sha=(path:string)=>createHash('sha256').update(readFileSync(path)).digest('hex');
+const scientificCore=(report:any)=>({destinationId:report.destinationId,sourceSha256:report.sourceSha256,monthly:report.monthly,snowScreen:report.snowScreen,dailyCoverage:report.dailyCoverage});
+const objectSha=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const changed=(before:unknown,after:unknown)=>JSON.stringify(before)!==JSON.stringify(after);
 
 const results=decision.scope.map(id=>{
   const directory=id==='denali'?denaliDirectory:expandedDirectory;
   const reportPath=join(directory,`${id}-report.json`);
-  const expected=(decision.evidence.reportSha256 as Record<string,string>)[id];
-  if(sha(reportPath)!==expected) throw Error(`${id}: evidence hash mismatch`);
   const report=read(reportPath);
+  const expected=(decision.evidence.scientificCoreSha256 as Record<string,string>)[id];
+  if(objectSha(scientificCore(report))!==expected) throw Error(`${id}: scientific evidence core hash mismatch`);
   if(report.destinationId!==id||report.monthly.length!==12) throw Error(`${id}: malformed evidence`);
+  const sourceEvidence=read(join(directory,`${id}-source-evidence.json`));
+  if(sourceEvidence.destinationId!==id||sourceEvidence.identicalToPublishedCanonical!==true||sourceEvidence.cacheSha256!==sourceEvidence.publishedCanonicalSha256) throw Error(`${id}: source differs from published canonical observations`);
   const config=destinations.find((item:{id:string})=>item.id===id);
   if(!config) throw Error(`${id}: destination missing`);
   const published=read(`public/data/hiking/destinations/${config.countryCode.toLowerCase()}/${config.slug}.json`);

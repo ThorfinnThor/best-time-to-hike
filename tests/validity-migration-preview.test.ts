@@ -7,6 +7,7 @@ test('approved migration and cache comparison cover the same ten unique destinat
   assert.equal(new Set(decision.scope).size,10);
   assert.deepEqual([...decision.scope].sort(),[...scope.destinations].sort());
   assert.deepEqual(Object.keys(decision.evidence.reportSha256).sort(),[...decision.scope].sort());
+  assert.deepEqual(Object.keys(decision.evidence.scientificCoreSha256).sort(),[...decision.scope].sort());
   assert.equal(decision.productionReleaseApproval,false);
   assert.equal(decision.overrideExistingReleaseGates,false);
 });
