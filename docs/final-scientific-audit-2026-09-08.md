@@ -1,5 +1,7 @@
 # Formaler wissenschaftlicher Audit, 2026-09-08
 
+> Historischer Prüfstand vor der anschließenden Sperrenbearbeitung. Die aktuelle Entscheidung und die konservativen Maßnahmen stehen in `docs/scientific-blocker-resolution-2026-09-08.md`; die maschinenlesbare aktuelle Lage steht in `generated/reports/science-audit.json`. Die unten genannten fünf Sperren dürfen nicht mehr als aktueller Status zitiert werden.
+
 Status: **Prüfung vollständig ausgeführt; wissenschaftliche Produktionsfreigabe verweigert.** Der Katalog darf nur als vorläufige, niedrig-konfidente Klimatologie der jeweils ausgewählten Modellzelle beschrieben werden. Er ist noch keine validierte Aussage über eine gesamte Destination, konkrete Wanderwege oder Sicherheit.
 
 Maschinenlesbare Evidenz: `generated/reports/science-audit.json`. Festgeschriebene Prüfregeln: `data-config/methodology/science-audit-v1.json`. Unabhängiger Diagnosesnapshot: `data-snapshots/external-audit/nasa-power-1991-2020.json`.

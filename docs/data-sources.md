@@ -40,4 +40,4 @@ The planning command is credential-free. Actual remote downloads run through `.g
 
 The default real ingest writes ignored audit artifacts. Publishing committed snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. Run `pnpm preflight:sources` to verify that gate. A pre-change artifact that used a GLO-30 proxy for lapse correction is not eligible for production publication.
 
-The live site remains a synthetic fixture until all five real climate snapshots are generated, reviewed, committed, rebuilt and redeployed. Removing the fixture label without completing that chain is prohibited.
+The current 315-destination site is built from committed ERA5-Land snapshots and remains provisional and `noindex`. The public claim is restricted to the selected model cell. Observation-validity migration, independent review holds and production approvals remain fail-closed; no deployment step may silently promote the dataset to production.
