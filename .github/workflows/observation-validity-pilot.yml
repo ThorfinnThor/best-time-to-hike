@@ -2,6 +2,13 @@ name: Observation validity cache-only pilot
 on:
   push:
     branches: [codex/observation-validity-pilot]
+    # Export-only changes can reuse the uploaded monthly evidence; CI still tests them.
+    paths:
+      - 'lib/hiking/climate*.ts'
+      - 'lib/hiking/daylight.ts'
+      - 'scripts/validate/prepare-cached-validity-input.ts'
+      - 'scripts/validate/inventory-validity-cache.ts'
+      - 'data-config/methodology/observation-validity-v1.json'
   workflow_dispatch:
 permissions:
   contents: read

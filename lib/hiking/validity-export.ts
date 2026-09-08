@@ -1,4 +1,5 @@
-import { scoreExactComponents, overallScore, type ExactScoringMetrics } from '../scoring';
+import { scoreExactComponents, overallScore, roundHalfAwayFromZero, type ExactScoringMetrics } from '../scoring';
+import type { ComponentScores } from '../data/types';
 import { recommendationDecision, bestMonthsFor } from '../scoring/recommendations';
 import type { aggregateValidMonth } from './climate-validity';
 
@@ -10,7 +11,11 @@ export function stageMonthScore(metrics:Record<string,number|null>, month:number
   if(held||missing.length) return {month,recommendationEligible:false,overallScore:null,scoreLevel:null,components:null,missingScoringInputs:missing,reason:held?'destination-review-hold':'insufficient-observations'};
   const exact=Object.fromEntries(requiredScoringKeys.map(k=>[k,metrics[k]])) as ExactScoringMetrics;
   const components=scoreExactComponents(exact);
-  return {month,...recommendationDecision(components,overallScore(components)),components,missingScoringInputs:[],reason:null};
+  const decision=recommendationDecision(components,overallScore(components));
+  // Match the existing export contract: eligibility uses raw components, but
+  // bestMonthsFor consumes rounded published components and rounded total scores.
+  const rounded=Object.fromEntries(Object.entries(components).map(([k,v])=>[k,roundHalfAwayFromZero(v)])) as unknown as ComponentScores;
+  return {month,...decision,overallScore:roundHalfAwayFromZero(decision.overallScore),components:rounded,missingScoringInputs:[],reason:null};
 }
 
 export function stageValidityExport(destinationId:string, monthly:ReturnType<typeof aggregateValidMonth>[], holdReasons:string[]) {

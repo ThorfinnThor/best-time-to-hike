@@ -6,6 +6,7 @@ import {stageMonthScore,stageValidityExport,requiredScoringKeys} from '../lib/hi
 import {aggregateValidMonth} from '../lib/hiking/climate-validity';
 import {scoreComponents,scoreExactComponents} from '../lib/scoring';
 import type {BandClimateMonth} from '../lib/data/types';
+import {bestMonthsFor} from '../lib/scoring/recommendations';
 const metrics={temperatureUtilityScore:95,wetDayProbability:0,heavyRainDayProbability:0,snowDayProbability:0,snowDepthMeanOnSnowDaysM:0,hotDayProbability:0,severeHotDayProbability:0,windHikingMeanKmh:3,highWindHourProbability:0,daylightHoursMean:14};
 test('every absent scoring input independently prevents a score without renormalization',()=>{
   for(const key of requiredScoringKeys){const result=stageMonthScore({...metrics,[key]:null},6,false);assert.equal(result.overallScore,null);assert.equal(result.recommendationEligible,false);assert.ok(result.missingScoringInputs.includes(key));}
@@ -22,4 +23,9 @@ test('staging schema accepts unknown metrics but cannot claim production approva
   const validate=new Ajv2020({strict:false}).compile(schema);assert.equal(validate(output),true);assert.deepEqual(output.bestMonths,[]);
   assert.equal(validate({...output,productionReleaseApproval:true}),false);
   assert.throws(()=>stageValidityExport('test',[],[]));
+});
+test('best-month selection preserves the existing rounded-component boundary',()=>{
+  const m=stageMonthScore({...metrics,wetDayProbability:1,heavyRainDayProbability:.27},9,false);
+  assert.equal(m.components!.precipitation,5);
+  assert.deepEqual(bestMonthsFor([m]),[]);
 });

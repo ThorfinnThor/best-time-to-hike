@@ -1,5 +1,6 @@
 import {readFileSync,readdirSync} from 'node:fs';
 import {join} from 'node:path';
+import {stageValidityExport} from '../../lib/hiking/validity-export';
 const directory=process.argv[2];
 if(!directory) throw Error('Usage: summarize-validity-comparison.ts <downloaded-artifact-directory>');
 const read=(path:string)=>JSON.parse(readFileSync(path,'utf8'));
@@ -11,7 +12,10 @@ const results=readdirSync(directory).filter(name=>name.endsWith('-report.json'))
   if(!destination || !report.stagingExport) throw Error('Unknown destination or missing staging export');
   const published=read(`public/data/hiking/destinations/${destination.countryCode.toLowerCase()}/${destination.slug}.json`);
   const evidence=read(join(directory,`${id}-source-evidence.json`));
-  const next=report.stagingExport;
+  // Reuse the verified aggregates for export-only fixes, without reading raw climate again.
+  const next=process.argv.includes('--current-export')
+    ? stageValidityExport(id,report.monthly,report.stagingExport.holdReasons)
+    : report.stagingExport;
   return {id,sourceIdentical:evidence.identicalToPublishedCanonical,
     publishedEligible:published.months.filter((m:any)=>m.recommendationEligible).map((m:any)=>m.month),
     stagedEligible:next.months.filter((m:any)=>m.recommendationEligible).map((m:any)=>m.month),
