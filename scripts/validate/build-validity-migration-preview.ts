@@ -1,6 +1,6 @@
 import {createHash} from 'node:crypto';
-import {readFileSync,writeFileSync} from 'node:fs';
-import {join} from 'node:path';
+import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {dirname,join} from 'node:path';
 import Ajv2020 from 'ajv/dist/2020';
 import decision from '../../data-config/methodology/validity-migration-decision-v1.json';
 import {stageValidityExport} from '../../lib/hiking/validity-export';
@@ -50,5 +50,6 @@ const preview={schemaVersion:1,status:'review-only-not-published',aggregationPol
 const schema=read('schemas/validity-migration-preview.schema.json');
 const validate=new Ajv2020({strict:false}).compile(schema);
 if(!validate(preview)) throw Error(`Preview schema failed: ${JSON.stringify(validate.errors)}`);
+mkdirSync(dirname(output),{recursive:true});
 writeFileSync(output,JSON.stringify(preview,null,2)+'\n');
 console.log(JSON.stringify(summary));
