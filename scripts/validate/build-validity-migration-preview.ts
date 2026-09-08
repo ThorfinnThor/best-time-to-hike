@@ -20,6 +20,8 @@ const results=decision.scope.map(id=>{
   const reportPath=join(directory,`${id}-report.json`);
   const report=read(reportPath);
   const expected=(decision.evidence.scientificCoreSha256 as Record<string,string>)[id];
+  const expectedReport=(decision.evidence.reportSha256 as Record<string,string>)[id];
+  if(sha(reportPath)!==expectedReport) throw Error(`${id}: full evidence report hash mismatch`);
   if(objectSha(scientificCore(report))!==expected) throw Error(`${id}: scientific evidence core hash mismatch`);
   if(report.destinationId!==id||report.monthly.length!==12) throw Error(`${id}: malformed evidence`);
   const sourceEvidence=read(join(directory,`${id}-source-evidence.json`));
@@ -28,7 +30,7 @@ const results=decision.scope.map(id=>{
   if(!config) throw Error(`${id}: destination missing`);
   const published=read(`public/data/hiking/destinations/${config.countryCode.toLowerCase()}/${config.slug}.json`);
   const confidenceContext={datasetStatus:published.datasetStatus,representativenessApproved:false,source:'existing-published-spatial-geometry' as const,
-    months:published.months.map((month:any)=>{const band=month.bands[0];return {meanElevationMismatchM:band.meanElevationMismatchM,samplePointCount:band.samplePointCount,samplePointMaxSeparationKm:band.samplePointMaxSeparationKm,polygonEquivalentDiameterKm:band.polygonEquivalentDiameterKm,terrainReliefM:band.terrainReliefM};})};
+    months:published.months.map((month:any)=>{if(month.bands.length!==1) throw Error(`${id}: scoped preview requires one published representative band`);const band=month.bands[0];return {meanElevationMismatchM:band.meanElevationMismatchM,samplePointCount:band.samplePointCount,samplePointMaxSeparationKm:band.samplePointMaxSeparationKm,polygonEquivalentDiameterKm:band.polygonEquivalentDiameterKm,terrainReliefM:band.terrainReliefM};})};
   const staged=stageValidityExport(id,report.monthly,report.stagingExport.holdReasons,confidenceContext);
   const months=staged.months.map((month,index)=>{
     const previous=published.months[index];

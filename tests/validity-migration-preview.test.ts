@@ -16,4 +16,7 @@ test('approved migration and cache comparison cover the same ten unique destinat
 test('preview builder creates its ignored report directory explicitly',()=>{
   const source=readFileSync('scripts/validate/build-validity-migration-preview.ts','utf8');
   assert.match(source,/mkdirSync\(dirname\(output\),\{recursive:true\}\)/);
+  assert.match(source,/full evidence report hash mismatch/);
+  assert.match(source,/scientific evidence core hash mismatch/);
+  assert.match(source,/requires one published representative band/);
 });
