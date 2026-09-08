@@ -2,11 +2,17 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import decision from '../data-config/methodology/validity-migration-decision-v1.json';
 import scope from '../data-config/methodology/validity-comparison-scope-v1.json';
+import destinations from '../data-config/sources/destinations.json';
 import {readFileSync} from 'node:fs';
 
-test('approved migration and cache comparison cover the same ten unique destinations',()=>{
-  assert.equal(new Set(decision.scope).size,10);
-  assert.deepEqual([...decision.scope].sort(),[...scope.destinations].sort());
+test('the migration decision has an exact unique scope and complete evidence hashes',()=>{
+  assert.equal(new Set(decision.scope).size,decision.scope.length);
+  if(decision.decisionStatus==='approved-for-scoped-provisional-migration') {
+    assert.deepEqual([...decision.scope].sort(),[...scope.destinations].sort());
+  } else {
+    assert.equal(decision.decisionStatus,'approved-for-global-provisional-migration');
+    assert.deepEqual([...decision.scope].sort(),destinations.filter(item=>item.active).map(item=>item.id).sort());
+  }
   assert.deepEqual(Object.keys(decision.evidence.reportSha256).sort(),[...decision.scope].sort());
   assert.deepEqual(Object.keys(decision.evidence.scientificCoreSha256).sort(),[...decision.scope].sort());
   assert.equal(decision.productionReleaseApproval,false);
