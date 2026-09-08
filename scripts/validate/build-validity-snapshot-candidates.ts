@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {mkdirSync,readFileSync,writeFileSync} from 'node:fs';
+import {mkdirSync,readdirSync,readFileSync,writeFileSync} from 'node:fs';
 import {join,resolve,relative} from 'node:path';
 import Ajv2020 from 'ajv/dist/2020';
 import decision from '../../data-config/methodology/validity-migration-decision-v1.json';
@@ -16,13 +16,20 @@ const read=(path:string)=>JSON.parse(readFileSync(path,'utf8'));
 const fileSha=(path:string)=>createHash('sha256').update(readFileSync(path)).digest('hex');
 const objectSha=(value:unknown)=>createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const scientificCore=(report:any)=>({destinationId:report.destinationId,sourceSha256:report.sourceSha256,monthly:report.monthly,snowScreen:report.snowScreen,dailyCoverage:report.dailyCoverage});
+const evidenceFiles=(directory:string):string[]=>readdirSync(directory,{withFileTypes:true}).flatMap(entry=>entry.isDirectory()?evidenceFiles(join(directory,entry.name)):[join(directory,entry.name)]);
+const evidenceIndex=evidenceFiles(evidenceDirectory);
+const evidenceFile=(name:string)=>{
+  const matches=evidenceIndex.filter(path=>path.split('/').at(-1)===name);
+  if(matches.length!==1)throw Error(`${name}: expected exactly one evidence file, found ${matches.length}`);
+  return matches[0];
+};
 const destinations=read('data-config/sources/destinations.json');
 const validate=new Ajv2020({allErrors:true,strict:false}).compile(read('schemas/validity-climate-snapshot-v3.schema.json'));
 mkdirSync(outputRoot,{recursive:true});
 
 for(const id of decision.scope) {
-  const reportPath=join(evidenceDirectory,`${id}-report.json`);
-  const sourceEvidence=read(join(evidenceDirectory,`${id}-source-evidence.json`));
+  const reportPath=evidenceFile(`${id}-report.json`);
+  const sourceEvidence=read(evidenceFile(`${id}-source-evidence.json`));
   const report=read(reportPath);
   if(fileSha(reportPath)!==(decision.evidence.reportSha256 as Record<string,string>)[id]) throw Error(`${id}: full evidence report hash mismatch`);
   if(objectSha(scientificCore(report))!==(decision.evidence.scientificCoreSha256 as Record<string,string>)[id]) throw Error(`${id}: scientific evidence core hash mismatch`);
