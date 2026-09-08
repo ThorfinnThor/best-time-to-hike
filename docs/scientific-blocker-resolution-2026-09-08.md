@@ -40,4 +40,4 @@ The training optimum improves mean training F1 from 0.7600 to 0.7826 but does no
 
 ## Remaining release boundary
 
-Withheld Golden destinations are quarantined without changing their signed reference months. This leaves 25 currently evaluable Golden cases, below the existing production minimum of 30. At least five new independent, signed and non-held cases are required before the Golden production gate can pass. Seven separate operator production approvals also remain untouched.
+Withheld Golden destinations are quarantined without changing their signed reference months. This leaves 25 currently evaluable Golden cases, below the existing production minimum of 30. At least five new independent, signed and non-held cases are required before the Golden production gate can pass. Six explicit operator approval flags and the separate source-semantics approval gate also remain untouched.
