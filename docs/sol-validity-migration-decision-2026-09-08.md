@@ -16,7 +16,7 @@
 
 Migration der Berechnung und ihrer nachvollziehbaren Herkunft für Annapurna, Denali, Dolomiten, El Chaltén, Hunza, Kakadu, Langtang, Madeira, Sikkim und Zermatt. Zermatt und El Chaltén bleiben Review-Ziele; Kakadu erhält weiterhin keine Empfehlung. Alle bisherigen Einschränkungen bleiben bestehen. Insbesondere ist Hunzas bekannter Temperatursprung damit nicht erklärt.
 
-Die zehn Quellenberichte sind per SHA-256 festgeschrieben. Der cache-only Lauf `34231759061` ersetzt für diese Migrationsstufe die älteren Aggregatberichte und enthält die neu berechnete jährliche Streuung und Confidence-Evidenz. Die Implementierung stammt aus `64a0286`. Die Prüfung akzeptiert diese begrenzte Änderung am vorläufigen Produkt, nicht sämtliche schon vorher bestehenden wissenschaftlichen Aussagen.
+Die zehn Quellenberichte sind per SHA-256 festgeschrieben. Der cache-only Lauf `34233903320` ersetzt für diese Migrationsstufe die älteren Aggregatberichte, enthält die neu berechnete jährliche Streuung und Confidence-Evidenz und begrenzt auch Vollständigkeit und Stichprobenjahre exakt auf die lokale Normalperiode. Die Snapshot-Kandidaten-Implementierung stammt aus `7e45641`. Die Prüfung akzeptiert diese begrenzte Änderung am vorläufigen Produkt, nicht sämtliche schon vorher bestehenden wissenschaftlichen Aussagen.
 
 ## Konkreter nächster Schritt, Luna
 

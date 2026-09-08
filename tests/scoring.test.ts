@@ -40,6 +40,11 @@ test("missing score inputs fail instead of silently renormalizing",()=>{
   assert.throws(()=>overallScore({temperature:90,precipitation:90,snow:90,heatStress:90,wind:Number.NaN,daylight:90}),/SCORE001/);
 });
 
+test("exact temperature utility scores do not require fabricated legacy samples",()=>{
+  const metric:any={temperatureUtilityScore:80,wetDayProbability:0,heavyRainDayProbability:0,snowDayProbability:0,snowDepthMeanOnSnowDaysM:0,hotDayProbability:0,severeHotDayProbability:0,windHikingMeanKmh:10,highWindHourProbability:0,daylightHoursMean:12};
+  assert.equal(scoreComponents(metric).temperature,80);
+});
+
 // Sikkim in July: every component in the nineties except rain, which is zero.
 // Through 1.1.0 this was withheld outright and capped at 49/poor. Rain is no
 // longer critical, so the month stands on its score and carries the reason.

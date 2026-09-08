@@ -24,10 +24,12 @@ export function roundHalfAwayFromZero(value: number): number {
 }
 
 export function scoreComponents(metrics: BandClimateMonth): ComponentScores {
-  if(!metrics.temperatureUtilitySamplesC.length||!metrics.temperatureUtilitySamplesC.every(Number.isFinite))throw new Error("SCORE001 missing or invalid required component metric");
+  const samples=metrics.temperatureUtilitySamplesC;
+  if(samples&&!samples.every(Number.isFinite))throw new Error("SCORE001 missing or invalid required component metric");
+  if(!Number.isFinite(metrics.temperatureUtilityScore)&&!samples?.length)throw new Error("SCORE001 missing or invalid required component metric");
   const temperatureUtilityScore = Number.isFinite(metrics.temperatureUtilityScore)
     ? metrics.temperatureUtilityScore!
-    : metrics.temperatureUtilitySamplesC.reduce((sum, value) => sum + interpolate(value, curves.temperature as Curve), 0) / metrics.temperatureUtilitySamplesC.length;
+    : samples!.reduce((sum, value) => sum + interpolate(value, curves.temperature as Curve), 0) / samples!.length;
   return scoreExactComponents({...metrics,temperatureUtilityScore});
 }
 
