@@ -37,6 +37,8 @@ function years(count:number):ValidDay[]{return Array.from({length:count},(_,y)=>
 test('staging: 26 years are insufficient, 27 complete years are sufficient',()=>{
   assert.equal(aggregateValidMonth(years(26),6).metrics.temperatureHikingMeanC,null);
   const result=aggregateValidMonth(years(27),6);assert.equal(result.metrics.temperatureHikingMeanC,20);assert.equal(result.scoringInputsAvailable,true);assert.equal(result.metrics.snowDepthMeanOnSnowDaysM,0);
+  assert.equal(result.interannual.validInterannualYearCount,27);assert.equal(result.interannual.scoreStandardDeviation,0);
+  assert.equal(result.metrics.sampleYearCount,27);assert.ok(result.metrics.dataCompleteness!>0.89&&result.metrics.dataCompleteness!<0.91);
 });
 test('staging: one missing rainfall day invalidates that year total but not event frequency',()=>{
   const days=years(27);days[0]={...days[0],precipitationDailyMm:null};
@@ -54,7 +56,18 @@ test('staging: empty hiking window cannot manufacture weather statistics',()=>{
   assert.equal(d.validity.expectedHikingHours,0);assert.equal(d.temperatureMeanHikingC,null);assert.equal(d.hotDay,null);assert.equal(d.windMeanHikingKmh,null);
 });
 test('staging: monthly empty input remains unknown and cannot score',()=>{
-  const r=aggregateValidMonth([],6);assert.equal(r.scoringInputsAvailable,false);assert.equal(r.metrics.daylightHoursMean,null);
+  const r=aggregateValidMonth([],6);assert.equal(r.scoringInputsAvailable,false);assert.equal(r.metrics.daylightHoursMean,null);assert.equal(r.metrics.dataCompleteness,0);assert.equal(r.interannual.scoreStandardDeviation,null);
+});
+test('staging: interannual spread uses complete yearly score vectors only',()=>{
+  const days=years(27);
+  for(let i=0;i<30;i++) days[i]={...days[i],adjustedTemperaturesHikingC:[0],temperatureMeanHikingC:0};
+  const result=aggregateValidMonth(days,6);
+  assert.equal(result.interannual.validInterannualYearCount,27);
+  assert.ok(result.interannual.scoreStandardDeviation!>0);
+  days[30]={...days[30],precipitationDailyMm:null};
+  assert.equal(aggregateValidMonth(days,6).interannual.validInterannualYearCount,27);
+  for(let i=30;i<34;i++) days[i]={...days[i],precipitationDailyMm:null};
+  assert.equal(aggregateValidMonth(days,6).interannual.validInterannualYearCount,26);
 });
 test('staging: incomplete boundary day retains a full calendar denominator',()=>{
   const d=aggregateValidDays(full().slice(1),options)[0];

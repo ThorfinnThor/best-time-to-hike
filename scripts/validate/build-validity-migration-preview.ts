@@ -27,14 +27,16 @@ const results=decision.scope.map(id=>{
   const config=destinations.find((item:{id:string})=>item.id===id);
   if(!config) throw Error(`${id}: destination missing`);
   const published=read(`public/data/hiking/destinations/${config.countryCode.toLowerCase()}/${config.slug}.json`);
-  const staged=stageValidityExport(id,report.monthly,report.stagingExport.holdReasons);
+  const confidenceContext={datasetStatus:published.datasetStatus,representativenessApproved:false,source:'existing-published-spatial-geometry' as const,
+    months:published.months.map((month:any)=>{const band=month.bands[0];return {meanElevationMismatchM:band.meanElevationMismatchM,samplePointCount:band.samplePointCount,samplePointMaxSeparationKm:band.samplePointMaxSeparationKm,polygonEquivalentDiameterKm:band.polygonEquivalentDiameterKm,terrainReliefM:band.terrainReliefM};})};
+  const staged=stageValidityExport(id,report.monthly,report.stagingExport.holdReasons,confidenceContext);
   const months=staged.months.map((month,index)=>{
     const previous=published.months[index];
     if(previous.month!==month.month) throw Error(`${id}: published month order mismatch`);
     return {month:month.month,
-      before:{recommendationEligible:previous.recommendationEligible,overallScore:previous.overallScore,components:previous.components,metrics:previous.metrics},
-      after:{recommendationEligible:month.recommendationEligible,overallScore:month.overallScore,components:month.components,metrics:month.metrics},
-      changes:{recommendationEligible:changed(previous.recommendationEligible,month.recommendationEligible),overallScore:changed(previous.overallScore,month.overallScore),components:changed(previous.components,month.components),metrics:changed(previous.metrics,month.metrics)},
+      before:{recommendationEligible:previous.recommendationEligible,overallScore:previous.overallScore,components:previous.components,confidenceScore:previous.confidenceScore,confidenceLevel:previous.confidenceLevel,metrics:previous.metrics},
+      after:{recommendationEligible:month.recommendationEligible,overallScore:month.overallScore,components:month.components,confidenceScore:month.confidence?.score??null,confidenceLevel:month.confidence?.level??null,metrics:month.metrics,interannual:month.interannual},
+      changes:{recommendationEligible:changed(previous.recommendationEligible,month.recommendationEligible),overallScore:changed(previous.overallScore,month.overallScore),components:changed(previous.components,month.components),confidence:changed({score:previous.confidenceScore,level:previous.confidenceLevel},{score:month.confidence?.score??null,level:month.confidence?.level??null}),metrics:changed(previous.metrics,month.metrics)},
       missingScoringInputs:month.missingScoringInputs};
   });
   return {destinationId:id,evidenceSha256:expected,sourceIdenticalToPublished:true,holdReasons:staged.holdReasons,
@@ -45,6 +47,7 @@ const summary={destinations:results.length,months:results.length*12,
   changedEligibilityMonths:results.flatMap(r=>r.months).filter(m=>m.changes.recommendationEligible).length,
   changedBestMonthDestinations:results.filter(r=>changed(r.before.bestMonths,r.after.bestMonths)).length,
   changedRoundedScoreMonths:results.flatMap(r=>r.months).filter(m=>m.changes.overallScore).length,
+  changedConfidenceMonths:results.flatMap(r=>r.months).filter(m=>m.changes.confidence).length,
   destinationsWithMissingInputs:results.filter(r=>r.months.some(m=>m.missingScoringInputs.length)).map(r=>r.destinationId)};
 const preview={schemaVersion:1,status:'review-only-not-published',aggregationPolicyVersion:'observation-validity-v1',decisionFile:'data-config/methodology/validity-migration-decision-v1.json',decisionSha256:createHash('sha256').update(readFileSync('data-config/methodology/validity-migration-decision-v1.json')).digest('hex'),summary,results};
 const schema=read('schemas/validity-migration-preview.schema.json');

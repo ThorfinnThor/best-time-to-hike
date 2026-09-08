@@ -21,7 +21,7 @@ Die zehn Quellenberichte sind per SHA-256 festgeschrieben. Für Denali gilt auss
 ## Konkreter nächster Schritt, Luna
 
 - Versionierte, null-fähige Snapshots und Herkunfts-/Abdeckungsfelder aus den geprüften Stunden-/Staging-Daten erzeugen. Temporäre Actions-Evidenz dauerhaft sichern.
-- Confidence und interannuelle Streuung nicht still aus alten Snapshots übernehmen. Der Bericht enthält nicht alle jährlichen Score-Eingänge; diese müssen bei Bedarf aus den vorhandenen Stunden-Daten berechnet werden. Keine neue CDS-Abfrage ist dafür grundsätzlich nötig.
+- Confidence und interannuelle Streuung nicht still aus alten Snapshots übernehmen. Die Implementierung berechnet nun alle vollständigen Jahresscores, deren Populations-Standardabweichung und die Rohdatenvollständigkeit erneut aus den vorhandenen Stunden-Daten. Räumliche Strukturwerte werden separat als aus dem bisherigen Snapshot übernommen gekennzeichnet. Keine neue CDS-Abfrage ist dafür nötig.
 - Nur die zehn Ziele migrieren; die übrigen 305 behalten ihre echte bisherige Methodenversion. Sämtliche Sperren und `provisional`/`noindex` bleiben.
 - Vor Veröffentlichung Tests, vollständigen Build, Herkunftsprüfung und deterministischen Export prüfen. Unerwartete Änderungen der Empfehlungsgültigkeit oder Best Months gehen zurück in die fachliche Prüfung.
 

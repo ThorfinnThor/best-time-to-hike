@@ -34,9 +34,20 @@ const monthly=Array.from({length:12},(_,i)=>aggregateValidMonth(daily,i+1));
 const snowScreen=screenPhysicalSnow(records.map(r=>r.snowDepthM),monthly.map(m=>m.metrics.snowDayProbability));
 const destination=JSON.parse(readFileSync('data-config/sources/destinations.json','utf8')).find((d:{id:string})=>d.id===snapshot.destinationId);
 const publishedPath=destination?`public/data/hiking/destinations/${destination.countryCode.toLowerCase()}/${destination.slug}.json`:null;
-const publishedHold=publishedPath&&existsSync(publishedPath)?JSON.parse(readFileSync(publishedPath,'utf8')).recommendationHoldReason:null;
+const published=publishedPath&&existsSync(publishedPath)?JSON.parse(readFileSync(publishedPath,'utf8')):null;
+const publishedHold=published?.recommendationHoldReason??null;
 const holdReasons=[...snowScreen.reasons,...(publishedHold?['existing-published-hold']:[])];
-const stagingExport=stageValidityExport(snapshot.destinationId,monthly,holdReasons);
+const confidenceContext=published?{
+  datasetStatus:published.datasetStatus,
+  representativenessApproved:false,
+  source:'existing-published-spatial-geometry' as const,
+  months:published.months.map((month:any)=>{
+    if(month.bands.length!==1) throw Error('Scoped staging confidence currently requires one published representative band');
+    const band=month.bands[0];
+    return {meanElevationMismatchM:band.meanElevationMismatchM,samplePointCount:band.samplePointCount,samplePointMaxSeparationKm:band.samplePointMaxSeparationKm,polygonEquivalentDiameterKm:band.polygonEquivalentDiameterKm,terrainReliefM:band.terrainReliefM};
+  })
+}:undefined;
+const stagingExport=stageValidityExport(snapshot.destinationId,monthly,holdReasons,confidenceContext);
 const validateExport=new Ajv2020({strict:false}).compile(JSON.parse(readFileSync('schemas/validity-staging.schema.json','utf8')));
 if(!validateExport(stagingExport)) throw Error(`Invalid staging export: ${JSON.stringify(validateExport.errors)}`);
 const report={status:'staging-only-not-for-publication',sourceSha256:createHash('sha256').update(raw).digest('hex'),destinationId:snapshot.destinationId,

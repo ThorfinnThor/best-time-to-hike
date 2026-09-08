@@ -29,3 +29,15 @@ test('best-month selection preserves the existing rounded-component boundary',()
   assert.equal(m.components!.precipitation,5);
   assert.deepEqual(bestMonthsFor([m]),[]);
 });
+test('staging confidence is recomputed from new completeness and yearly scores, then guarded',()=>{
+  const monthly=Array.from({length:12},(_,i)=>{
+    const base=aggregateValidMonth([],i+1);
+    return {...base,metrics:{...base.metrics,...metrics,dataCompleteness:.99},interannual:{validInterannualYearCount:30,scoreStandardDeviation:5,yearlyScores:Array.from({length:30},(_,year)=>({year:1991+year,score:80}))}};
+  });
+  const structure={meanElevationMismatchM:100,samplePointCount:1,samplePointMaxSeparationKm:0,polygonEquivalentDiameterKm:20,terrainReliefM:200};
+  const context={datasetStatus:'provisional' as const,representativenessApproved:false,source:'existing-published-spatial-geometry' as const,months:Array(12).fill(structure)};
+  const output=stageValidityExport('test',monthly,[],context);
+  assert.equal(output.confidenceInputProvenance,'existing-published-spatial-geometry');
+  assert.deepEqual(output.months[0].confidence&&{score:output.months[0].confidence.score,level:output.months[0].confidence.level},{score:64,level:'low'});
+  assert.equal(stageValidityExport('test',monthly,['existing-published-hold'],context).months[0].confidence,null);
+});
