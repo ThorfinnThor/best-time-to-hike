@@ -5,7 +5,7 @@ import { scoreLevel } from "../../lib/scoring/index";
 import recommendationConfig from "../../data-config/methodology/recommendation-eligibility-v1.json";
 import { readJson, round, writeJson } from "../lib/io";
 
-type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; representativenessApproved?:boolean; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; bands: Record<string, {months: BandClimateMonth[]}> } };
+type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; representativenessApproved?:boolean; aggregationPolicyVersion?:string; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; bands: Record<string, {months: BandClimateMonth[]}> } };
 type InternalBandMonth = Omit<PublicBandMonth, "components" | "overallScore" | "scoreLevel" | "confidenceScore" | "confidenceLevel"> & {components: ComponentScores; overallScore:number; scoreLevel:ScoreLevel; confidenceScore:number; confidenceLevel:ConfidenceLevel};
 type ScoredMonth = Omit<PublicMonth, "components" | "overallScore" | "scoreLevel" | "confidenceScore" | "confidenceLevel" | "bands"> & {components: ComponentScores; overallScore:number; scoreLevel:ScoreLevel; confidenceScore:number; confidenceLevel:ConfidenceLevel; bands:InternalBandMonth[]; rawComponents: ComponentScores; rawOverallScore: number};
 type RepresentativeCell = {lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string};
@@ -44,7 +44,10 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
       const components = scoreComponents(metrics);
       const score = overallScore(components);
       const confidence = guardConfidence(confidenceScore(metrics), datasetStatus, metrics.samplePointCount, representativenessApproved);
-      return {...metrics, components, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence.score), confidenceLevel: confidence.level};
+      const {observationCoverage,interannualYearlyScores,...publicMetrics}=metrics;
+      return {...publicMetrics,
+        ...(observationCoverage?{observationValidYearsByMetric:observationCoverage.validYearsByMetric}:{}),
+        components, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence.score), confidenceLevel: confidence.level};
     });
     const internalComponents = weightedComponents(bands, destination);
     const score = overallScore(internalComponents);
@@ -113,6 +116,7 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
     recommendationEligible: !destinationHold && months.some((month) => month.recommendationEligible),
     ...(destinationHold ? {recommendationHoldReason: "persistent-snow" as const} : {}),
     datasetStatus,
+    aggregationPolicyVersion:climate.aggregationPolicyVersion ?? "legacy-climate-aggregation-v1",
     climateSource:climate.source ?? "era5-land-compatible-synthetic-fixture",
     climateSourceDataset:climate.sourceDataset,
     climateSourceDoi:climate.sourceDoi,

@@ -4,7 +4,7 @@
   "required":["schemaVersion","datasetStatus","destinationId","fixture","climateNormal","bands","aggregationPolicyVersion","migrationStatus","validityEvidence"],
   "properties":{
     "schemaVersion":{"const":3},"datasetStatus":{"const":"provisional"},"destinationId":{"type":"string"},"fixture":{"const":false},
-    "aggregationPolicyVersion":{"const":"observation-validity-v1"},"migrationStatus":{"const":"candidate-not-published"},
+    "aggregationPolicyVersion":{"const":"observation-validity-v1"},"migrationStatus":{"enum":["candidate-not-published","scoped-provisional"]},
     "climateNormal":{"type":"object","required":["startYear","endYear"],"properties":{"startYear":{"const":1991},"endYear":{"const":2020}}},
     "validityEvidence":{"type":"object","additionalProperties":false,"required":["githubActionsRun","decisionSha256","reportSha256","scientificCoreSha256","sourceSha256","sourceIdenticalToPublished"],"properties":{"githubActionsRun":{"type":"integer"},"decisionSha256":{"$ref":"#/$defs/hash"},"reportSha256":{"$ref":"#/$defs/hash"},"scientificCoreSha256":{"$ref":"#/$defs/hash"},"sourceSha256":{"$ref":"#/$defs/hash"},"sourceIdenticalToPublished":{"const":true}}},
     "bands":{"type":"object","additionalProperties":false,"required":["representative"],"properties":{"representative":{"type":"object","additionalProperties":false,"required":["months"],"properties":{"months":{"type":"array","minItems":12,"maxItems":12,"items":{"$ref":"#/$defs/month"}}}}}}

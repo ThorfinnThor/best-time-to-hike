@@ -4,7 +4,9 @@ import {join,resolve,relative} from 'node:path';
 import Ajv2020 from 'ajv/dist/2020';
 import decision from '../../data-config/methodology/validity-migration-decision-v1.json';
 
-const [evidenceDirectory,outputDirectory='generated/intermediate/validity-migration-candidates']=process.argv.slice(2);
+const applyReviewed=process.argv.includes('--apply-reviewed');
+const positional=process.argv.slice(2).filter(arg=>arg!=='--apply-reviewed');
+const [evidenceDirectory,outputDirectory='generated/intermediate/validity-migration-candidates']=positional;
 if(!evidenceDirectory) throw Error('Usage: build-validity-snapshot-candidates.ts <evidence-directory> [generated/intermediate/validity-migration-candidates]');
 const outputRoot=resolve(outputDirectory);
 const allowedRoot=resolve('generated/intermediate/validity-migration-candidates');
@@ -38,10 +40,13 @@ for(const id of decision.scope) {
     return {...month.metrics,...structure,interannualScoreSd:month.interannual.scoreStandardDeviation,validInterannualYearCount:month.interannual.validInterannualYearCount,
       scoringInputsAvailable:month.scoringInputsAvailable,missingScoringInputs:month.missingScoringInputs,observationCoverage:month.coverage,interannualYearlyScores:month.interannual.yearlyScores};
   });
-  const candidate={...previous,schemaVersion:3,aggregationPolicyVersion:'observation-validity-v1',migrationStatus:'candidate-not-published',
+  const candidate={...previous,schemaVersion:3,aggregationPolicyVersion:'observation-validity-v1',migrationStatus:applyReviewed?'scoped-provisional':'candidate-not-published',
     validityEvidence:{githubActionsRun:decision.evidence.recomputedInterannualRun,decisionSha256:fileSha('data-config/methodology/validity-migration-decision-v1.json'),reportSha256:fileSha(reportPath),scientificCoreSha256:objectSha(scientificCore(report)),sourceSha256:report.sourceSha256,sourceIdenticalToPublished:true},
     bands:{representative:{months}}};
   if(!validate(candidate)) throw Error(`${id}: candidate schema failed: ${JSON.stringify(validate.errors)}`);
-  writeFileSync(join(outputRoot,`${id}.json`),JSON.stringify(candidate,null,2)+'\n');
+  const target=applyReviewed?`data-snapshots/climate/${destination.slug}.json`:join(outputRoot,`${id}.json`);
+  writeFileSync(target,JSON.stringify(candidate,null,2)+'\n');
 }
-console.log(`Built ${decision.scope.length} versioned snapshot candidates under ${outputDirectory}; public snapshots unchanged.`);
+console.log(applyReviewed
+  ? `Applied ${decision.scope.length} reviewed versioned snapshots; public exports still require an explicit rebuild.`
+  : `Built ${decision.scope.length} versioned snapshot candidates under ${outputDirectory}; public snapshots unchanged.`);
