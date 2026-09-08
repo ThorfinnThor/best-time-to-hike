@@ -60,3 +60,9 @@ test('staging: incomplete boundary day retains a full calendar denominator',()=>
   const d=aggregateValidDays(full().slice(1),options)[0];
   assert.equal(d.validity.expectedHours,24);assert.equal(d.observationCount,23);assert.equal(d.snowDay,null);
 });
+test('Denali midnight-crossing summer daylight retains all ten hiking hours',()=>{
+  const o={...options,timezone:'America/Anchorage',lat:63.7,lon:-149.3};
+  const records=expectedDayHours('2000-06-15',o.timezone).map(instant=>({...record(12),utcInstant:instant.toISOString()}));
+  const d=aggregateValidDays(records,o)[0];
+  assert.equal(d.validity.expectedHikingHours,10);assert.equal(d.temperatureMeanHikingC,20);assert.equal(d.hotDay,false);
+});
