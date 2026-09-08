@@ -29,13 +29,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '[0,1,2,3,4,5,6,7,8,9]' || '[0]') }}
+        shard: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '[0,1,2,3]' || '[0]') }}
     env:
       # Pushes run the high-latitude regression cheaply. Manual runs use the full ten-point scope.
       BTH_VALIDITY_DESTINATIONS: ${{ github.event_name == 'push' && 'denali' || '' }}
       BTH_VALIDITY_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && 'all' || 'pilot' }}
       BTH_VALIDITY_REQUIRE_ALL: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '1' || '0' }}
-      BTH_VALIDITY_SHARD_COUNT: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '10' || '1' }}
+      BTH_VALIDITY_SHARD_COUNT: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '4' || '1' }}
       BTH_VALIDITY_SHARD_INDEX: ${{ matrix.shard }}
     steps:
       - uses: actions/checkout@v4
