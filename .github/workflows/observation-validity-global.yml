@@ -1,0 +1,49 @@
+name: Observation validity global cache migration
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    env:
+      BTH_VALIDITY_SCOPE: all
+      BTH_VALIDITY_REQUIRE_ALL: '1'
+      BTH_VALIDITY_SHARD_COUNT: '10'
+      BTH_VALIDITY_SHARD_INDEX: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.22.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Restore exact existing raw cache
+        uses: actions/cache/restore@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-cell-replacements-v1-34139951879
+          fail-on-cache-miss: true
+      - run: pnpm exec tsc --noEmit && node --import tsx --test tests/climate-validity.test.ts tests/snow-screening.test.ts
+      - name: Recompute observation-validity evidence for this shard
+        run: |
+          node --import tsx scripts/validate/inventory-validity-cache.ts > generated/intermediate/validity-destinations.txt
+          while read -r destination; do
+            node --import tsx scripts/validate/prepare-cached-validity-input.ts "$destination"
+            node --import tsx scripts/validate/compare-observation-validity.ts "generated/intermediate/validity-pilot/$destination-input.json" "generated/intermediate/validity-pilot/$destination-report.json"
+          done < generated/intermediate/validity-destinations.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: observation-validity-global-${{ github.run_id }}-${{ matrix.shard }}
+          retention-days: 14
+          if-no-files-found: error
+          path: |
+            generated/intermediate/validity-pilot/*-report.json
+            generated/intermediate/validity-pilot/*-source-evidence.json
+            generated/intermediate/validity-pilot/cache-inventory.json

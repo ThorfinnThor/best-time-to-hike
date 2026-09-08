@@ -6,8 +6,10 @@ import scope from '../../data-config/methodology/validity-comparison-scope-v1.js
 
 async function main() {
 const id=process.argv[2];
-if(!scope.destinations.includes(id)) throw Error('Destination outside the bounded cache-comparison scope');
 const json=(p:string)=>JSON.parse(readFileSync(p,'utf8'));
+const globalScope=process.env.BTH_VALIDITY_SCOPE==='all';
+const permitted=globalScope?json('data-config/sources/destinations.json').map((item:{id:string})=>item.id):scope.destinations;
+if(!permitted.includes(id)) throw Error('Destination outside the permitted cache-comparison scope');
 const climate=json(`data-snapshots/climate/${id}.json`);
 const sampling=json(`data-snapshots/sampling/${id}.json`);
 const destination=json('data-config/sources/destinations.json').find((d:{id:string})=>d.id===id);
