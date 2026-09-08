@@ -20,6 +20,43 @@ SPEC.loader.exec_module(MODULE)
 
 
 class Era5DownloadImporterTest(unittest.TestCase):
+    def test_netcdf_groups_must_describe_the_same_point(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            first, second = Path(directory) / "temperature.nc", Path(directory) / "other.nc"
+            self.write_group(first, 46.0, 7.8, {"temperatureK", "dewpointK"})
+            rest = set(self.arrays(24)) - {"temperatureK", "dewpointK"}
+            self.write_group(second, 46.0, 367.8, rest)
+            times, arrays, metadata, resolved = MODULE.read_netcdf_files([first, second])
+            self.assertEqual(len(times), 24)
+            self.assertEqual(len(arrays), 7)
+            self.assertAlmostEqual(resolved["longitude"], 7.8)
+            self.assertEqual(metadata["snowCover"]["normalization"], "PERCENT_TO_FRACTION")
+            for latitude, longitude in [(46.1, 7.8), (46.0, 7.9), (float("nan"), 7.8)]:
+                self.write_group(second, latitude, longitude, rest)
+                with self.assertRaisesRegex(RuntimeError, "ERA5_COORD001"):
+                    MODULE.read_netcdf_files([first, second])
+            self.write_group(second, 46.0, 7.8, rest)
+            with MODULE.netCDF4.Dataset(second, "a") as dataset:
+                dataset.renameVariable("latitude", "missing_latitude")
+            with self.assertRaisesRegex(RuntimeError, "ERA5_COORD001 missing latitude"):
+                MODULE.read_netcdf_files([first, second])
+
+    @classmethod
+    def write_group(cls, path: Path, latitude: float, longitude: float, names: set[str]) -> None:
+        units = {"temperatureK": "K", "dewpointK": "K", "windUMs": "m s**-1",
+                 "windVMs": "m s**-1", "precipitationM": "m", "snowCover": "%", "snowDepthM": "m"}
+        with MODULE.netCDF4.Dataset(path, "w") as dataset:
+            dataset.createDimension("time", 24)
+            time = dataset.createVariable("time", "f8", ("time",))
+            time.units = "hours since 2020-01-01 00:00:00"
+            time[:] = np.arange(24)
+            for coordinate, value in [("latitude", latitude), ("longitude", longitude)]:
+                dataset.createVariable(coordinate, "f8").assignValue(value)
+            for name in sorted(names):
+                variable = dataset.createVariable(sorted(MODULE.ALIASES[name])[0], "f8", ("time",))
+                variable.units = units[name]
+                variable[:] = cls.arrays(24)[name]
+
     def test_snow_cover_percent_is_normalized_to_fraction(self) -> None:
         values, normalization = MODULE.canonicalize_values("snowCover", "%", np.array([0.0, 25.0, 100.0]))
         np.testing.assert_allclose(values, [0.0, 0.25, 1.0])

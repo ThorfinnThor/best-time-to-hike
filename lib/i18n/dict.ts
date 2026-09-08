@@ -523,6 +523,7 @@ export const DICT = {
       credits: {
         title: "Image credits",
         paragraphs: [
+          "We crop and resize the photographs and convert them to WebP. Our adapted versions of CC BY and CC BY-SA photographs are offered under the same licence and version listed for each original. These image licences do not cover the website as a whole. The linked source pages contain the original files and notices.",
           "Destination photographs come from Wikimedia Commons and are used only under licences that permit commercial use: public domain, CC0, CC BY and CC BY-SA. Non-commercial and no-derivatives licences are refused, because this site carries affiliate links and its cards crop. Where no acceptably licensed photograph exists, a generated topographic placeholder is shown instead. Every photograph is credited below with its author, licence and source file.",
         ],
       },
@@ -1038,6 +1039,7 @@ export const DICT = {
       credits: {
         title: "Bildnachweis",
         paragraphs: [
+          "Wir beschneiden und skalieren die Fotos und wandeln sie in WebP um. Unsere bearbeiteten Fassungen der CC-BY- und CC-BY-SA-Fotos stehen unter derselben Lizenz und Version wie das jeweils aufgeführte Original. Diese Bildlizenzen gelten nicht für die Website insgesamt. Die verlinkten Quellseiten enthalten die Originaldateien und Hinweise.",
           "Die Zielfotos stammen von Wikimedia Commons und werden nur unter Lizenzen verwendet, die kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Nicht-kommerzielle Lizenzen und Lizenzen ohne Bearbeitung werden abgelehnt, weil diese Website Affiliate-Links enthält und die Karten beschneidet. Wo kein passend lizenziertes Foto existiert, erscheint stattdessen eine generierte topografische Grafik. Jedes Foto ist unten mit Urheber, Lizenz und Quelldatei nachgewiesen.",
         ],
       },

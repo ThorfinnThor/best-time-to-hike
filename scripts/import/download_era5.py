@@ -147,10 +147,26 @@ def read_netcdf_files(paths: list[Path]) -> tuple[list[datetime], dict[str, np.n
         with netCDF4.Dataset(path) as dataset:
             current_times = time_values(dataset)
             for coordinate in ("latitude", "longitude"):
-                if coordinate in dataset.variables:
-                    values = np.asarray(dataset.variables[coordinate][:]).reshape(-1)
-                    if values.size:
-                        resolved[coordinate] = finite_or_none(values[0])
+                if coordinate not in dataset.variables:
+                    raise RuntimeError(f"ERA5_COORD001 missing {coordinate} in source group")
+                values = np.asarray(np.ma.filled(dataset.variables[coordinate][:], np.nan)).reshape(-1)
+                if values.size != 1 or not np.isfinite(values[0]):
+                    raise RuntimeError(f"ERA5_COORD001 {coordinate} must identify one finite grid point")
+                value = float(values[0])
+                if coordinate == "longitude":
+                    value = (value + 180) % 360 - 180
+                elif not -90 <= value <= 90:
+                    raise RuntimeError("ERA5_COORD001 latitude outside geographic range")
+                previous = resolved[coordinate]
+                if previous is not None:
+                    difference = abs(value - previous)
+                    if coordinate == "longitude":
+                        difference = min(difference, 360 - difference)
+                    # Same float-coordinate tolerance as fetch-era5.ts, not a new sampling rule.
+                    if difference > 1e-4:
+                        raise RuntimeError(f"ERA5_COORD001 {coordinate} differs between source groups")
+                else:
+                    resolved[coordinate] = value
             for variable_name, variable in dataset.variables.items():
                 logical_name = find_logical_name(variable_name)
                 if logical_name is None:

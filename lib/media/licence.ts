@@ -54,3 +54,12 @@ export function normaliseLicence(raw: string | undefined | null): LicenceRule | 
 }
 
 export const isAllowedLicence = (raw: string | undefined | null): boolean => normaliseLicence(raw) !== null;
+
+/** Public-domain claims have no licence deed; retain the individual source evidence. */
+export function licenceUrl(id: string): string | null {
+  const licence = BY_ID.get(id);
+  if (!licence || id === "pd") return null;
+  if (id === "cc0") return "https://creativecommons.org/publicdomain/zero/1.0/";
+  const match = /^cc-(by(?:-sa)?)-(\d\.\d)$/.exec(id);
+  return match ? `https://creativecommons.org/licenses/${match[1]}/${match[2]}/` : null;
+}

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import replacements from "../data-config/sources/representative-cell-replacements-v1.json";
 
 test("scoped review rejects empty, unknown and rejected candidates before reading climate", () => {
-  for (const scope of ["", "unknown-destination", "zermatt", "denali,unknown-destination"]) {
+  for (const scope of ["", "unknown-destination", "zermatt", "garhwal", "denali,unknown-destination"]) {
     const result = spawnSync(process.execPath, ["--import", "tsx",
       "scripts/validate/review-representative-cell-replacements.ts", `--only=${scope}`],
     { encoding: "utf8" });
@@ -24,7 +24,7 @@ test("replacement cells remain an evidence-only scientific staging set", () => {
   assert.match(replacements.replacements.zermatt.rejectionReason, /10 m glacier-indicator/);
   assert.deepEqual(
     Object.entries(replacements.replacements).filter(([, candidate]) => candidate.stagingDisposition === "candidate").map(([id]) => id).sort(),
-    ["annapurna", "denali", "garhwal"],
+    ["annapurna", "denali"],
   );
   assert.deepEqual(replacements.controls.destinations, ["hunza"]);
   const cells = new Set<string>();

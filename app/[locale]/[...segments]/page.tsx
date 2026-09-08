@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import weights from "@/data-config/scoring/weights.json";
 import { allImages } from "@/lib/media/images";
+import { licenceUrl } from "@/lib/media/licence";
 import { Finder } from "@/components/finder/Finder";
 import { HomePage } from "@/components/home/HomePage";
 import { ComparisonPage, DestinationPage, MethodNote, MonthPage, RankingPage } from "@/components/hiking/Pages";
@@ -116,7 +117,7 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
       <ul>{allImages().map((image)=><li key={image.slug}>
         <strong>{image.slug.replaceAll("-"," ")}</strong>
         <a href={image.sourceUrl} rel="noopener noreferrer" target="_blank">{image.sourceFile}</a>
-        <span>{image.attribution}</span>
+        <span>{image.author}{" · "}<a href={licenceUrl(image.licenceId) ?? image.sourceUrl} rel="noopener noreferrer" target="_blank">{image.licenceName}</a></span>
       </li>)}</ul>
     </section>}
     {pageKey==="methodology" && <section className="weight-diagram">{(Object.entries(weights.overall) as Array<[keyof ComponentScores,number]>).map(([key,weight])=><div key={key}><span>{componentLabels[key]}</span><strong>{Math.round(weight*100)}%</strong></div>)}</section>}
