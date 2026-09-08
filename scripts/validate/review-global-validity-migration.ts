@@ -47,7 +47,9 @@ for(const destination of destinations){
   if(!/^[a-f0-9]{64}$/.test(report.sourceSha256??""))errors.push(`${id}: invalid report source hash`);
   if(!Array.isArray(report.monthly)||report.monthly.length!==12||report.monthly.some((month:any,index:number)=>month.month!==index+1||month.aggregationPolicyVersion!=="observation-validity-v1"))errors.push(`${id}: monthly validity output malformed`);
   if(report.monthly?.some((month:any)=>month.scoringInputsAvailable!==true||month.missingScoringInputs?.length!==0))errors.push(`${id}: recomputation has missing scoring inputs`);
-  if(!Array.isArray(report.dailyCoverage)||report.dailyCoverage.length!==10957)errors.push(`${id}: daily coverage does not span the exact 1991-2020 calendar`);
+  const dailyDates=(report.dailyCoverage??[]).map((day:any)=>day.localDate);
+  if(!Array.isArray(report.dailyCoverage)||dailyDates.length<10957||dailyDates.length>10959||new Set(dailyDates).size!==dailyDates.length||dailyDates.some((date:string,index:number)=>index>0&&dailyDates[index-1]>=date))errors.push(`${id}: daily coverage is not a unique ordered boundary-aware 1991-2020 series`);
+  if(report.monthly?.some((month:any)=>Object.keys(month.coverage?.years??{}).length!==30||Object.keys(month.coverage.years).some(year=>Number(year)<1991||Number(year)>2020)))errors.push(`${id}: monthly coverage does not contain exactly the 30 normal years`);
   if(source.identicalToPublishedCanonical!==true||source.cacheSha256!==source.publishedCanonicalSha256||source.publishedCanonicalSha256!==download?.canonicalObservation?.sha256)errors.push(`${id}: cached observations differ from the published canonical source`);
   if(source.observationCount!==262992||download?.observationCount!==262992)errors.push(`${id}: hourly observation count mismatch`);
   if(!close(source.request?.location?.latitude,download?.request?.location?.latitude)||!close(source.request?.location?.longitude,download?.request?.location?.longitude)||!close(source.resolvedLocation?.latitude,download?.resolvedLocation?.latitude)||!close(source.resolvedLocation?.longitude,download?.resolvedLocation?.longitude))errors.push(`${id}: source coordinate chain mismatch`);

@@ -16,7 +16,7 @@ Ten destinations already use `observation-validity-v1`; 305 still use the legacy
 
 - exactly 315 unique report/source pairs;
 - identical cached and published canonical source hashes;
-- the exact 1991–2020 hourly and daily coverage;
+- the exact 1991–2020 hourly series and deterministic boundary-aware local-day coverage;
 - twelve ordered monthly results with no missing scoring input;
 - matching source and selected-cell coordinates;
 - a hash-pinned decision record; and
