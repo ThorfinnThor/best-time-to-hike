@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "decisionDate": "2026-09-08",
+  "decisionStatus": "approved-for-staging-implementation",
+  "runtimeImplemented": false,
+  "stagingImplementation": "lib/hiking/snow-screening.ts; historical importer names intentionally unchanged pending versioned pipeline migration",
+  "productionReleaseApproval": false,
+  "physicalSnowDepth": { "shortName": "sde", "paramId": 3066, "unit": "m" },
+  "snowWaterEquivalent": { "shortName": "sd", "paramId": 141, "unit": "m water equivalent", "acceptedAsPhysicalDepthAlias": false },
+  "physicalDepthReviewThresholdM": 10,
+  "thresholdAttribution": "Retained local conservative screening threshold pending unambiguous ECMWF parameter-specific clarification; not proof that a cell is a glacier",
+  "onThresholdReached": "Block new recommendation publication pending source and spatial review; retain provenance. Do not infer glacier coverage or trail snow depth from the threshold alone.",
+  "persistentSnowReviewMonthCount": 12,
+  "persistentSnowCondition": "All 12 valid monthly snow-day probabilities equal 1; missing months never establish absence of persistent snow and instead trigger an insufficient-data hold.",
+  "existingHolds": "Preserve all existing holds. Reclassification of this threshold alone cannot release a destination.",
+  "releaseEvidence": "Document exact source parameter and units, independently supported hiking corridor and elevation range, spatial relation to selected cell, and independent seasonal snow evidence. Resolve contradictory evidence before release; no requirement to invent a replacement cell.",
+  "conversion": "Do not convert SWE to physical snow depth without compatible density and spatial/temporal semantics.",
+  "source": "https://confluence.ecmwf.int/spaces/CKB/pages/140385202/ERA5-Land+data+documentation",
+  "migration": "Replace misleading official-glacier-indicator names and messages consistently in importer, metadata, validators, tests and documentation. Preserve interpretation/version of historical metadata; do not relabel old artifacts as newly processed. Keep the numeric blocking boundary unchanged."
+}

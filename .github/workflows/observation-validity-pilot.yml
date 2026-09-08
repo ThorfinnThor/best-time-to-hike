@@ -1,0 +1,40 @@
+name: Observation validity cache-only pilot
+on:
+  push:
+    branches: [codex/observation-validity-pilot]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.22.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Restore exact existing raw cache, never download new climate data
+        uses: actions/cache/restore@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-cell-replacements-v1-34139951879
+          fail-on-cache-miss: true
+      - run: pnpm exec tsc --noEmit && node --import tsx --test tests/climate-validity.test.ts tests/snow-screening.test.ts
+      - name: Compare the two reviewed pilot points
+        run: |
+          for destination in hunza el-chalten; do
+            node --import tsx scripts/validate/prepare-cached-validity-input.ts "$destination"
+            node --import tsx scripts/validate/compare-observation-validity.ts "generated/intermediate/validity-pilot/$destination-input.json" "generated/intermediate/validity-pilot/$destination-report.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: observation-validity-pilot-${{ github.run_id }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            generated/intermediate/validity-pilot/*-report.json
+            generated/intermediate/validity-pilot/*-source-evidence.json
