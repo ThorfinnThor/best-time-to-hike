@@ -1,8 +1,8 @@
-# Beobachtungsgültigkeit: Staging-Implementierung
+# Beobachtungsgültigkeit: globale vorläufige Migration
 
 ## Umgesetzt
 
-- Separater Rechenpfad `lib/hiking/climate-validity.ts`, ohne Import in den bisherigen Veröffentlichungsprozess.
+- Separater, getesteter Rechenpfad `lib/hiking/climate-validity.ts`, der jetzt die Monatswerte aller 315 versionierten Snapshots erzeugt.
 - Kalenderbasierte Stundenanzahl, Tageslichtfenster, merkmalsbezogene Gültigkeit, unbekannte unvollständige Ereignistage, vollständige Niederschlagssummen.
 - Monatsauswertung mit 90-%-Tagesabdeckung, mindestens 27 Jahren, gleicher Gewichtung gültiger Jahre und hierarchisch gewichteten Temperaturquantilen/Komfortwerten.
 - Explizite fehlende Score-Eingänge und Abdeckungsmetadaten. Der Staging-Bericht erzeugt ausschließlich als `staging-only` markierte Review-Scores; er kann keine Produktionsfreigabe behaupten.
@@ -20,12 +20,12 @@ Der Befehl schreibt ausschließlich neue Staging-Berichte, einschließlich Einga
 
 ## Geprüft
 
-Die gezielten Validitäts-, Export- und Migrations-Tests sowie TypeScript bestehen. Der vollständige Prüflauf wird nach der erneuten cache-only Evidenzerzeugung ausgeführt. Kein synthetischer Datensatz wurde veröffentlicht.
+GitHub-Actions-Lauf `34251408255` hat alle 315 Quellen cache-only aus den bereits hash-fixierten kanonischen Stundenbeobachtungen neu berechnet. Die globale Prüfung bestätigte 315 eindeutige Bericht-/Quellenpaare, jeweils identische Quell-Hashes, exakt 262.992 Stunden, die vollständige 1991–2020-Abdeckung, zwölf geordnete Monate und keine fehlenden Score-Eingänge. Danach wurden alle 315 Snapshots auf Schema 3 und `observation-validity-v1` migriert und die öffentlichen Exporte deterministisch neu gebaut.
 
-## Noch nicht abgeschlossen
+Der vollständige Prüflauf besteht: Datenvalidierung, Architektur- und Determinismuswächter, 212 Tests, 8 Render-Tests, TypeScript und der statische Next.js-Build mit 5.253 Seiten. Der Wissenschafts-Audit meldet null automatisierte wissenschaftliche Blocker.
 
-Der bestehende Import-/Score-/Exportpfad wurde absichtlich nicht umgestellt. Die neuen null-fähigen Staging-Metriken sind noch kein Ersatz für das öffentliche Band-Schema. Ebenso tragen historische Rohdaten-Metadaten weiterhin ihre bisherigen Namen; sie wurden nicht nachträglich umetikettiert.
+## Bewusst nicht freigegeben
 
-Der echte cache-only Vergleich ist für zehn hash-fixierte Ziele vorhanden; die übrigen 305 Ziele sind nicht migriert. `runtimeImplemented=false` bedeutet weiterhin: nicht im aktiven Veröffentlichungsprozess integriert.
+Die Migration ist `provisional` und keine Produktionsfreigabe. Sie erteilt keine unabhängige Expertenzertifizierung, hebt keinen Schnee- oder Niederschlags-Hold auf und erlaubt keine Routen-, Regions-, Sicherheits- oder Vorhersageaussage. Historische Rohdaten-Metadaten behalten ihre ursprünglichen Namen; sie wurden nicht nachträglich umetikettiert.
 
-Nächster mechanischer Schritt (Luna): die zehn cache-only Berichte mit der neuen Jahres-/Confidence-Evidenz neu erzeugen, Hashes prüfen und den öffentlichen Snapshot-Diff vorbereiten. Kein Deployment vor erfolgreicher Diff-Prüfung.
+Die Produktionsfreigabe bleibt zusätzlich durch die Golden-Case-Mindestzahl, die Quellen-Semantikfreigabe und sechs ausdrückliche Betreiberfreigaben gesperrt. Diese Entscheidungen dürfen nicht aus einem erfolgreichen automatisierten Lauf abgeleitet werden.

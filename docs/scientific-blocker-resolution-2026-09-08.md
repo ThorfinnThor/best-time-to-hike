@@ -12,7 +12,7 @@ The release class is therefore narrowed to **selected-model-cell climatology**. 
 
 ## 2. Observation-validity migration
 
-Ten destinations already use `observation-validity-v1`; 305 still use the legacy monthly aggregation. A cache-only GitHub Actions run recomputes all 315 destinations from the exact canonical hourly observations already referenced by the published snapshots. The migration gate requires:
+All 315 destinations now use `observation-validity-v1`. Cache-only GitHub Actions run `34251408255` recomputed every destination from the exact canonical hourly observations already referenced by the published snapshots. The global migration review verified:
 
 - exactly 315 unique report/source pairs;
 - identical cached and published canonical source hashes;
@@ -22,7 +22,7 @@ Ten destinations already use `observation-validity-v1`; 305 still use the legacy
 - a hash-pinned decision record; and
 - continued provisional status and all existing review holds.
 
-This remains the only automated scientific blocker until the global run and migration complete.
+The review approved only a global **provisional** migration. It did not approve production, remove any scientific hold, broaden the claim beyond one selected model cell, or validate route conditions, safety, forecasts or independent expert certification. After the versioned snapshots and public exports were rebuilt, the formal science audit passed with zero automated scientific blockers and the same claim restrictions.
 
 ## 3. Independent precipitation disagreements
 
@@ -40,4 +40,6 @@ The training optimum improves mean training F1 from 0.7600 to 0.7826 but does no
 
 ## Remaining release boundary
 
-Withheld Golden destinations are quarantined without changing their signed reference months. This leaves 25 currently evaluable Golden cases, below the existing production minimum of 30. At least five new independent, signed and non-held cases are required before the Golden production gate can pass. Six explicit operator approval flags and the separate source-semantics approval gate also remain untouched.
+The five scientific evidence and calibration issues in this review are now handled: the claim scope is narrowed, all 315 snapshots are migrated, the 30 precipitation disagreements are quarantined, wind is excluded from scoring, and calibration retains the baseline because no candidate improved validation performance.
+
+Production remains a separate decision. Withheld Golden destinations are quarantined without changing their signed reference months. This leaves 25 currently evaluable Golden cases, below the existing production minimum of 30. At least five new independent, signed and non-held cases are required before the Golden production gate can pass. Six explicit operator approval flags and the separate source-semantics approval gate also remain untouched.
