@@ -69,6 +69,13 @@ test('staging: interannual spread uses complete yearly score vectors only',()=>{
   for(let i=30;i<34;i++) days[i]={...days[i],precipitationDailyMm:null};
   assert.equal(aggregateValidMonth(days,6).interannual.validInterannualYearCount,26);
 });
+test('staging: local boundary dates outside the normal cannot create a 31st sample year',()=>{
+  const days=years(27);
+  days.push({...template,localDate:'1990-06-30'});
+  const result=aggregateValidMonth(days,6);
+  assert.equal(result.metrics.sampleYearCount,27);
+  assert.ok(result.metrics.dataCompleteness!>0.89&&result.metrics.dataCompleteness!<0.91);
+});
 test('staging: incomplete boundary day retains a full calendar denominator',()=>{
   const d=aggregateValidDays(full().slice(1),options)[0];
   assert.equal(d.validity.expectedHours,24);assert.equal(d.observationCount,23);assert.equal(d.snowDay,null);

@@ -152,7 +152,10 @@ export function aggregateValidMonth(days: ValidDay[], month: number) {
       expectedDayHours(`${year}-${String(month).padStart(2,'0')}-${String(dayIndex+1).padStart(2,'0')}`,days[0]?.timezone??'UTC').length*config.requiredHourlyVariables.length
     ).reduce((sum,value)=>sum+value,0);
   }).reduce((sum,value)=>sum+value,0);
-  const selectedMonthDays=days.filter(day=>Number(day.localDate.slice(5,7))===month);
+  const selectedMonthDays=days.filter(day=>{
+    const year=Number(day.localDate.slice(0,4));
+    return Number(day.localDate.slice(5,7))===month&&year>=policy.normal.startYear&&year<=policy.normal.endYear;
+  });
   metrics.dataCompleteness=expectedRawCells?Math.min(1,selectedMonthDays.reduce((sum,day)=>sum+day.rawPresentCellCount,0)/expectedRawCells):null;
   metrics.sampleYearCount=new Set(selectedMonthDays.filter(day=>day.rawPresentCellCount>0).map(day=>Number(day.localDate.slice(0,4)))).size;
   const required=['temperatureUtilityScore','wetDayProbability','heavyRainDayProbability','snowDayProbability','snowDepthMeanOnSnowDaysM','windHikingMeanKmh','highWindHourProbability','hotDayProbability','severeHotDayProbability','daylightHoursMean'];
