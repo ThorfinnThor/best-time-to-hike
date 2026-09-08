@@ -1,6 +1,7 @@
 import {readFileSync,existsSync,mkdirSync,writeFileSync} from 'node:fs';
 import scope from '../../data-config/methodology/validity-comparison-scope-v1.json';
-const selected=process.env.BTH_VALIDITY_DESTINATIONS?.split(',')??scope.destinations;
+const requested=process.env.BTH_VALIDITY_DESTINATIONS?.split(',').map(value=>value.trim()).filter(Boolean)??[];
+const selected=requested.length?requested:scope.destinations;
 if(selected.some(id=>!scope.destinations.includes(id))) throw Error('Comparison subset outside bounded scope');
 const inventory=scope.destinations.map(id=>{
   const climate=JSON.parse(readFileSync(`data-snapshots/climate/${id}.json`,'utf8'));

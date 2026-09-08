@@ -36,6 +36,8 @@ Die korrigierte Denali-Auswertung ersetzt allein den Denali-Eintrag des ersten L
 - **Denalis Juni-Mitteltemperatur ändert sich gegenüber dem veröffentlichten Wert von 7,8 °C auf 10,364 °C**, weil die fälschlich ausgelassenen Tageslichtstunden wieder einbezogen werden. Das ist keine bloße Rundungsdifferenz. Juli: 11,5 auf 11,707 °C. Die Best Months bleiben Juni, Juli, August.
 - Die internen `maxTemperatureMeanDelta`-Felder vergleichen alte und neue Aggregation desselben Laufs. Im korrigierten Denali-Lauf nutzen beide bereits die reparierte Tageslichtfunktion; diese Felder sind deshalb ausdrücklich nicht die Änderung gegenüber dem alten veröffentlichten Juni-Wert.
 
+Der schema-geprüfte Migrations-Preview vergleicht alle 120 Monatsobjekte nach der korrigierten Exportregel: keine Änderung an Empfehlungsgültigkeit oder Best Months, keine fehlenden Score-Eingänge. Vier gerundete Scores ändern sich: Annapurna April 48 auf 47, Denali Juni 79 auf 82, Dolomiten Juni 72 auf 74 und Hunza Oktober 48 auf 49. Held-Monate bleiben ohne Score und erscheinen nicht als numerische Nulländerung.
+
 ## Verifikation und Freigabegrenze
 
 198 lokale Tests bestanden, TypeScript bestanden. Die bisherige öffentliche Exportstrecke reproduziert alle 370 Dateien bytegenau. Vollständige CI für `18a01ed`, `a87ac2f` und die letzte Exportkorrektur `33a9cf7` erfolgreich ([CI 34212268930](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/34212268930)).

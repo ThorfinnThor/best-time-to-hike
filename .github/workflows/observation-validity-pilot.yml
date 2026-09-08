@@ -9,6 +9,9 @@ on:
       - 'scripts/validate/prepare-cached-validity-input.ts'
       - 'scripts/validate/inventory-validity-cache.ts'
       - 'data-config/methodology/observation-validity-v1.json'
+      - 'lib/hiking/validity-export.ts'
+      - 'scripts/validate/build-validity-migration-preview.ts'
+      - 'schemas/validity-migration-preview.schema.json'
   workflow_dispatch:
 permissions:
   contents: read
@@ -17,8 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      # Targeted regression follow-up; the preceding run covered all ten scope points.
-      BTH_VALIDITY_DESTINATIONS: denali
+      # Pushes run the high-latitude regression cheaply. Manual runs use the full ten-point scope.
+      BTH_VALIDITY_DESTINATIONS: ${{ github.event_name == 'push' && 'denali' || '' }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -40,6 +43,10 @@ jobs:
             node --import tsx scripts/validate/prepare-cached-validity-input.ts "$destination"
             node --import tsx scripts/validate/compare-observation-validity.ts "generated/intermediate/validity-pilot/$destination-input.json" "generated/intermediate/validity-pilot/$destination-report.json"
           done < generated/intermediate/validity-destinations.txt
+      - name: Build the reviewed public-data migration preview
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          node --import tsx scripts/validate/build-validity-migration-preview.ts generated/intermediate/validity-pilot generated/intermediate/validity-pilot
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -54,3 +61,4 @@ jobs:
             data-config/methodology/observation-validity-v1.json
             data-config/methodology/snow-screening-clarification-v1.json
             docs/sol-validity-migration-decision-2026-09-08.md
+            generated/reports/validity-migration-preview.json
