@@ -45,6 +45,10 @@ test("category links open unselected month pickers in both languages", {skip: !b
       const path = theme ? links.themeIndex(locale, theme) : links.rankingIndex(locale);
       if (theme !== "snowFree") assert.ok(header.includes(`href="${path}/"`), `${path} missing from header`);
       const html = page(`${path.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+      assert.match(html, /class="ranking-filter"/);
+      for (const region of ["worldwide", "europe", "americas", "north-america", "south-america", "asia", "africa", "oceania"]) {
+        assert.ok(html.includes(`value="${region}"`), `${path} is missing ${region}`);
+      }
       const picker = /<nav class="ranking-months"[\s\S]*?<\/nav>/.exec(html)![0];
       assert.equal((picker.match(/<a /g) ?? []).length, 12);
       assert.doesNotMatch(picker, /aria-current/);
@@ -55,6 +59,7 @@ test("category links open unselected month pickers in both languages", {skip: !b
         assert.ok(picker.includes(monthName(month, locale)));
         assert.ok(existsSync(`${OUT}${target}/index.html`), `${target} not exported`);
         const result = page(`${target.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+        assert.match(result, /class="ranking-filter"/);
         const switcher = /<nav class="ranking-months"[\s\S]*?<\/nav>/.exec(result)![0];
         assert.equal((switcher.match(/aria-current="page"/g) ?? []).length, 1);
         assert.match(switcher, new RegExp(`aria-current="page"[^>]*>${monthName(month, locale)}<`));

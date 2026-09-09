@@ -394,6 +394,10 @@ export const DICT = {
     },
     ranking: {
       heading: "Best hiking destinations",
+      region: "Region",
+      regions: { worldwide: "Worldwide", europe: "Europe", americas: "Americas", "north-america": "North America", "south-america": "South America", asia: "Asia", africa: "Africa", oceania: "Oceania" },
+      resultCount: (count: number) => `${count} ${count === 1 ? "destination" : "destinations"}`,
+      emptyRegion: "No destinations match this region for the selected month and category. Try another month or choose Worldwide.",
       chooseMonth: "Choose your travel month",
       chooseMonthIntro: "Select a month to see hiking destinations that match this category. No month is selected for you.",
       headingIn: (month: string) => `Best hiking destinations in ${month}`,
@@ -912,6 +916,10 @@ export const DICT = {
     },
     ranking: {
       heading: "Beste Wanderziele",
+      region: "Region",
+      regions: { worldwide: "Weltweit", europe: "Europa", americas: "Amerika", "north-america": "Nordamerika", "south-america": "Südamerika", asia: "Asien", africa: "Afrika", oceania: "Ozeanien" },
+      resultCount: (count: number) => `${count} ${count === 1 ? "Ziel" : "Ziele"}`,
+      emptyRegion: "Keine Ziele passen zu dieser Region im gewählten Monat und in dieser Kategorie. Wähle einen anderen Monat oder Weltweit.",
       chooseMonth: "Wähle deinen Reisemonat",
       chooseMonthIntro: "Wähle einen Monat, um passende Wanderziele für diese Kategorie zu sehen. Kein Monat ist vorausgewählt.",
       headingIn: (month: string) => `Beste Wanderziele im ${month}`,
