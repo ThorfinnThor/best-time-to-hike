@@ -8,6 +8,7 @@ import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 import { loadGoldenCases } from "../lib/golden-cases";
 import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
+import { releaseSourcesApproved } from "../lib/release-source-approvals";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
@@ -28,6 +29,7 @@ const configFiles = [
   "data-config/methodology/sampling-v1.json",
   "data-config/methodology/science-audit-v1.json",
   "data-config/methodology/source-semantics.json",
+  "data-config/methodology/source-semantics-review-v1.json",
   "data-config/scoring/curves.json",
   "data-config/scoring/weights.json",
   "tests/fixtures/known-hiking-seasons.json"
@@ -52,6 +54,11 @@ const samplingPoints = samplingFiles.flatMap((file) => {
   const snapshot = readJson<any>(`data-snapshots/sampling/${file}`);
   return Object.values(snapshot.bands as Record<string, any>).flatMap((band) => band.points);
 });
+const sourceApproval = releaseSourcesApproved({
+  climateSources: destinations.map((destination) => readJson<any>(`data-snapshots/climate/${destination.id}.json`).source),
+  elevationSources: destinations.map((destination) => readJson<any>(`data-snapshots/dem/${destination.id}.json`).source),
+  samplingSources: samplingFiles.map((file) => readJson<any>(`data-snapshots/sampling/${file}`).source),
+}, sourceSemantics);
 const crawlerPolicy = robotsForDataset(manifest.datasetStatus, "https://example.invalid/sitemap.xml");
 const crawlLockLayers = {
   robotsDisallowAll: robotsDisallowEverything(crawlerPolicy),
@@ -69,7 +76,7 @@ const goldenReview = reviewGoldenCases(golden, destinations);
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
   nonProductionIndexabilityLocked,
-  realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
+  realSourcesApproved: sourceApproval.passed,
   destinationMinimumMet: manifest.destinationCount >= 50,
   goldenMinimumMet: goldenReview.passed && goldenReview.reviewedCaseCount >= 30,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
@@ -120,6 +127,7 @@ const report = {
     externalTemperatureReviewFlags: scienceAudit.independentClimateDiagnostic.temperatureReviewFlags,
     externalPrecipitationReviewFlags: scienceAudit.independentClimateDiagnostic.precipitationReviewFlags,
   },
+  sourceApprovalScope: sourceApproval,
   recommendationPolicy: {
     eligibleMonths: recommendationMonths.length,
     ineligibleMonths: months.length - recommendationMonths.length,
