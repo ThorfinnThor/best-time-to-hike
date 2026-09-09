@@ -126,8 +126,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
     case "ranking": return {
       title: de ? `Beste Wanderziele im ${monthName(page.month, locale)}` : `The best hiking destinations in ${monthName(page.month, locale)}`,
       description: clamp(de
-        ? `Ziele, die im ${monthName(page.month, locale)} unsere Klimakriterien erfüllen, sortiert nach Wanderwert und Datenvertrauen.`
-        : `Destinations that clear our climate criteria in ${monthName(page.month, locale)}, ordered by hiking suitability then data confidence.`),
+        ? `Ziele, die im ${monthName(page.month, locale)} unsere Klimakriterien erfüllen, sortiert nach Wanderwert.`
+        : `Destinations that clear our climate criteria in ${monthName(page.month, locale)}, ordered by hiking suitability.`),
       index: getManifest().datasetStatus === "production",
       reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
     case "areaRanking": {
