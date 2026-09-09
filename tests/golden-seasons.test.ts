@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { getDestination } from "../lib/data/load";
+import { loadGoldenCases } from "../scripts/lib/golden-cases";
 import { reviewGoldenCases } from "../scripts/lib/golden-review";
 
 /**
@@ -40,8 +40,7 @@ interface GoldenCase {
   acceptedDeviation?: {reason: string; recordedBy: string; recordedAt: string; engineMonths: number[]};
 }
 
-const golden = JSON.parse(readFileSync("tests/fixtures/known-hiking-seasons.json", "utf8")) as
-  {status: string; cases: GoldenCase[]};
+const golden = loadGoldenCases() as {status: string; cases: GoldenCase[]};
 const approved = golden.status === "APPROVED";
 
 interface Comparison { verdict: "agrees" | "partly" | "disagrees" | "no answer"; best: number[]; outside: number[] }

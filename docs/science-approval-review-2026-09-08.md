@@ -1,5 +1,7 @@
 # Scientific cases and approval review, 2026-09-08
 
+> Historical approval snapshot. The Golden inventory was extended and re-audited on 2026-09-09; current counts and gates are recorded in `generated/reports/science-audit.json` and `generated/reports/release-report.json`.
+
 Reviewer: Codex AI-assisted technical/scientific review. This is not an independent
 field validation or an operator signature. Scope: the five named problem cases,
 source semantics, geographic representativeness, licensing evidence and science

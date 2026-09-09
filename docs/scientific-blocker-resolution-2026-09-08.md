@@ -34,12 +34,12 @@ ERA5-Land 10 m grid wind is not validated as exposed-trail wind or gust risk. It
 
 ## 5. Weights and thresholds
 
-The calibration evaluates 1,134 parameter combinations against independent signed season labels using a deterministic destination-level hash split. Six labels are excluded because their destinations are under snow or precipitation review holds. The remaining 25 cases split into 19 training and 6 untouched validation cases.
+The calibration evaluates 1,134 parameter combinations against independent signed season labels using a deterministic destination-level hash split. After the fixed ten-destination extension was approved as a whole on 2026-09-09, the registry contains 41 signed labels. Six labels are excluded because their destinations are under snow or precipitation review holds. The remaining 35 cases split into 27 training and 8 untouched validation cases.
 
-The training optimum improves mean training F1 from 0.7600 to 0.7826 but does not improve validation F1: both it and the conservative baseline score 0.7321. Changing the published parameters is therefore not empirically justified. The retained policy uses wind-free normalized weights, a critical-component floor of 20 and a best-month component floor of 5. This calibrates descriptive season alignment only; it does not validate probabilities, forecasts, trail conditions or safety advice.
+The training optimum improves mean training F1 from 0.7861 to 0.8019 but does not improve validation F1: both it and the conservative baseline score 0.7396. Changing the published parameters is therefore not empirically justified. The retained policy uses wind-free normalized weights, a critical-component floor of 20 and a best-month component floor of 5. This calibrates descriptive season alignment only; it does not validate probabilities, forecasts, trail conditions or safety advice.
 
 ## Remaining release boundary
 
 The five scientific evidence and calibration issues in this review are now handled: the claim scope is narrowed, all 315 snapshots are migrated, the 30 precipitation disagreements are quarantined, wind is excluded from scoring, and calibration retains the baseline because no candidate improved validation performance.
 
-Production remains a separate decision. Withheld Golden destinations are quarantined without changing their signed reference months. This leaves 25 currently evaluable Golden cases, below the existing production minimum of 30. At least five new independent, signed and non-held cases are required before the Golden production gate can pass. Six explicit operator approval flags and the separate source-semantics approval gate also remain untouched.
+Production remains a separate decision. Withheld Golden destinations are quarantined without changing their signed reference months. The fixed extension raises the set to 41 signed cases and 35 currently evaluable cases, so the Golden production gate now passes. Six explicit operator approval flags and the separate source-semantics approval gate remain untouched.

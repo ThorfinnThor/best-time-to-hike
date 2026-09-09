@@ -6,12 +6,13 @@ import { routeCatalog } from "../../lib/seo/route-catalog";
 import { pageSeo } from "../../lib/seo/page-seo";
 import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
+import { loadGoldenCases } from "../lib/golden-cases";
 import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
 const releaseApprovals = readJson<any>("data-config/methodology/release-approvals.json");
-const golden = readJson<{status:string;cases:GoldenCase[]}>("tests/fixtures/known-hiking-seasons.json");
+const golden = loadGoldenCases() as {status:string;cases:GoldenCase[]};
 const goldenCandidates = readJson<{status:string;candidates:Array<{approvedBy:string|null;approvedAt:string|null}>}>("data-config/methodology/golden-case-candidates-v1.json");
 const configFiles = [
   "data-config/methodology/climate-aggregation-v1.json",
@@ -101,12 +102,12 @@ const report = {
   goldenReview: {
     status: golden.status,
     ...goldenReview,
-    pendingCandidateBatch: {
+    candidateBatch: {
       status: goldenCandidates.status,
       candidateCount: goldenCandidates.candidates.length,
       signedCount: goldenCandidates.candidates.filter((candidate) => candidate.approvedBy
         && Number.isFinite(Date.parse(candidate.approvedAt ?? ""))).length,
-      productionEffect: "none-until-signed-and-promoted",
+      productionEffect: goldenCandidateEffect(goldenCandidates),
     },
   },
   crawlLockLayers,
@@ -142,5 +143,9 @@ const report = {
   manifestChecksum: sha256(readFileSync(join(ROOT, "public/data/hiking/manifest.json"))),
   destinationFiles: destinationFiles.map((file) => relative(ROOT, file)).sort()
 };
+
+function goldenCandidateEffect(registry: typeof goldenCandidates) {
+  return registry.status === "APPROVED" ? "included-in-signed-golden-set" : "none-until-signed-and-promoted";
+}
 writeJson("generated/reports/release-report.json", report);
 console.log(`Release report: ${report.releaseStatus}; ${blockers.length} production blocker(s); generated/reports/release-report.json`);

@@ -1,6 +1,7 @@
 import {createHash} from "node:crypto";
 import type {ComponentScores} from "../../lib/data/types";
 import {scoreComponents} from "../../lib/scoring";
+import {loadGoldenCases} from "../lib/golden-cases";
 import {readJson,round,writeJson} from "../lib/io";
 
 type Key=keyof ComponentScores;
@@ -12,7 +13,7 @@ const config=readJson<any>("data-config/methodology/season-alignment-calibration
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
 const baseline=readJson<any>("data-config/scoring/weights.json").overall as Record<Key,number>;
 const destinations=readJson<any[]>("data-config/sources/destinations.json");
-const golden=readJson<{cases:Case[]}>("tests/fixtures/known-hiking-seasons.json");
+const golden=loadGoldenCases() as {cases:Case[]};
 const snowHolds=new Set(readJson<{destinationIds:string[]}>("data-config/sources/known-snowbound-cell-holds.json").destinationIds);
 const precipitationHolds=new Set(readJson<{destinationIds:string[]}>("data-config/methodology/independent-climate-review-holds-v1.json").destinationIds);
 const active=config.activeComponents as Key[];

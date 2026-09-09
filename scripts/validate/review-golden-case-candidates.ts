@@ -9,7 +9,7 @@ interface Candidate {
 }
 
 const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, "utf8"));
-const candidates = readJson<{ status: string; candidates: Candidate[] }>(
+const candidates = readJson<{ status: string; productionEffect: string; candidates: Candidate[] }>(
   "data-config/methodology/golden-case-candidates-v1.json",
 );
 const destinationFiles = (directory: string): string[] => readdirSync(directory, { withFileTypes: true })
@@ -40,7 +40,7 @@ const rows = candidates.candidates.map((candidate) => {
 const report = {
   schemaVersion: 1,
   status: candidates.status,
-  productionEffect: "none",
+  productionEffect: candidates.productionEffect,
   candidateCount: rows.length,
   signedCount: rows.filter((row) => row.signed).length,
   tally: {
@@ -53,4 +53,4 @@ const report = {
 };
 mkdirSync("generated/reports", { recursive: true });
 writeFileSync("generated/reports/golden-case-candidates.json", `${JSON.stringify(report, null, 2)}\n`);
-console.log(`Golden candidates: ${report.candidateCount}; ${report.tally.agrees} agree, ${report.tally.partly} partly, ${report.tally.disagrees} disagree, ${report.tally.noAnswer} no answer; production unchanged.`);
+console.log(`Golden candidates: ${report.candidateCount}; ${report.tally.agrees} agree, ${report.tally.partly} partly, ${report.tally.disagrees} disagree, ${report.tally.noAnswer} no answer; release approvals unchanged.`);

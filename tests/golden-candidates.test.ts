@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
+import { loadGoldenCases } from "../scripts/lib/golden-cases";
 
 const readJson = <T>(path: string): T => JSON.parse(readFileSync(path, "utf8"));
 const registry = readJson<any>("data-config/methodology/golden-case-candidates-v1.json");
@@ -12,9 +13,11 @@ const destinations = destinationFiles("public/data/hiking/destinations")
   .map((path) => readJson<any>(path));
 const destinationBySlug = new Map(destinations.map((destination) => [destination.slug, destination]));
 
-test("the Golden candidate batch is fixed, independent and production-inert", () => {
-  assert.equal(registry.status, "pending-operator-review");
-  assert.equal(registry.productionEffect, "none-until-signed-and-promoted");
+test("the whole Golden candidate batch is signed and promoted without filtering", () => {
+  assert.equal(registry.status, "APPROVED");
+  assert.equal(registry.productionEffect, "included-in-signed-golden-set");
+  assert.equal(registry.approvalDecision.approvedBy, "ThorfinnThor");
+  assert.ok(Number.isFinite(Date.parse(registry.approvalDecision.approvedAt)));
   assert.match(registry.selectionRule, /whole/i);
   assert.match(registry.selectionRule, /not remove/i);
   assert.equal(registry.candidates.length, 10);
@@ -34,7 +37,10 @@ test("the Golden candidate batch is fixed, independent and production-inert", ()
     assert.ok(candidate.source.title.length > 3);
     assert.match(candidate.source.url, /^https:\/\//);
     assert.ok(Number.isFinite(Date.parse(candidate.source.reviewedAt)));
-    assert.equal(candidate.approvedBy, null);
-    assert.equal(candidate.approvedAt, null);
+    assert.equal(candidate.approvedBy, "ThorfinnThor");
+    assert.equal(candidate.approvedAt, registry.approvalDecision.approvedAt);
   }
+  const combined = loadGoldenCases();
+  assert.equal(combined.status, "APPROVED");
+  assert.equal(combined.cases.length, approved.cases.length + registry.candidates.length);
 });
