@@ -103,12 +103,16 @@ test("a provisional export is blocked from indexing at every rendered layer", {s
   }
 });
 
-test("both imprint pages carry the mandatory Copernicus DEM notices", {skip: !built}, () => {
+test("both imprint pages attribute the source used by the current release", {skip: !built}, () => {
   for (const path of ["en/imprint/index.html", "de/impressum/index.html"]) {
     const text = visible(page(path));
-    assert.match(text, /Produced using Copernicus WorldDEM-30 © DLR e\.V\. 2010-2014/);
-    assert.match(text, /Copernicus programme|Copernicus-Programm/);
-    assert.match(text, /do not incur any liability|haften nicht/);
+    assert.match(text, /Copernicus Climate Change Service/);
+    assert.match(text, /ERA5-Land/);
+    assert.match(text, /10\.24381\/ee82e357/);
+    assert.doesNotMatch(text, /WorldDEM-30/, "the current release does not use Copernicus DEM");
+    const html = page(path);
+    assert.match(html, /href="https:\/\/cds\.climate\.copernicus\.eu\/datasets\/reanalysis-era5-land-timeseries"/);
+    assert.match(html, /href="https:\/\/cds\.climate\.copernicus\.eu\/licences\/licence-to-use-copernicus-products"/);
   }
 });
 

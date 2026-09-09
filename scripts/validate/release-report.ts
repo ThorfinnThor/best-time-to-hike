@@ -24,6 +24,7 @@ const configFiles = [
   "data-config/methodology/recommendation-eligibility-v1.json",
   "data-config/methodology/independent-climate-review-holds-v1.json",
   "data-config/methodology/golden-case-candidates-v1.json",
+  "data-config/methodology/licensing-review-v1.json",
   "data-config/methodology/scientific-release-profile-v1.json",
   "data-config/methodology/season-alignment-calibration-v1.json",
   "data-config/methodology/sampling-v1.json",

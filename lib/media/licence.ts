@@ -6,7 +6,7 @@
  * non-commercial file cannot reach the manifest even by accident.
  *
  * Deliberately excluded:
- *  - NonCommercial (NC): the site carries affiliate links, so its use is commercial.
+ *  - NonCommercial (NC): the site must remain eligible for commercial operation.
  *  - NoDerivatives (ND): destination cards crop and resize, which is a derivative.
  *    The sibling project allows ND under a strict no-crop rule; refusing it
  *    outright is simpler and cannot be broken later by a layout change.

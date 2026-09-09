@@ -1,6 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { ALLOWED_LICENCES, isAllowedLicence, normaliseLicence, sourceLicenceUrl } from "../lib/media/licence";
+
+const read = <T>(path:string) => JSON.parse(readFileSync(path, "utf8")) as T;
 
 test("source licences preserve jurisdictions and reject mismatched or unsafe links", () => {
   assert.equal(sourceLicenceUrl("cc-by-sa-3.0", "http://creativecommons.org/licenses/by-sa/3.0/de/deed.en"), "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en");
@@ -25,7 +28,7 @@ test("permitted licences resolve", () => {
 
 test("non-commercial licences are refused", () => {
   for (const raw of ["cc-by-nc-4.0", "CC BY-NC-SA 3.0", "cc-by-nc-nd-4.0", "noncommercial"]) {
-    assert.equal(normaliseLicence(raw), null, `${raw} must be refused: the site carries affiliate links`);
+    assert.equal(normaliseLicence(raw), null, `${raw} must be refused: the site must remain eligible for commercial operation`);
   }
 });
 
@@ -52,4 +55,18 @@ test("attribution and share-alike obligations are carried, not just the id", () 
   assert.equal(normaliseLicence("cc-by-4.0")!.requiresAttribution, true);
   assert.equal(normaliseLicence("cc-by-sa-4.0")!.requiresShareAlike, true);
   assert.equal(normaliseLicence("cc-by-4.0")!.requiresShareAlike, false);
+});
+
+test("the licensing review describes the current release rather than a future DEM workflow", () => {
+  const review = read<any>("data-config/methodology/licensing-review-v1.json");
+  const images = read<any>("data-config/sources/destination-images.json").images;
+  const climate = read<any>("data-snapshots/climate/madeira.json");
+  const dem = read<any>("data-snapshots/dem/madeira.json");
+  assert.equal(review.climate.datasetId, climate.sourceDataset);
+  assert.equal(review.climate.doi, climate.sourceDoi);
+  assert.match(dem.source, /era5-land/);
+  assert.equal(review.copernicusDem.usedByCurrentRelease, false);
+  assert.equal(review.images.evidenceRecords, images.length);
+  assert.equal(review.images.usageHolds, images.filter((image:any) => image.usageHoldReason).length);
+  assert.equal(review.images.displayedImages, images.filter((image:any) => !image.usageHoldReason).length);
 });

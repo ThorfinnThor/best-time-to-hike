@@ -515,9 +515,6 @@ export const DICT = {
           {heading: "Copyright", paragraphs: [
             "Content and works created by the operator on these pages are subject to German copyright law. Reproduction, adaptation, distribution and any form of exploitation beyond the limits of copyright require the written consent of the respective author or creator.",
             "Destination photographs come from Wikimedia Commons and are used only under licences permitting commercial use: public domain, CC0, CC BY and CC BY-SA. The author, licence and source file of every photograph are listed in full on the image credits page.",
-            "The underlying climate data is ERA5-Land from the Copernicus Climate Change Service (C3S), DOI 10.24381/ee82e357. Neither the European Commission nor ECMWF is responsible for the use made of it here.",
-            "Produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved.",
-            "The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.",
           ]},
           {heading: "Consumer dispute resolution", paragraphs: [
             "The European Commission shut down its online dispute resolution platform on 20 July 2025, so no link to it is given.",
@@ -529,8 +526,14 @@ export const DICT = {
         title: "Image credits",
         paragraphs: [
           "We crop and resize the photographs and convert them to WebP. Our adapted versions of CC BY and CC BY-SA photographs are offered under the same licence and version listed for each original. These image licences do not cover the website as a whole. The linked source pages contain the original files and notices.",
-          "Destination photographs come from Wikimedia Commons and are used only under licences that permit commercial use: public domain, CC0, CC BY and CC BY-SA. Non-commercial and no-derivatives licences are refused, because this site carries affiliate links and its cards crop. Where no acceptably licensed photograph exists, a generated topographic placeholder is shown instead. Every photograph is credited below with its author, licence and source file.",
+          "Destination photographs come from Wikimedia Commons and are used only under licences that permit commercial use: public domain, CC0, CC BY and CC BY-SA. Non-commercial and no-derivatives licences are refused, because the site is intended to permit commercial operation and its cards crop images. Where no acceptably licensed photograph exists, a generated topographic placeholder is shown instead. Every photograph is credited below with its author, licence and source file.",
         ],
+      },
+      sourceAttribution: {
+        heading: "Climate data attribution",
+        notice: "Contains modified Copernicus Climate Change Service information 2026. The derived 1991-2020 climate normals use the ERA5-Land hourly time-series dataset. Neither the European Commission nor ECMWF is responsible for any use that may be made of this information.",
+        dataset: "ERA5-Land dataset and DOI 10.24381/ee82e357",
+        licence: "Copernicus Products licence",
       },
     },
   },
@@ -1036,9 +1039,6 @@ export const DICT = {
           {heading: "Urheberrecht", paragraphs: [
             "Die durch den Betreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers.",
             "Die Zielfotografien stammen von Wikimedia Commons und werden ausschließlich unter Lizenzen genutzt, die eine kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Urheber, Lizenz und Quelldatei jedes Bildes sind auf der Seite Bildnachweis vollständig aufgeführt.",
-            "Die zugrunde liegenden Klimadaten stammen aus ERA5-Land des Copernicus Climate Change Service (C3S), DOI 10.24381/ee82e357. Weder die Europäische Kommission noch ECMWF haften für die hier vorgenommene Weiterverarbeitung.",
-            "Produced using Copernicus WorldDEM-30 © DLR e.V. 2010-2014 and © Airbus Defence and Space GmbH 2014-2018 provided under COPERNICUS by the European Union and ESA; all rights reserved.",
-            "Die kraft Gesetzes oder durch Übertragung für das Copernicus-Programm zuständigen Organisationen haften nicht für die Nutzung des Copernicus WorldDEM-30.",
           ]},
           {heading: "Verbraucherstreitbeilegung", paragraphs: [
             "Die Europäische Kommission hat ihre Plattform zur Online-Streitbeilegung zum 20. Juli 2025 eingestellt; ein Link darauf entfällt daher.",
@@ -1050,8 +1050,14 @@ export const DICT = {
         title: "Bildnachweis",
         paragraphs: [
           "Wir beschneiden und skalieren die Fotos und wandeln sie in WebP um. Unsere bearbeiteten Fassungen der CC-BY- und CC-BY-SA-Fotos stehen unter derselben Lizenz und Version wie das jeweils aufgeführte Original. Diese Bildlizenzen gelten nicht für die Website insgesamt. Die verlinkten Quellseiten enthalten die Originaldateien und Hinweise.",
-          "Die Zielfotos stammen von Wikimedia Commons und werden nur unter Lizenzen verwendet, die kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Nicht-kommerzielle Lizenzen und Lizenzen ohne Bearbeitung werden abgelehnt, weil diese Website Affiliate-Links enthält und die Karten beschneidet. Wo kein passend lizenziertes Foto existiert, erscheint stattdessen eine generierte topografische Grafik. Jedes Foto ist unten mit Urheber, Lizenz und Quelldatei nachgewiesen.",
+          "Die Zielfotos stammen von Wikimedia Commons und werden nur unter Lizenzen verwendet, die kommerzielle Nutzung erlauben: Public Domain, CC0, CC BY und CC BY-SA. Nicht-kommerzielle Lizenzen und Lizenzen ohne Bearbeitung werden abgelehnt, weil die Website für einen möglichen kommerziellen Betrieb geeignet bleiben soll und die Karten Bilder beschneiden. Wo kein passend lizenziertes Foto existiert, erscheint stattdessen eine generierte topografische Grafik. Jedes Foto ist unten mit Urheber, Lizenz und Quelldatei nachgewiesen.",
         ],
+      },
+      sourceAttribution: {
+        heading: "Quellenangabe Klimadaten",
+        notice: "Enthält veränderte Informationen des Copernicus Climate Change Service aus dem Jahr 2026. Die abgeleiteten Klimanormale 1991-2020 verwenden den stündlichen ERA5-Land-Zeitreihendatensatz. Weder die Europäische Kommission noch ECMWF haften für die Nutzung dieser Informationen.",
+        dataset: "ERA5-Land-Datensatz und DOI 10.24381/ee82e357",
+        licence: "Lizenz für Copernicus-Produkte",
       },
     },
   },

@@ -97,6 +97,12 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
           : c.vatPending}</p>
       </section></section>;
     })() : null}
+    {pageKey==="imprint" ? <section className="content-section legal-body"><section>
+      <h2>{copy.info.sourceAttribution.heading}</h2>
+      <p>{copy.info.sourceAttribution.notice}</p>
+      <p><a href="https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries" rel="noopener noreferrer" target="_blank">{copy.info.sourceAttribution.dataset}</a></p>
+      <p><a href="https://cds.climate.copernicus.eu/licences/licence-to-use-copernicus-products" rel="noopener noreferrer" target="_blank">{copy.info.sourceAttribution.licence}</a></p>
+    </section></section> : null}
     {pageKey==="methodology" && (() => {
       const withheld = getAllDestinations().filter((destination) => !destination.recommendationEligible);
       return <section className="content-section withheld-list">
