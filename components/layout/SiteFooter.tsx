@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/data/types";
-import { monthName } from "@/lib/i18n/config";
 import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
 
@@ -9,7 +8,7 @@ export function SiteFooter({locale}:{locale:Locale}) {
   const columns = [
     {title:copy.discover,links:[
       [links.finder(locale),copy.finder],
-      [links.ranking(locale,6),copy.bestInMonth(monthName(6,locale))],
+      [links.rankingIndex(locale),t(locale).header.nav.rankings],
       [links.destination(locale,"mallorca"),copy.allMonthsFor("Mallorca")],
     ]},
     {title:copy.comparisons,links:[

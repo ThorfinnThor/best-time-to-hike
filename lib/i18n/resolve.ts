@@ -16,6 +16,8 @@ export type PageId =
   | { kind: "destination"; slug: string }
   | { kind: "destinationMonth"; slug: string; month: number }
   | { kind: "ranking"; month: number }
+  | { kind: "rankingIndex" }
+  | { kind: "themeIndex"; theme: ThemeKey }
   | { kind: "areaRanking"; area: string }
   | { kind: "themeRanking"; theme: ThemeKey; month: number }
   | { kind: "compare"; slug: string }
@@ -38,6 +40,7 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
     return null;
   }
 
+  if (head === routes.rankings[locale] && rest.length === 0) return { kind: "rankingIndex" };
   if (head === routes.rankings[locale] && rest.length === 1) {
     // Month slugs win: they are a closed set, so an area can never shadow one.
     const month = monthNumber(rest[0], locale);
@@ -46,6 +49,7 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
   }
 
   for (const theme of themeKeys) {
+    if (head === routes[theme][locale] && rest.length === 0) return { kind: "themeIndex", theme };
     if (head === routes[theme][locale] && rest.length === 1) {
       const month = monthNumber(rest[0], locale);
       return month ? { kind: "themeRanking", theme, month } : null;
@@ -72,6 +76,8 @@ export function pathFor(page: PageId, locale: Locale): string {
     case "destination": return links.destination(locale, page.slug);
     case "destinationMonth": return links.destinationMonth(locale, page.slug, page.month);
     case "ranking": return links.ranking(locale, page.month);
+    case "rankingIndex": return links.rankingIndex(locale);
+    case "themeIndex": return links.themeIndex(locale, page.theme);
     case "areaRanking": return links.areaRanking(locale, page.area);
     case "themeRanking": return links.themeRanking(locale, page.theme, page.month);
     case "compare": return links.compare(locale, page.slug);

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { DICT, t } from "../lib/i18n/dict";
-import { locales, monthNumber, monthSlug, routes } from "../lib/i18n/config";
+import { locales, monthNumber, monthSlug, routes, themeKeys } from "../lib/i18n/config";
 import { altLanguages, links } from "../lib/i18n/links";
 import { pathFor, resolvePageId, type PageId } from "../lib/i18n/resolve";
 import { routeCatalog } from "../lib/seo/route-catalog";
@@ -24,6 +24,19 @@ test("language links retain finder filters and comparison selections", () => {
 });
 
 type Shape = string | Shape[] | { [key: string]: Shape };
+
+test("category entry points have no default month and are statically exported", () => {
+  const catalog = routeCatalog();
+  for (const locale of locales) {
+    const pages: PageId[] = [{kind: "rankingIndex"}, ...themeKeys.map((theme) => ({kind: "themeIndex" as const, theme}))];
+    for (const page of pages) {
+      const segments = pathFor(page, locale).split("/").slice(2);
+      assert.equal(segments.length, 1);
+      assert.deepEqual(resolvePageId(locale, segments), page);
+      assert.ok(catalog.some((route) => route.locale === locale && route.segments.join("/") === segments.join("/")));
+    }
+  }
+});
 
 /** Structural fingerprint of a dictionary subtree, ignoring the actual words. */
 function shapeOf(value: unknown, path: string): Shape {
