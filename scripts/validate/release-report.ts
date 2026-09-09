@@ -12,6 +12,7 @@ const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
 const releaseApprovals = readJson<any>("data-config/methodology/release-approvals.json");
 const golden = readJson<{status:string;cases:GoldenCase[]}>("tests/fixtures/known-hiking-seasons.json");
+const goldenCandidates = readJson<{status:string;candidates:Array<{approvedBy:string|null;approvedAt:string|null}>}>("data-config/methodology/golden-case-candidates-v1.json");
 const configFiles = [
   "data-config/methodology/climate-aggregation-v1.json",
   "data-config/methodology/confidence-v1.json",
@@ -20,6 +21,7 @@ const configFiles = [
   "data-config/methodology/release-approvals.json",
   "data-config/methodology/recommendation-eligibility-v1.json",
   "data-config/methodology/independent-climate-review-holds-v1.json",
+  "data-config/methodology/golden-case-candidates-v1.json",
   "data-config/methodology/scientific-release-profile-v1.json",
   "data-config/methodology/season-alignment-calibration-v1.json",
   "data-config/methodology/sampling-v1.json",
@@ -99,6 +101,13 @@ const report = {
   goldenReview: {
     status: golden.status,
     ...goldenReview,
+    pendingCandidateBatch: {
+      status: goldenCandidates.status,
+      candidateCount: goldenCandidates.candidates.length,
+      signedCount: goldenCandidates.candidates.filter((candidate) => candidate.approvedBy
+        && Number.isFinite(Date.parse(candidate.approvedAt ?? ""))).length,
+      productionEffect: "none-until-signed-and-promoted",
+    },
   },
   crawlLockLayers,
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },
