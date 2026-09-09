@@ -50,9 +50,12 @@ export function inHikingWindow(
   // daylightHours still independently records the astronomical 24 or 0 hours.
   if (polarState !== "normal") return localMinutes >= 8 * 60 && localMinutes < 18 * 60;
   if (sunriseLocalMinutes === null || sunsetLocalMinutes === null) return false;
-  const start = Math.max(8 * 60, sunriseLocalMinutes);
-  const end = Math.min(18 * 60, sunsetLocalMinutes);
-  return end > start && localMinutes >= start && localMinutes < end;
+  if(localMinutes < 8*60 || localMinutes >= 18*60) return false;
+  // A summer sunset after local midnight has a smaller clock minute than sunrise.
+  // Intersect the circular daylight interval with the fixed daytime hiking window.
+  return sunriseLocalMinutes <= sunsetLocalMinutes
+    ? localMinutes >= sunriseLocalMinutes && localMinutes < sunsetLocalMinutes
+    : localMinutes >= sunriseLocalMinutes || localMinutes < sunsetLocalMinutes;
 }
 
 export interface LocalDateTime {

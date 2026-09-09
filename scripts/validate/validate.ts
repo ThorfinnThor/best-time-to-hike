@@ -34,6 +34,9 @@ const era5LandOrography=readJson<any>("data-config/methodology/era5-land-orograp
 const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
+const validityMigration=readJson<any>("data-config/methodology/validity-migration-decision-v1.json");
+const independentClimateHolds=readJson<{destinationIds:string[]}>("data-config/methodology/independent-climate-review-holds-v1.json");
+const precipitationReviewHolds=new Set(independentClimateHolds.destinationIds);
 const operator=readJson<any>("config/operator.json");
 assert(Math.abs(Object.values(scoringWeights.overall).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Overall score weights do not sum to 1");
 assert(Math.abs(Object.values(confidence.weights).reduce((sum:number,value:any)=>sum+value,0)-1)<1e-9,"Confidence weights do not sum to 1");
@@ -119,6 +122,16 @@ for (const file of detailFiles) {
   assert(validateDestination(destination), `${relative(root,file)} schema: ${ajv.errorsText(validateDestination.errors)}`);
   const config = configs.find((item)=>item.id===destination.id);
   assert(Boolean(config?.active), `${destination.slug}: public destination is not active in config`);
+  const climateSnapshot=readJson<any>(`data-snapshots/climate/${destination.slug}.json`);
+  const expectedAggregationPolicy=climateSnapshot.aggregationPolicyVersion ?? "legacy-climate-aggregation-v1";
+  assert(destination.aggregationPolicyVersion===expectedAggregationPolicy,`${destination.slug}: exported aggregation policy differs from its snapshot`);
+  if(expectedAggregationPolicy==="observation-validity-v1") {
+    assert(validityMigration.scope.includes(destination.id),`${destination.slug}: validity migration is outside the approved scope`);
+    assert(climateSnapshot.schemaVersion===3&&climateSnapshot.migrationStatus==="scoped-provisional",`${destination.slug}: invalid migrated snapshot state`);
+    assert(destination.months.every((month,index)=>month.bands.every((band)=>
+      JSON.stringify(band.observationValidYearsByMetric)===JSON.stringify(climateSnapshot.bands[band.bandId].months[index].observationCoverage.validYearsByMetric)
+    )),`${destination.slug}: compact observation coverage differs from snapshot evidence`);
+  }
   assert(destination.datasetStatus===manifest.datasetStatus, `${destination.slug}: dataset status differs from manifest`);
   assert(Number.isFinite(destination.representativeCell.lat)&&Number.isFinite(destination.representativeCell.lon)&&Number.isFinite(destination.representativeCell.modelElevationM),`${destination.slug}: representative cell provenance is incomplete`);
   const selectedPoint=Object.values(readJson<any>(`data-snapshots/sampling/${destination.slug}.json`).bands).flatMap((band:any)=>band.points).find((point:any)=>point.selectionRank===1);
@@ -127,11 +140,14 @@ for (const file of detailFiles) {
   assert(JSON.stringify(destination.months.map((month)=>month.month))===JSON.stringify(Array.from({length:12},(_,index)=>index+1)), `${destination.slug}: months must be ordered 1..12`);
   assert(destination.elevation.minM<=destination.elevation.medianM&&destination.elevation.medianM<=destination.elevation.maxM, `${destination.slug}: invalid elevation ordering`);
   assert(destination.alternatives.every((slug)=>slugs.has(slug)&&slug!==destination.slug), `${destination.slug}: invalid alternative`);
-  const expectedHold = hasPersistentSnowHold(destination.months);
+  const expectedPersistentSnowHold = hasPersistentSnowHold(destination.months);
+  const expectedPrecipitationHold = precipitationReviewHolds.has(destination.id);
+  const expectedHold = expectedPersistentSnowHold || expectedPrecipitationHold;
   const hasEligibleMonth = destination.months.some((month)=>month.recommendationEligible);
   assert(destination.recommendationEligible===(!expectedHold&&hasEligibleMonth),`${destination.slug}: destination recommendation eligibility mismatch`);
   if (expectedHold) {
-    assert(destination.recommendationHoldReason==="persistent-snow",`${destination.slug}: persistent-snow hold reason missing`);
+    const expectedReason = expectedPersistentSnowHold ? "persistent-snow" : "precipitation-validation";
+    assert(destination.recommendationHoldReason===expectedReason,`${destination.slug}: ${expectedReason} hold reason missing`);
     assert(destination.bestMonths.length===0,`${destination.slug}: held destination must not have best months`);
     assert(destination.months.every((month)=>!month.recommendationEligible),`${destination.slug}: held destination month is recommendation eligible`);
     assert(destination.months.every((month)=>month.overallScore===null&&month.scoreLevel===null&&month.confidenceScore===null&&month.confidenceLevel===null&&month.components===null),`${destination.slug}: held destination publishes score claims`);

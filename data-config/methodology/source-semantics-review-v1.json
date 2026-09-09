@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-09-09T00:00:00.000Z",
+  "status": "READY_FOR_OPERATOR_APPROVAL",
+  "releaseScope": "Current 315-destination selected-ERA5-Land-model-cell climatology",
+  "requiredApproval": "era5Land",
+  "notRequiredForCurrentRelease": {
+    "source": "copernicusDem",
+    "reason": "All current climate, sampling and elevation snapshots identify ERA5-Land sources. Copernicus DEM is not a scoring, elevation or sampling input in this release.",
+    "futureUseStillBlocked": true
+  },
+  "era5LandDecision": {
+    "recommendedDecision": "approve-for-current-constrained-release",
+    "constraints": [
+      "Claims remain limited to one selected 0.1-degree ERA5-Land model-grid cell.",
+      "The product is a 1991-2020 historical climatology, not a forecast or safety decision.",
+      "Grid wind remains excluded from scores, gates and best-month decisions.",
+      "Independent precipitation outliers remain withheld from recommendations.",
+      "Snow cover is converted from source percent to canonical fraction before aggregation.",
+      "Small negative precipitation and snow-depth artifacts are clamped only within the versioned -1e-6 m policy."
+    ],
+    "officialEvidence": [
+      "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries",
+      "https://confluence.ecmwf.int/spaces/CKB/pages/536218894/ERA5-Land+hourly+Analysis+Ready+Cloud+Optimised+ARCO+data+on+single+levels+from+1950+to+present+Product+User+Guide+PUG",
+      "https://confluence.ecmwf.int/pages/viewpage.action?pageId=222488376"
+    ],
+    "verifiedContract": {
+      "datasetId": "reanalysis-era5-land-timeseries",
+      "grid": "regular latitude-longitude 0.1 x 0.1 degree",
+      "timeSeries": "hourly UTC instants",
+      "temperature": "source K; canonical K",
+      "wind": "source m s-1; canonical m s-1; excluded from recommendation logic",
+      "precipitation": "source hourly de-accumulated m; canonical incremental per timestep m",
+      "snowCover": "source percent; canonical fraction 0-1",
+      "snowDepth": "source m; canonical m",
+      "orography": "geopotential z, parameter 129, m**2 s**-2, converted with g=9.80665 m s-2"
+    },
+    "catalogueEvidence": {
+      "destinationCount": 315,
+      "hourlyObservationsPerDestination": 262992,
+      "sourceAndCanonicalHashesRequired": true,
+      "crossVariableCoordinateAgreementEnforced": true
+    }
+  },
+  "approvalDecision": {
+    "approved": true,
+    "approvedBy": "ThorfinnThor",
+    "approvedAt": "2026-09-09T09:25:32Z"
+  }
+}

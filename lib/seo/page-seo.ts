@@ -118,6 +118,11 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       return destination ? monthSeo(destination, page.month, locale)
         : {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-destination"]};
     }
+    case "rankingIndex":
+    case "themeIndex": return {
+      title: page.kind === "themeIndex" ? t(locale).ranking.themes[page.theme] : t(locale).ranking.heading,
+      description: t(locale).ranking.chooseMonthIntro,
+      index: false, reasons: ["month-selection-navigation"]};
     case "ranking": return {
       title: de ? `Beste Wanderziele im ${monthName(page.month, locale)}` : `The best hiking destinations in ${monthName(page.month, locale)}`,
       description: clamp(de

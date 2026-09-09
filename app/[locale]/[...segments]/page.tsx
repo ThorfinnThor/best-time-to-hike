@@ -22,6 +22,7 @@ import { areaById } from "@/lib/seo/areas";
 import operator from "@/config/operator.json";
 import { blockingComponents } from "@/lib/scoring/recommendations";
 import { AreaRankingPage } from "@/components/hiking/AreaRankingPage";
+import { RankingMonthSelectionPage } from "@/components/hiking/RankingMonths";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ComparisonTool } from "@/components/compare/ComparisonTool";
@@ -97,6 +98,12 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
           : c.vatPending}</p>
       </section></section>;
     })() : null}
+    {pageKey==="imprint" ? <section className="content-section legal-body"><section>
+      <h2>{copy.info.sourceAttribution.heading}</h2>
+      <p>{copy.info.sourceAttribution.notice}</p>
+      <p><a href="https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries" rel="noopener noreferrer" target="_blank">{copy.info.sourceAttribution.dataset}</a></p>
+      <p><a href="https://cds.climate.copernicus.eu/licences/licence-to-use-copernicus-products" rel="noopener noreferrer" target="_blank">{copy.info.sourceAttribution.licence}</a></p>
+    </section></section> : null}
     {pageKey==="methodology" && (() => {
       const withheld = getAllDestinations().filter((destination) => !destination.recommendationEligible);
       return <section className="content-section withheld-list">
@@ -134,6 +141,8 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
   switch (page.kind) {
     case "home": return <><JsonLd data={webSiteLd(locale)}/><JsonLd data={organisationLd()}/><HomePage locale={locale}/></>;
     case "finder": return <FinderPage locale={locale}/>;
+    case "rankingIndex": return <RankingMonthSelectionPage locale={locale}/>;
+    case "themeIndex": return <RankingMonthSelectionPage locale={locale} theme={page.theme}/>;
     case "destination": { const destination=getDestination(page.slug); if(!destination) notFound();
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)},
                    {name: taxonomyLabel(locale, "continents", destination.continent), path: pathFor({kind:"finder"}, locale)},
@@ -169,6 +178,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
  */
 function withheldReason(destination: PublicDestination, copy: ReturnType<typeof t>): string {
   if (destination.recommendationHoldReason === "persistent-snow") return copy.withheld.reasonSnow;
+  if (destination.recommendationHoldReason === "precipitation-validation") return copy.withheld.reasonPrecipitation;
   const blocking = blockingComponents(destination.months);
   if (!blocking.length) return copy.withheld.reasonNoMonth;
   return copy.withheld.reasonComponent(blocking.map((key) => copy.components[key]).join(", "));

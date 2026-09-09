@@ -31,7 +31,8 @@ export interface ClimateMetrics {
   temperatureHikingMeanC: number;
   temperatureHikingP10C: number;
   temperatureHikingP90C: number;
-  temperatureUtilitySamplesC: number[];
+  /** Legacy sample vector. Versioned validity snapshots use the exact utility instead. */
+  temperatureUtilitySamplesC?: number[];
   /** Exact mean utility score from all valid hiking-window hours when available. */
   temperatureUtilityScore?: number;
   wetDayProbability: number;
@@ -61,6 +62,11 @@ export interface BandClimateMonth extends ClimateMetrics {
   terrainReliefM: number;
   interannualScoreSd: number;
   validInterannualYearCount: number;
+  scoringInputsAvailable?: boolean;
+  missingScoringInputs?: string[];
+  observationCoverage?: {validYearsByMetric:Record<string,number>;years:Record<string,{expectedDays:number;validDaysByMetric:Record<string,number>}>};
+  interannualYearlyScores?: Array<{year:number;score:number}>;
+  observationValidYearsByMetric?: Record<string,number>;
 }
 
 export interface ComponentScores {
@@ -99,6 +105,7 @@ export interface PublicMonth {
 export interface PublicDestination {
   schemaVersion: 1;
   algorithmVersion: string;
+  aggregationPolicyVersion: string;
   datasetStatus: DatasetStatus;
   id: string;
   slug: string;
@@ -115,7 +122,7 @@ export interface PublicDestination {
   representativeCell: { lat: number; lon: number; modelElevationM: number; overrideLabel?: string; overrideReason?: string };
   months: PublicMonth[];
   recommendationEligible: boolean;
-  recommendationHoldReason?: "persistent-snow";
+  recommendationHoldReason?: "persistent-snow" | "precipitation-validation";
   bestMonths: number[];
   alternatives: string[];
   provenance: Record<string, string>;

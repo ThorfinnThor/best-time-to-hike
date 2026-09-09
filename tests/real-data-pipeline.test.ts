@@ -90,7 +90,7 @@ test("band metrics use point weights and preserve exact utility score", () => {
   assert.equal(result.temperatureHikingMeanC, 17.5);
   assert.ok(Math.abs(result.wetDayProbability - .35) < 1e-12);
   assert.equal(result.temperatureUtilityScore, 75);
-  assert.equal(result.temperatureUtilitySamplesC.length, 101);
+  assert.equal(result.temperatureUtilitySamplesC!.length, 101);
 });
 
 test("band aggregation rejects incomplete point weights", () => {

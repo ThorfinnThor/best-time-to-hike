@@ -41,7 +41,7 @@ const report={
   recommendationPolicy:{
     eligibleMonths:destinations.flatMap((destination)=>destination.months).filter((month)=>month.recommendationEligible).length,
     ineligibleMonths:destinations.flatMap((destination)=>destination.months).filter((month)=>!month.recommendationEligible).length,
-    heldDestinations:destinations.filter((destination)=>destination.recommendationHoldReason === "persistent-snow").map((destination)=>destination.slug).sort(),
+    heldDestinations:destinations.filter((destination)=>Boolean(destination.recommendationHoldReason)).map((destination)=>destination.slug).sort(),
     confidenceCappedMonths:destinations.flatMap((destination)=>destination.months).filter((month)=>month.confidenceScore!==null&&month.confidenceScore<=64&&month.confidenceLevel==="low").length
   },
   warningCount:warnings.length,

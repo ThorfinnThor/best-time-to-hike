@@ -2,10 +2,11 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://besttimetohike.com/schemas/destination.schema.json",
   "type": "object",
-  "required": ["schemaVersion","algorithmVersion","datasetStatus","id","slug","name","countryCode","countryName","continent","region","timezone","tags","coordinates","elevationBands","elevation","months","recommendationEligible","representativeCell","bestMonths","alternatives","provenance","updatedAt"],
+  "required": ["schemaVersion","algorithmVersion","aggregationPolicyVersion","datasetStatus","id","slug","name","countryCode","countryName","continent","region","timezone","tags","coordinates","elevationBands","elevation","months","recommendationEligible","representativeCell","bestMonths","alternatives","provenance","updatedAt"],
   "properties": {
     "schemaVersion": {"const": 1},
     "algorithmVersion": {"type":"string","pattern":"^[0-9]+\\.[0-9]+\\.[0-9]+$"},
+    "aggregationPolicyVersion":{"enum":["legacy-climate-aggregation-v1","observation-validity-v1"]},
     "datasetStatus": {"enum":["fixture","provisional","production"]},
     "id": {"$ref":"#/$defs/slug"}, "slug": {"$ref":"#/$defs/slug"}, "name": {"type":"string","minLength":1},
     "countryCode": {"type":"string","pattern":"^[A-Z]{2}$"}, "countryName": {"type":"string","minLength":1},
@@ -16,7 +17,7 @@
     "elevation": {"type":"object","required":["minM","medianM","maxM"],"properties":{"minM":{"type":"number"},"medianM":{"type":"number"},"maxM":{"type":"number"}},"additionalProperties":false},
     "months": {"type":"array","minItems":12,"maxItems":12,"items":{"$ref":"#/$defs/month"}},
     "recommendationEligible": {"type":"boolean"},
-    "recommendationHoldReason": {"const":"persistent-snow"},
+    "recommendationHoldReason": {"enum":["persistent-snow","precipitation-validation"]},
     "representativeCell": {"$ref":"#/$defs/representativeCell"},
     "bestMonths": {"type":"array","items":{"type":"integer","minimum":1,"maximum":12},"uniqueItems":true},
     "alternatives": {"type":"array","items":{"$ref":"#/$defs/slug"},"uniqueItems":true},
@@ -40,7 +41,8 @@
     },
     "metrics": {
       "type":"object",
-      "required":["temperatureHikingMeanC","temperatureHikingP10C","temperatureHikingP90C","temperatureUtilitySamplesC","wetDayProbability","heavyRainDayProbability","precipitationMonthlyMeanMm","snowDayProbability","snowDepthMeanOnSnowDaysM","windHikingMeanKmh","highWindHourProbability","severeWindHourProbability","hotDayProbability","severeHotDayProbability","daylightHoursMean","relativeHumidityHikingMeanPct","sampleYearCount","dataCompleteness"],
+      "required":["temperatureHikingMeanC","temperatureHikingP10C","temperatureHikingP90C","wetDayProbability","heavyRainDayProbability","precipitationMonthlyMeanMm","snowDayProbability","snowDepthMeanOnSnowDaysM","windHikingMeanKmh","highWindHourProbability","severeWindHourProbability","hotDayProbability","severeHotDayProbability","daylightHoursMean","relativeHumidityHikingMeanPct","sampleYearCount","dataCompleteness"],
+      "anyOf":[{"required":["temperatureUtilityScore"]},{"required":["temperatureUtilitySamplesC"]}],
       "properties": {
         "temperatureHikingMeanC":{"type":"number","minimum":-100,"maximum":70}, "temperatureHikingP10C":{"type":"number","minimum":-100,"maximum":70}, "temperatureHikingP90C":{"type":"number","minimum":-100,"maximum":70},
         "temperatureUtilitySamplesC":{"type":"array","minItems":1,"items":{"type":"number","minimum":-100,"maximum":70}},
@@ -58,6 +60,7 @@
         {"type":"object","required":["month","bandId","targetElevationM","meanElevationMismatchM","samplePointCount","samplePointMaxSeparationKm","polygonEquivalentDiameterKm","terrainReliefM","interannualScoreSd","validInterannualYearCount","components","overallScore","scoreLevel","confidenceScore","confidenceLevel"],"properties":{
           "month":{"type":"integer","minimum":1,"maximum":12}, "bandId":{"$ref":"#/$defs/slug"}, "targetElevationM":{"type":"number"}, "meanElevationMismatchM":{"type":"number","minimum":0,"maximum":800},
           "samplePointCount":{"type":"integer","minimum":1}, "samplePointMaxSeparationKm":{"type":"number","minimum":0}, "polygonEquivalentDiameterKm":{"type":"number","minimum":0}, "terrainReliefM":{"type":"number","minimum":0}, "interannualScoreSd":{"type":"number","minimum":0}, "validInterannualYearCount":{"type":"integer","minimum":0,"maximum":30},
+          "scoringInputsAvailable":{"type":"boolean"}, "missingScoringInputs":{"type":"array","uniqueItems":true,"items":{"type":"string"}}, "observationValidYearsByMetric":{"type":"object","additionalProperties":{"type":"integer","minimum":0,"maximum":30}},
           "components":{"anyOf":[{"$ref":"#/$defs/components"},{"type":"null"}]}, "overallScore":{"$ref":"#/$defs/nullableScore"}, "scoreLevel":{"$ref":"#/$defs/nullableScoreLevel"}, "confidenceScore":{"$ref":"#/$defs/nullableScore"}, "confidenceLevel":{"anyOf":[{"$ref":"#/$defs/confidenceLevel"},{"type":"null"}]}
         }}
       ],

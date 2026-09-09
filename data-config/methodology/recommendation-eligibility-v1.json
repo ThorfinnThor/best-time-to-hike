@@ -1,17 +1,17 @@
 {
   "recommendationVersion": 1,
-  "algorithmVersion": "1.2.0",
+  "algorithmVersion": "1.3.0",
   "criticalComponentMinimumExclusive": 20,
   "criticalComponents": [
     "temperature",
     "snow",
     "heatStress",
-    "wind",
     "daylight"
   ],
-  "criticalComponentsNote": "Precipitation was critical through 1.1.0 and vetoed 15 of the 22 withheld destinations, in every month of the year. Rain makes a walk unpleasant; snow, heat, cold and darkness make it unsafe, and the veto belongs to that second group. Precipitation keeps its 20 percent weight, so a wet destination now scores low instead of disappearing.",
+  "criticalComponentsNote": "The gate covers temperature, snow, heat stress and daylight. Precipitation remains a scored comfort factor. ERA5-Land 10 m grid wind is excluded from the score and gate until it is validated for trail exposure or gusts.",
   "bestMonthComponentMinimumExclusive": 5,
-  "bestMonthComponentNote": "A month with a component at the very bottom of its scale cannot be a best month, whatever it adds up to. Separate from the recommendation floor of 20 and much stricter, because the two answer different questions: 20 is 'would we recommend walking here at all', 5 is 'is this the answer to when should I go'. Calibrated against tests/fixtures/known-hiking-seasons.json, where any value from 3 to 10 gives an identical result and 20 is visibly worse: at 20 the Dolomites lose July and August, whose rain component is 14 and 15 because of afternoon storms nobody stays home for, and Torres del Paine loses its season entirely. At 5 the Annapurna monsoon months, whose rain component is 0 with rain on every day of the month, are still excluded.",
+  "bestMonthComponents": ["temperature", "precipitation", "snow", "heatStress", "daylight"],
+  "bestMonthComponentNote": "The floor applies only to the five scored climate-fit components. A deterministic training/validation search over 1,134 candidates retained the expert baseline floor of 5 because the training improvement from another policy did not improve validation performance. Grid wind is informational and cannot veto a best month.",
   "ineligibleScoreMaximum": 49,
   "persistentSnowHold": {
     "sourceConfigPath": "data-config/methodology/era5-land-representativeness-v1.json",

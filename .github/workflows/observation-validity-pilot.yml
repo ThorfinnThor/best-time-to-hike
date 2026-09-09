@@ -1,0 +1,79 @@
+name: Observation validity cache-only pilot
+on:
+  push:
+    branches: [codex/observation-validity-pilot]
+    # Export-only changes can reuse the uploaded monthly evidence; CI still tests them.
+    paths:
+      - 'lib/hiking/climate*.ts'
+      - 'lib/hiking/daylight.ts'
+      - 'scripts/validate/prepare-cached-validity-input.ts'
+      - 'scripts/validate/inventory-validity-cache.ts'
+      - 'data-config/methodology/observation-validity-v1.json'
+      - 'lib/hiking/validity-export.ts'
+      - 'scripts/validate/build-validity-migration-preview.ts'
+      - 'schemas/validity-migration-preview.schema.json'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Recompute the reviewed pilot or all current cached destinations
+        required: true
+        default: pilot
+        type: choice
+        options: [pilot, global]
+permissions:
+  contents: read
+jobs:
+  compare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ${{ fromJSON(github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '[0,1,2,3]' || '[0]') }}
+    env:
+      # Pushes run the high-latitude regression cheaply. Manual runs use the full ten-point scope.
+      BTH_VALIDITY_DESTINATIONS: ${{ github.event_name == 'push' && 'denali' || '' }}
+      BTH_VALIDITY_SCOPE: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && 'all' || 'pilot' }}
+      BTH_VALIDITY_REQUIRE_ALL: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '1' || '0' }}
+      BTH_VALIDITY_SHARD_COUNT: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'global' && '4' || '1' }}
+      BTH_VALIDITY_SHARD_INDEX: ${{ matrix.shard }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 11.22.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - name: Restore exact existing raw cache, never download new climate data
+        uses: actions/cache/restore@v4
+        with:
+          path: generated/intermediate/era5-raw
+          key: era5-land-cell-replacements-v1-34139951879
+          fail-on-cache-miss: true
+      - run: pnpm exec tsc --noEmit && node --import tsx --test tests/climate-validity.test.ts tests/snow-screening.test.ts
+      - name: Inventory and compare the bounded cache-only sample
+        run: |
+          node --import tsx scripts/validate/inventory-validity-cache.ts > generated/intermediate/validity-destinations.txt
+          while read -r destination; do
+            node --import tsx scripts/validate/prepare-cached-validity-input.ts "$destination"
+            node --import tsx scripts/validate/compare-observation-validity.ts "generated/intermediate/validity-pilot/$destination-input.json" "generated/intermediate/validity-pilot/$destination-report.json"
+          done < generated/intermediate/validity-destinations.txt
+      - name: Build the reviewed public-data migration preview
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.scope == 'pilot' }}
+        run: |
+          node --import tsx scripts/validate/build-validity-migration-preview.ts generated/intermediate/validity-pilot generated/intermediate/validity-pilot
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: observation-validity-${{ inputs.scope || 'pilot' }}-${{ github.run_id }}-${{ matrix.shard }}
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            generated/intermediate/validity-pilot/*-report.json
+            generated/intermediate/validity-pilot/*-source-evidence.json
+            generated/intermediate/validity-pilot/cache-inventory.json
+            data-config/methodology/validity-migration-decision-v1.json
+            data-config/methodology/observation-validity-v1.json
+            data-config/methodology/snow-screening-clarification-v1.json
+            docs/sol-validity-migration-decision-2026-09-08.md
+            generated/reports/validity-migration-preview.json

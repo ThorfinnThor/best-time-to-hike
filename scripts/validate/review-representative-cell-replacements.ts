@@ -1,4 +1,5 @@
 import type { BandClimateMonth, PublicDestination } from "../../lib/data/types";
+import { loadGoldenCases } from "../lib/golden-cases";
 import { readJson, round, writeJson } from "../lib/io";
 
 interface ReplacementConfig {
@@ -22,7 +23,7 @@ const only = onlyArgument ? onlyArgument.slice(7).split(",").map((id) => id.trim
 if (only && (!only.length || only.some((id) => config.replacements[id]?.stagingDisposition !== "candidate"))) {
   throw new Error("CELL_REPLACEMENT_REVIEW001 --only must name active candidates");
 }
-const golden = readJson<{cases: Array<{slug: string; expectedMonths: number[]}>}>("tests/fixtures/known-hiking-seasons.json");
+const golden = loadGoldenCases() as {cases: Array<{slug: string; expectedMonths: number[]}>};
 if (config.schemaVersion !== 1 || config.approval !== false) {
   throw new Error("CELL_REPLACEMENT_REVIEW001 replacement candidates must remain unapproved during staging");
 }

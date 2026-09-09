@@ -16,12 +16,13 @@ const sameMonths = (a: number[], b: number[]) => a.length === b.length && a.ever
 /** Compare independent labels with the published answer, including exact exception scope. */
 export function reviewGoldenCases(
   golden: { status: string; cases: GoldenCase[] },
-  destinations: { slug: string; bestMonths: number[] }[],
+  destinations: { slug: string; bestMonths: number[]; recommendationHoldReason?: string }[],
 ) {
   const bySlug = new Map(destinations.map((destination) => [destination.slug, destination]));
   const seen = new Set<string>();
   const cases = golden.cases.map((item) => {
     const destination = bySlug.get(item.slug);
+    const excludedForScientificReview = Boolean(destination?.recommendationHoldReason);
     const best = destination?.bestMonths ?? [];
     const outside = best.filter((month) => !item.expectedMonths.includes(month));
     const verdict = !best.length ? "no answer" : !outside.length ? "agrees"
@@ -36,16 +37,18 @@ export function reviewGoldenCases(
     if (deviation) {
       if (deviation.reason.trim().length <= 60 || !signed(deviation.recordedBy, deviation.recordedAt)
         || !validMonths(deviation.engineMonths)) errors.push("invalid-deviation");
-      if (!sameMonths(best, deviation.engineMonths)) errors.push("stale-deviation");
-    } else if (verdict !== "agrees") errors.push("unaccepted-deviation");
+      if (!excludedForScientificReview && !sameMonths(best, deviation.engineMonths)) errors.push("stale-deviation");
+    } else if (!excludedForScientificReview && verdict !== "agrees") errors.push("unaccepted-deviation");
     return { slug: item.slug, verdict, expectedMonths: item.expectedMonths, engineMonths: best,
-      acceptedDeviation: Boolean(deviation), errors };
+      acceptedDeviation: Boolean(deviation), excludedForScientificReview, holdReason: destination?.recommendationHoldReason ?? null, errors };
   });
   const acceptedDeviations = golden.cases.filter((item) => item.acceptedDeviation).length;
   return {
     passed: golden.status === "APPROVED" && golden.cases.length >= 30
       && acceptedDeviations <= golden.cases.length / 4 && cases.every((item) => !item.errors.length),
     signedCases: golden.cases.filter((item) => signed(item.approvedBy, item.approvedAt)).length,
+    reviewedCaseCount: cases.filter((item) => !item.excludedForScientificReview).length,
+    excludedForScientificReview: cases.filter((item) => item.excludedForScientificReview).map((item) => item.slug),
     acceptedDeviations,
     maximumAcceptedDeviations: Math.floor(golden.cases.length / 4),
     tally: {

@@ -6,6 +6,8 @@ import type { ComponentScores, ConfidenceLevel, DatasetStatus, PublicMonth, Scor
 export const COMPONENT_KEYS = ["temperature", "precipitation", "snow", "heatStress", "wind", "daylight"] as const;
 export type ComponentKey = (typeof COMPONENT_KEYS)[number];
 export type CriticalComponentKey = ComponentKey;
+export const BEST_MONTH_COMPONENT_KEYS: readonly ComponentKey[] = COMPONENT_KEYS
+  .filter((key) => (recommendationConfig.bestMonthComponents as string[]).includes(key));
 
 /**
  * The components that can veto a month, read from config rather than fixed here.
@@ -130,7 +132,7 @@ export function blockingComponents(months: Array<{components: ComponentScores | 
 export function bestMonthsFor(months: Array<{month: number; recommendationEligible: boolean; overallScore: number | null; components: ComponentScores | null}>): number[] {
   return months
     .filter((month) => month.recommendationEligible && month.overallScore !== null && month.components !== null
-      && !COMPONENT_KEYS.some((key) => month.components![key] <= recommendationConfig.bestMonthComponentMinimumExclusive))
+      && !BEST_MONTH_COMPONENT_KEYS.some((key) => month.components![key] <= recommendationConfig.bestMonthComponentMinimumExclusive))
     .sort((a, b) => b.overallScore! - a.overallScore! || a.month - b.month)
     .slice(0, 3)
     .map((month) => month.month)
@@ -164,4 +166,3 @@ export function guardConfidence(
   }
   return { score: Math.max(0, Math.min(100, confidence)), level: confidenceLevel(confidence) };
 }
-

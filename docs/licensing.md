@@ -1,6 +1,6 @@
 # Licensing and attribution
 
-The current public provisional build distributes derived climate normals and elevation summaries, but not the raw source archives. The following notices therefore apply now. Their presence does not auto-approve the legal gate.
+The current public provisional build distributes derived ERA5-Land climate normals and ERA5-Land model-cell elevations, but not the raw source archives. The following notices therefore apply now. Their presence does not auto-approve the legal gate.
 
 ## ERA5-Land
 
@@ -9,10 +9,14 @@ The current public provisional build distributes derived climate normals and ele
 - DOI: `10.24381/ee82e357`
 - Licence shown by the Climate Data Store: CC BY 4.0
 - Provider: Copernicus Climate Change Service / ECMWF
+- Public notice: `Contains modified Copernicus Climate Change Service information 2026.`
+- Disclaimer: neither the European Commission nor ECMWF is responsible for any use that may be made of the Copernicus information.
 
-Use remains subject to accepting the current terms on the [official dataset page](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries).
+The imprint links both the [official dataset page](https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries) and the [Copernicus Products licence](https://cds.climate.copernicus.eu/licences/licence-to-use-copernicus-products).
 
 ## Copernicus DEM GLO-30
+
+Copernicus DEM is not used by the current 315-destination public release, so the public imprint must not claim that the current product was produced from it. The following notice remains mandatory for any future release that actually distributes DEM-derived sampling, terrain or elevation results.
 
 The required notice for adapted/derived GLO-30 data is:
 
@@ -24,4 +28,4 @@ The required no-liability notice is:
 
 > The organisations in charge of the Copernicus programme by law or by delegation do not incur any liability for any use of the Copernicus WorldDEM-30.
 
-Operator/legal approval is still required before these prepared notices are treated as complete for the product, especially for the exact placement and wording of the no-liability notice, operator identity, images, and any future OSM-derived data.
+Operator/legal approval is still required before these prepared notices are treated as complete for the product, especially for operator contact/VAT details and any future DEM- or OSM-derived public data.

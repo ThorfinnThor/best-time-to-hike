@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Comparison, ComponentScores, Locale, PublicDestination, Ranking } from "@/lib/data/types";
-import { monthName, monthNameShort } from "@/lib/i18n/config";
+import { monthName, monthNameShort, themeKeys, themes } from "@/lib/i18n/config";
 import { cellLabel, degreesC, metreRange, metres } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, rankingPath } from "@/lib/i18n/links";
@@ -12,13 +12,15 @@ import { ScoreChart } from "./ScoreChart";
 import { ComponentGrid } from "./ComponentGrid";
 import { DayRange } from "./DayRange";
 import { DestinationImage } from "@/components/media/DestinationImage";
+import { RankingMonths } from "./RankingMonths";
 
 
 function RecommendationReviewNotice({locale, destination}:{locale:Locale; destination:PublicDestination}) {
   const copy = t(locale).notices;
   if (!destination.recommendationHoldReason) return null;
   const cell = destination.representativeCell;
-  return <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.holdTitle}</strong><p>{copy.holdBody}</p><p>{copy.selectedCell(cellLabel(cell.lat, cell.lon), metres(cell.modelElevationM, locale))}</p></div></aside>;
+  const body=destination.recommendationHoldReason === "persistent-snow" ? copy.holdBody : copy.precipitationHoldBody;
+  return <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.holdTitle}</strong><p>{body}</p><p>{copy.selectedCell(cellLabel(cell.lat, cell.lon), metres(cell.modelElevationM, locale))}</p></div></aside>;
 }
 
 /** Which critical components closed a month, for the summary on the detail page. */
@@ -28,7 +30,7 @@ function failing(components: ComponentScores): ComponentKey[] {
 
 export function DestinationPage({destination,locale}:{destination:PublicDestination;locale:Locale}) {
   const copy = t(locale); const c = copy.destination;
-  const held = destination.recommendationHoldReason === "persistent-snow";
+  const held = Boolean(destination.recommendationHoldReason);
   const unavailable = !destination.recommendationEligible;
   const hasEligibleMonth = destination.months.some((month)=>month.recommendationEligible);
   const peak = Math.max(0,...destination.months.flatMap((month)=>month.overallScore===null?[]:[month.overallScore]));
@@ -40,7 +42,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
     <RecommendationReviewNotice locale={locale} destination={destination}/>
     {!unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
     {unavailable && !hasEligibleMonth && !held ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.noEligibleMonthTitle}</strong><p>{copy.notices.noEligibleMonthBody}</p></div></aside> : null}
-    <section className="content-section split"><div><span className="eyebrow">{unavailable ? c.provenanceEyebrow : c.elevation}</span><h2>{unavailable ? c.selectedCellHeading : c.referencePointHeading}</h2><p>{held ? c.heldBody : unavailable ? c.unavailableBody : c.scopeBody}</p><p>{cellLabel(cell.lat, cell.lon)} · {metres(cell.modelElevationM, locale)}</p></div><div className="elevation-list">{destination.elevationBands.map((band)=><div key={band.id}><span>{band.id.replaceAll("-"," ")}</span><strong>{metreRange(band.minM, band.maxM, locale)}</strong><small>{Math.round(band.weight*100)}% {copy.common.weight}</small></div>)}</div></section>
+    <section className="content-section split"><div><span className="eyebrow">{unavailable ? c.provenanceEyebrow : c.elevation}</span><h2>{unavailable ? c.selectedCellHeading : c.referencePointHeading}</h2><p>{held ? destination.recommendationHoldReason === "persistent-snow" ? c.heldBody : c.precipitationHeldBody : unavailable ? c.unavailableBody : c.scopeBody}</p><p>{cellLabel(cell.lat, cell.lon)} · {metres(cell.modelElevationM, locale)}</p></div><div className="elevation-list">{destination.elevationBands.map((band)=><div key={band.id}><span>{band.id.replaceAll("-"," ")}</span><strong>{metreRange(band.minM, band.maxM, locale)}</strong><small>{Math.round(band.weight*100)}% {copy.common.weight}</small></div>)}</div></section>
     {closed.length ? <section className="content-section closed-months"><div className="section-heading"><div><span className="eyebrow">{c.closedEyebrow}</span><h2>{c.closedHeading(closed.length)}</h2><p>{c.closedIntro}</p></div></div>
       <ul>{closed.map((month)=><li key={month.month}>
         <strong>{monthName(month.month,locale)}</strong>
@@ -80,7 +82,7 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
   };
   const previous = step(month, -1); const next = step(month, 1);
   const cell = destination.representativeCell;
-  if (destination.recommendationHoldReason === "persistent-snow") return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.reviewTitle(destination.name)}</h1><p>{m.reviewBody}</p></section><RecommendationReviewNotice locale={locale} destination={destination}/><MethodNote locale={locale}/></>;
+  if (destination.recommendationHoldReason) return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.reviewTitle(destination.name)}</h1><p>{destination.recommendationHoldReason === "persistent-snow" ? m.reviewBody : m.precipitationReviewBody}</p></section><RecommendationReviewNotice locale={locale} destination={destination}/><MethodNote locale={locale}/></>;
   if (!data || data.overallScore === null || data.confidenceScore === null || data.confidenceLevel === null || data.components === null || data.scoreLevel === null) return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.noDataTitle}</h1><p>{m.noDataBody}</p></section><MethodNote locale={locale}/></>;
   return <>
     
@@ -109,7 +111,8 @@ function rankingThemeLabel(theme: string, locale: Locale): string {
 
 export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
   const copy = t(locale);
-  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
+  const theme = themeKeys.find((key) => themes[key] === ranking.theme || key === ranking.theme);
+  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p><RankingMonths locale={locale} theme={theme} selectedMonth={ranking.month}/></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {

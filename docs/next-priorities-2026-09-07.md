@@ -1,5 +1,7 @@
 # Review conclusion and next priorities
 
+> Historical priority snapshot. The global observation-validity migration and the fixed ten-case Golden extension were completed afterward. Use `generated/reports/release-report.json` for the current gate inventory.
+
 ## El Chalten: what the evidence establishes
 
 The completed run 34139951879 validates retrieval and aggregation, not hiking

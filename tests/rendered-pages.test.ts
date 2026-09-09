@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { DICT } from "../lib/i18n/dict";
 import { getDestinationIndex } from "../lib/data/load";
+import { locales, monthName, themeKeys } from "../lib/i18n/config";
+import { links } from "../lib/i18n/links";
 
 /**
  * Assertions against the built HTML.
@@ -34,6 +36,34 @@ const PAGES = [
   "en/best-hiking-destinations/june/index.html",
   "en/methodology/index.html",
 ];
+
+test("category links open unselected month pickers in both languages", {skip: !built}, () => {
+  for (const locale of locales) {
+    const home = page(`${locale}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+    const header = /<header[\s\S]*?<\/header>/.exec(home)![0];
+    for (const theme of [undefined, ...themeKeys]) {
+      const path = theme ? links.themeIndex(locale, theme) : links.rankingIndex(locale);
+      if (theme !== "snowFree") assert.ok(header.includes(`href="${path}/"`), `${path} missing from header`);
+      const html = page(`${path.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+      const picker = /<nav class="ranking-months"[\s\S]*?<\/nav>/.exec(html)![0];
+      assert.equal((picker.match(/<a /g) ?? []).length, 12);
+      assert.doesNotMatch(picker, /aria-current/);
+      assert.equal((html.match(/<h1[\s>]/g) ?? []).length, 1);
+      for (let month = 1; month <= 12; month++) {
+        const target = theme ? links.themeRanking(locale, theme, month) : links.ranking(locale, month);
+        assert.ok(picker.includes(`href="${target}/"`), `${target} missing from picker`);
+        assert.ok(picker.includes(monthName(month, locale)));
+        assert.ok(existsSync(`${OUT}${target}/index.html`), `${target} not exported`);
+        const result = page(`${target.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+        const switcher = /<nav class="ranking-months"[\s\S]*?<\/nav>/.exec(result)![0];
+        assert.equal((switcher.match(/aria-current="page"/g) ?? []).length, 1);
+        assert.match(switcher, new RegExp(`aria-current="page"[^>]*>${monthName(month, locale)}<`));
+        const another = month === 12 ? 1 : month + 1;
+        assert.ok(switcher.includes(`href="${theme ? links.themeRanking(locale, theme, another) : links.ranking(locale, another)}/"`));
+      }
+    }
+  }
+});
 
 test("no page prints a taxonomy or destination id as text", {skip: !built}, () => {
   // east-africa-highlands reached readers from two components while all 62
@@ -103,12 +133,16 @@ test("a provisional export is blocked from indexing at every rendered layer", {s
   }
 });
 
-test("both imprint pages carry the mandatory Copernicus DEM notices", {skip: !built}, () => {
+test("both imprint pages attribute the source used by the current release", {skip: !built}, () => {
   for (const path of ["en/imprint/index.html", "de/impressum/index.html"]) {
     const text = visible(page(path));
-    assert.match(text, /Produced using Copernicus WorldDEM-30 © DLR e\.V\. 2010-2014/);
-    assert.match(text, /Copernicus programme|Copernicus-Programm/);
-    assert.match(text, /do not incur any liability|haften nicht/);
+    assert.match(text, /Copernicus Climate Change Service/);
+    assert.match(text, /ERA5-Land/);
+    assert.match(text, /10\.24381\/ee82e357/);
+    assert.doesNotMatch(text, /WorldDEM-30/, "the current release does not use Copernicus DEM");
+    const html = page(path);
+    assert.match(html, /href="https:\/\/cds\.climate\.copernicus\.eu\/datasets\/reanalysis-era5-land-timeseries"/);
+    assert.match(html, /href="https:\/\/cds\.climate\.copernicus\.eu\/licences\/licence-to-use-copernicus-products"/);
   }
 });
 

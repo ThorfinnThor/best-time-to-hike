@@ -242,3 +242,44 @@ body{font-size:16px;-webkit-font-smoothing:antialiased}
 .compare-grid .closed-mark em{font-style:normal;font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:#a8401f}
 .compare-grid .closed-mark em::before{content:"▲ ";font-size:.85em}
 .compare-hint-inline{margin:16px 0 0;color:var(--fern);font-size:.88rem}
+
+/* Compact home search: inputs, decision row, then secondary shortcuts. */
+.finder-compact .finder-controls{grid-template-columns:1fr 1fr 1fr;gap:24px}
+.finder-compact .finder-controls>label{min-width:0}
+.finder-compact .range-label{grid-column:auto}
+.finder-compact .finder-controls label>span{margin-bottom:10px;letter-spacing:.07em;font-size:.7rem}
+.finder-compact .finder-controls select,.finder-compact .range-label>div{height:54px;border-radius:12px;padding:0 16px}
+.finder-compact .range-label>div{gap:12px}
+.finder-compact .range-label input{flex:1;width:0;height:44px;text-align:center;font-variant-numeric:tabular-nums}
+.finder-compact .finder-warning{grid-column:1 / -1;margin:0}
+.finder-actions{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:24px}
+.finder-weather{display:flex;flex-wrap:wrap;gap:10px}
+.finder-compact .toggle{height:44px;border-radius:10px;padding:0 16px;font-size:.85rem}
+.finder-compact .toggle.active{background:var(--mist);border-color:#9ab09e;color:var(--moss)}
+.finder-compact .toggle:hover{border-color:var(--moss)}
+.finder-compact .finder-submit{display:flex;align-items:center;justify-content:center;gap:24px;min-height:50px;margin:0;border-radius:12px;padding:12px 24px;font-size:.9rem;width:auto}
+.finder-compact .finder-submit>span{font-size:1.2rem;line-height:1}
+.finder-compact .finder-presets{align-items:center;gap:8px 12px;margin-top:24px;padding-top:18px;border-top:1px solid var(--line)}
+.finder-presets-label{font-size:.75rem;color:var(--fern);margin-right:4px}
+.ranking-months{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.ranking-months a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:10px 16px;border:1px solid var(--line);border-radius:12px;background:var(--paper);color:var(--moss);font-size:.9rem;font-weight:600}
+.ranking-months a:hover{border-color:var(--moss);background:var(--mist)}
+.ranking-months a[aria-current="page"]{background:var(--moss);border-color:var(--moss);color:var(--paper)}
+.month-selection .ranking-months{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.month-selection .ranking-months a{min-height:76px;font-size:1rem}
+@media(max-width:600px){.month-selection .ranking-months{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+.finder-compact .finder-presets button{min-height:36px;padding:6px 12px;background:transparent;font-weight:500;font-size:.75rem;border-color:transparent}
+.finder-compact .finder-presets button:hover{background:var(--mist);border-color:var(--line)}
+@media(max-width:900px){
+  .finder-compact .finder-controls{gap:16px;grid-template-columns:1fr 1fr}
+  .finder-compact .range-label{grid-column:1 / -1}
+}
+@media(max-width:600px){
+  .finder-compact .finder-controls{grid-template-columns:1fr;gap:18px}
+  .finder-actions{align-items:stretch;flex-direction:column;gap:18px;margin-top:20px}
+  .finder-weather{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .finder-compact .toggle{padding:0 8px;font-size:.8rem;white-space:normal}
+  .finder-compact .finder-submit{width:100%;gap:16px}
+  .finder-compact .finder-presets{gap:4px 8px;margin-top:20px;padding-top:14px}
+  .finder-presets-label{flex-basis:100%;margin-bottom:4px}
+}

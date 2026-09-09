@@ -86,6 +86,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
         {area.withheld.map((destination) => <li key={destination.slug}>
           <Link href={destinationPath(locale, destination.slug)}>{destination.name}</Link>
           <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.area.reasonSnow
+            : destination.recommendationHoldReason === "precipitation-validation" ? copy.area.reasonPrecipitation
             : blockingComponents(destination.months).length
               ? copy.area.reasonComponent(blockingComponents(destination.months).map((key) => copy.components[key]).join(", "))
               : copy.area.reasonNoMonth}</span>

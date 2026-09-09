@@ -164,14 +164,19 @@ function conditions(destination: PublicDestination, p: DestinationProfile, local
 
 function withheldArticle(destination: PublicDestination, p: DestinationProfile, locale: Locale): Section[] {
   const de = locale === "de";
-  const held = destination.recommendationHoldReason === "persistent-snow";
+  const snowHeld = destination.recommendationHoldReason === "persistent-snow";
+  const precipitationHeld = destination.recommendationHoldReason === "precipitation-validation";
   const cell = destination.representativeCell;
   return [
     {heading: de ? `Warum hier keine Empfehlung steht` : `Why there is no recommendation here`,
-     paragraphs: [held
+     paragraphs: [snowHeld
        ? (de
          ? `An der für ${destination.name} ausgewählten ERA5-Land-Gitterzelle liegt in allen zwölf Monaten des Klimanormals Schnee. Eine Zelle mit ganzjähriger Schneedecke beschreibt kein Wandergelände, deshalb veröffentlichen wir für dieses Ziel weder einen Wanderwert noch beste Monate.`
          : `At the ERA5-Land grid cell selected for ${destination.name}, snow lies in all twelve months of the climate normal. A cell under year-round snow does not describe hiking terrain, so we publish no hiking score and no best months for this destination.`)
+       : precipitationHeld
+         ? (de
+           ? `Der Niederschlag der ausgewählten ERA5-Land-Zelle für ${destination.name} weicht wesentlich von einer unabhängigen Klimadiagnose ab. Bis zur Klärung veröffentlichen wir weder Wanderwert noch beste Monate.`
+           : `Precipitation at the ERA5-Land cell selected for ${destination.name} differs materially from an independent climate diagnostic. We publish no hiking score or best months until it is resolved.`)
        : (de
          ? `Kein Monat in ${destination.name} erfüllt alle kritischen Klimakriterien. ${p.limitingFactor ? `Begrenzend ist vor allem ${factor(p.limitingFactor, locale)}.` : ""} Statt einen schwachen Wert zu veröffentlichen, halten wir die Empfehlung ganz zurück.`.replace(/\s+/g, " ")
          : `No month at ${destination.name} clears every critical climate criterion. ${p.limitingFactor ? `The binding constraint is ${factor(p.limitingFactor, locale)}.` : ""} Rather than publish a weak score, we withhold the recommendation entirely.`.replace(/\s+/g, " "))]},

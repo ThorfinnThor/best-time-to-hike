@@ -141,7 +141,12 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
     setSubmitted(true);
   }
 
-  return <section className={`finder ${compact ? "finder-compact" : ""}`} aria-label={copy.finder.aria}>
+  const weatherPreferences = <>
+    <button type="button" className={preferences.avoidRain ? "toggle active" : "toggle"} onClick={() => update({avoidRain: !preferences.avoidRain})} aria-pressed={preferences.avoidRain}><span aria-hidden="true">☂</span> {copy.finder.avoidRain}</button>
+    <button type="button" className={preferences.avoidSnow ? "toggle active" : "toggle"} onClick={() => update({avoidSnow: !preferences.avoidSnow})} aria-pressed={preferences.avoidSnow}><span aria-hidden="true">❄</span> {copy.finder.avoidSnow}</button>
+  </>;
+
+  return <section className={compact ? "finder finder-compact" : "finder"} aria-label={copy.finder.aria}>
     <form onSubmit={(event) => {event.preventDefault(); if (navigates) { goToFinder(preferences); return; } setSubmitted(true);}}>
       <div className="finder-controls">
         <label><span>{copy.finder.month}</span>
@@ -176,8 +181,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
         {inverted ? <p className="finder-warning" role="status">{copy.finder.invertedRange}{" "}
           <button type="button" onClick={() => update({minTemp: preferences.maxTemp, maxTemp: preferences.minTemp})}>{copy.finder.swapRange}</button>
         </p> : null}
-        <button type="button" className={preferences.avoidRain ? "toggle active" : "toggle"} onClick={() => update({avoidRain: !preferences.avoidRain})} aria-pressed={preferences.avoidRain}>☂ {copy.finder.avoidRain}</button>
-        <button type="button" className={preferences.avoidSnow ? "toggle active" : "toggle"} onClick={() => update({avoidSnow: !preferences.avoidSnow})} aria-pressed={preferences.avoidSnow}>❄ {copy.finder.avoidSnow}</button>
+        {!compact ? weatherPreferences : null}
         {!compact ? <button type="button" className={preferences.avoidHeat ? "toggle active" : "toggle"} onClick={() => update({avoidHeat: !preferences.avoidHeat})} aria-pressed={preferences.avoidHeat}>☀ {copy.finder.avoidHeat}</button> : null}
         {!compact ? <label><span>{copy.finder.elevation}</span>
           <select value={`${preferences.minElevation}-${preferences.maxElevation}`}
@@ -211,10 +215,14 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
         </fieldset>
       </details> : null}
 
-      {compact ? <button className="finder-submit" type="submit">{copy.finder.submit}</button> : null}
+      {compact ? <div className="finder-actions">
+        <div className="finder-weather">{weatherPreferences}</div>
+        <button className="finder-submit" type="submit">{copy.finder.submit}<span aria-hidden="true">→</span></button>
+      </div> : null}
     </form>
 
     <div className="finder-presets" aria-label={copy.finder.presetsAria}>
+      {compact ? <span className="finder-presets-label">{copy.finder.presetsAria}</span> : null}
       {PRESETS.map((preset, index) => <button type="button" key={copy.finder.presets[index]} onClick={() => applyPreset(preset)}>{copy.finder.presets[index]}</button>)}
       {!compact ? <button type="button" onClick={() => {setPreferences(defaultPreferences); setSavedOnly(false); setVisible(PAGE);}}>{copy.finder.reset}</button> : null}
     </div>

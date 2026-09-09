@@ -6,12 +6,15 @@ import { routeCatalog } from "../../lib/seo/route-catalog";
 import { pageSeo } from "../../lib/seo/page-seo";
 import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
+import { loadGoldenCases } from "../lib/golden-cases";
 import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
+import { releaseSourcesApproved } from "../lib/release-source-approvals";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
 const releaseApprovals = readJson<any>("data-config/methodology/release-approvals.json");
-const golden = readJson<{status:string;cases:GoldenCase[]}>("tests/fixtures/known-hiking-seasons.json");
+const golden = loadGoldenCases() as {status:string;cases:GoldenCase[]};
+const goldenCandidates = readJson<{status:string;candidates:Array<{approvedBy:string|null;approvedAt:string|null}>}>("data-config/methodology/golden-case-candidates-v1.json");
 const configFiles = [
   "data-config/methodology/climate-aggregation-v1.json",
   "data-config/methodology/confidence-v1.json",
@@ -19,8 +22,15 @@ const configFiles = [
   "data-config/methodology/rounding-v1.json",
   "data-config/methodology/release-approvals.json",
   "data-config/methodology/recommendation-eligibility-v1.json",
+  "data-config/methodology/independent-climate-review-holds-v1.json",
+  "data-config/methodology/golden-case-candidates-v1.json",
+  "data-config/methodology/licensing-review-v1.json",
+  "data-config/methodology/scientific-release-profile-v1.json",
+  "data-config/methodology/season-alignment-calibration-v1.json",
   "data-config/methodology/sampling-v1.json",
+  "data-config/methodology/science-audit-v1.json",
   "data-config/methodology/source-semantics.json",
+  "data-config/methodology/source-semantics-review-v1.json",
   "data-config/scoring/curves.json",
   "data-config/scoring/weights.json",
   "tests/fixtures/known-hiking-seasons.json"
@@ -32,10 +42,11 @@ const destinationFiles = readdirSync(destinationRoot, { withFileTypes: true }).f
 );
 const destinations = destinationFiles.map((file) => JSON.parse(readFileSync(file, "utf8")) as PublicDestination);
 const dataQuality = readJson<{warningCount:number;warnings:unknown[]}>("generated/reports/data-quality.json");
+const scienceAudit = readJson<any>("generated/reports/science-audit.json");
 const months = destinations.flatMap((destination) => destination.months);
 const bands = months.flatMap((month) => month.bands);
 const recommendationMonths = months.filter((month) => month.recommendationEligible);
-const heldDestinations = destinations.filter((destination) => destination.recommendationHoldReason === "persistent-snow");
+const heldDestinations = destinations.filter((destination) => Boolean(destination.recommendationHoldReason));
 const confidenceCappedMonths = months.filter((month) => month.confidenceScore !== null && month.confidenceScore <= 64 && month.confidenceLevel === "low");
 const scores = months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore]).sort((a, b) => a - b);
 const completeness = bands.map((band) => band.dataCompleteness).sort((a, b) => a - b);
@@ -44,6 +55,11 @@ const samplingPoints = samplingFiles.flatMap((file) => {
   const snapshot = readJson<any>(`data-snapshots/sampling/${file}`);
   return Object.values(snapshot.bands as Record<string, any>).flatMap((band) => band.points);
 });
+const sourceApproval = releaseSourcesApproved({
+  climateSources: destinations.map((destination) => readJson<any>(`data-snapshots/climate/${destination.id}.json`).source),
+  elevationSources: destinations.map((destination) => readJson<any>(`data-snapshots/dem/${destination.id}.json`).source),
+  samplingSources: samplingFiles.map((file) => readJson<any>(`data-snapshots/sampling/${file}`).source),
+}, sourceSemantics);
 const crawlerPolicy = robotsForDataset(manifest.datasetStatus, "https://example.invalid/sitemap.xml");
 const crawlLockLayers = {
   robotsDisallowAll: robotsDisallowEverything(crawlerPolicy),
@@ -61,9 +77,9 @@ const goldenReview = reviewGoldenCases(golden, destinations);
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
   nonProductionIndexabilityLocked,
-  realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
+  realSourcesApproved: sourceApproval.passed,
   destinationMinimumMet: manifest.destinationCount >= 50,
-  goldenMinimumMet: goldenReview.passed,
+  goldenMinimumMet: goldenReview.passed && goldenReview.reviewedCaseCount >= 30,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
   climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2020,
   releaseApprovals: Object.fromEntries(Object.entries(releaseApprovals.approvals).map(([key,value]:[string,any])=>[key,value.approved===true&&Boolean(value.approvedBy)&&Number.isFinite(new Date(value.approvedAt).getTime())]))
@@ -94,13 +110,33 @@ const report = {
   goldenReview: {
     status: golden.status,
     ...goldenReview,
+    candidateBatch: {
+      status: goldenCandidates.status,
+      candidateCount: goldenCandidates.candidates.length,
+      signedCount: goldenCandidates.candidates.filter((candidate) => candidate.approvedBy
+        && Number.isFinite(Date.parse(candidate.approvedAt ?? ""))).length,
+      productionEffect: goldenCandidateEffect(goldenCandidates),
+    },
   },
   crawlLockLayers,
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },
+  scienceAudit: {
+    status: scienceAudit.status,
+    productionReleaseApproval: scienceAudit.productionReleaseApproval,
+    scientificProductionBlockers: scienceAudit.productionBlockers,
+    internalIntegrityPassed: scienceAudit.internalIntegrity.passed,
+    externalTemperatureReviewFlags: scienceAudit.independentClimateDiagnostic.temperatureReviewFlags,
+    externalPrecipitationReviewFlags: scienceAudit.independentClimateDiagnostic.precipitationReviewFlags,
+  },
+  sourceApprovalScope: sourceApproval,
   recommendationPolicy: {
     eligibleMonths: recommendationMonths.length,
     ineligibleMonths: months.length - recommendationMonths.length,
     heldDestinations: heldDestinations.map((destination) => destination.slug).sort(),
+    heldDestinationCountsByReason: Object.fromEntries(["persistent-snow", "precipitation-validation"].map((reason) => [
+      reason,
+      heldDestinations.filter((destination) => destination.recommendationHoldReason === reason).length,
+    ])),
     confidenceCappedMonths: confidenceCappedMonths.length,
     unvalidatedGridWindCaveatMonths: months.filter((month) => month.caveats.includes("unvalidated-grid-wind")).length
   },
@@ -116,5 +152,9 @@ const report = {
   manifestChecksum: sha256(readFileSync(join(ROOT, "public/data/hiking/manifest.json"))),
   destinationFiles: destinationFiles.map((file) => relative(ROOT, file)).sort()
 };
+
+function goldenCandidateEffect(registry: typeof goldenCandidates) {
+  return registry.status === "APPROVED" ? "included-in-signed-golden-set" : "none-until-signed-and-promoted";
+}
 writeJson("generated/reports/release-report.json", report);
 console.log(`Release report: ${report.releaseStatus}; ${blockers.length} production blocker(s); generated/reports/release-report.json`);

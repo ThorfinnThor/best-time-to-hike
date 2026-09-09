@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import { getDestination } from "../lib/data/load";
+import { loadGoldenCases } from "../scripts/lib/golden-cases";
 import { reviewGoldenCases } from "../scripts/lib/golden-review";
 
 /**
@@ -40,8 +40,7 @@ interface GoldenCase {
   acceptedDeviation?: {reason: string; recordedBy: string; recordedAt: string; engineMonths: number[]};
 }
 
-const golden = JSON.parse(readFileSync("tests/fixtures/known-hiking-seasons.json", "utf8")) as
-  {status: string; cases: GoldenCase[]};
+const golden = loadGoldenCases() as {status: string; cases: GoldenCase[]};
 const approved = golden.status === "APPROVED";
 
 interface Comparison { verdict: "agrees" | "partly" | "disagrees" | "no answer"; best: number[]; outside: number[] }
@@ -88,6 +87,7 @@ test("the approved golden set clears the same evidence gate as the release repor
 
 test("the engine's best months fall inside the labelled season", {skip: !approved && "labels are not approved yet; see the report below"}, () => {
   const failures = golden.cases
+    .filter((item) => !getDestination(item.slug)?.recommendationHoldReason)
     .map((item) => ({item, result: compare(item)}))
     .filter(({item, result}) => result.verdict !== "agrees" && !item.acceptedDeviation)
     .map(({item, result}) => `${item.slug}: labelled ${item.label} (${item.expectedMonths.join(",")}), engine says ${result.best.join(",") || "no month"}`);
@@ -100,6 +100,7 @@ test("an accepted deviation still describes the disagreement it was written for"
   for (const item of golden.cases) {
     const deviation = item.acceptedDeviation;
     if (!deviation) continue;
+    if (getDestination(item.slug)?.recommendationHoldReason) continue;
     assert.ok(item.approvedBy, `${item.slug} records a deviation but is not signed`);
     assert.ok(deviation.reason.length > 60, `${item.slug}: a deviation needs a reason someone can disagree with`);
     assert.deepEqual(compare(item).best, deviation.engineMonths,

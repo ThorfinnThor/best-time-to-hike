@@ -2,7 +2,7 @@
 
 A bilingual, static hiking-season decision engine. It turns versioned climate/elevation snapshots into transparent monthly scores, rankings, comparisons, and a client-side preference finder.
 
-The public build currently ships a five-destination **fixture dataset** and therefore remains deliberately `noindex`. The repository now includes working real-data adapters: polygon-clipped Copernicus DEM GLO-30 terrain ingestion, DEM-derived ERA5 grid sampling, official ERA5-Land invariant-geopotential model heights, and credential-driven ERA5-Land 1991–2020 hourly ingestion. Production publication remains gated until the source/geometry approvals are recorded and corrected real-data staging has completed.
+The public build currently ships 315 destinations from committed ERA5-Land 1991–2020 snapshots and remains deliberately `provisional` and `noindex`. Each result is limited to one selected model-grid cell; it is not a whole-region, route-condition, forecast or safety claim. Review-held destinations keep provenance pages but publish no score, ranking or best-month recommendation. Production publication remains gated by independent evidence and operator approvals.
 
 ## Stack
 
@@ -37,7 +37,7 @@ Real source data is refreshed in the manually triggered `Refresh real static dat
 
 Run the action with `publish: false` to produce a private, 14-day staging artifact without changing the website. Run it with `publish: true` only after the source and geometry approval files are complete; the existing approval checks fail closed before snapshots can be committed.
 
-`CDSAPI_KEY` is an encrypted GitHub Actions repository secret. It is used only by the data-refresh job and is never passed to Cloudflare Pages or written to snapshots, logs, or the public build. The ERA5 plan currently contains 34 unique point requests.
+`CDSAPI_KEY` is an encrypted GitHub Actions repository secret. It is used only by the data-refresh job and is never passed to Cloudflare Pages or written to snapshots, logs, or the public build. The current static catalogue contains 315 unique point requests.
 
 ## Deployment
 

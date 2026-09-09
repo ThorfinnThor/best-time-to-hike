@@ -3,13 +3,15 @@ import { confidenceScore, overallScore, roundHalfAwayFromZero, scoreComponents }
 import { guardConfidence, hasPersistentSnowHold, recommendationDecision } from "../../lib/scoring/recommendations";
 import { scoreLevel } from "../../lib/scoring/index";
 import recommendationConfig from "../../data-config/methodology/recommendation-eligibility-v1.json";
+import independentClimateHolds from "../../data-config/methodology/independent-climate-review-holds-v1.json";
 import { readJson, round, writeJson } from "../lib/io";
 
-type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; representativenessApproved?:boolean; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; bands: Record<string, {months: BandClimateMonth[]}> } };
+type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; representativenessApproved?:boolean; aggregationPolicyVersion?:string; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; bands: Record<string, {months: BandClimateMonth[]}> } };
 type InternalBandMonth = Omit<PublicBandMonth, "components" | "overallScore" | "scoreLevel" | "confidenceScore" | "confidenceLevel"> & {components: ComponentScores; overallScore:number; scoreLevel:ScoreLevel; confidenceScore:number; confidenceLevel:ConfidenceLevel};
 type ScoredMonth = Omit<PublicMonth, "components" | "overallScore" | "scoreLevel" | "confidenceScore" | "confidenceLevel" | "bands"> & {components: ComponentScores; overallScore:number; scoreLevel:ScoreLevel; confidenceScore:number; confidenceLevel:ConfidenceLevel; bands:InternalBandMonth[]; rawComponents: ComponentScores; rawOverallScore: number};
 type RepresentativeCell = {lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string};
 const representativeOverrides = readJson<{overrides:Record<string,{label:string;reason:string}>}>("data-config/sources/representative-cell-overrides.json").overrides;
+const precipitationReviewHolds = new Set(independentClimateHolds.destinationIds);
 const normalized = readJson<Normalized[]>("generated/intermediate/normalized.json");
 
 function weightedComponents(bands: InternalBandMonth[], destination: DestinationConfig): ComponentScores {
@@ -44,7 +46,10 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
       const components = scoreComponents(metrics);
       const score = overallScore(components);
       const confidence = guardConfidence(confidenceScore(metrics), datasetStatus, metrics.samplePointCount, representativenessApproved);
-      return {...metrics, components, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence.score), confidenceLevel: confidence.level};
+      const {observationCoverage,interannualYearlyScores,...publicMetrics}=metrics;
+      return {...publicMetrics,
+        ...(observationCoverage?{observationValidYearsByMetric:observationCoverage.validYearsByMetric}:{}),
+        components, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidence.score), confidenceLevel: confidence.level};
     });
     const internalComponents = weightedComponents(bands, destination);
     const score = overallScore(internalComponents);
@@ -55,22 +60,27 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
       keys.forEach((key) => { (acc as any)[key] = ((acc as any)[key] ?? 0) + (band as any)[key] * config.weight; });
       return acc;
     }, {} as any);
-    const utilitySampleCount=Math.min(...bands.map((band)=>band.temperatureUtilitySamplesC.length));
-    metrics.temperatureUtilitySamplesC=Array.from({length:utilitySampleCount},(_,index)=>destination.elevationBands.reduce((sum,config)=>sum+bands.find((band)=>band.bandId===config.id)!.temperatureUtilitySamplesC[index]*config.weight,0));
+    const utilitySamples=bands.map((band)=>band.temperatureUtilitySamplesC);
+    if(utilitySamples.every((samples):samples is number[]=>Array.isArray(samples)&&samples.length>0)) {
+      const utilitySampleCount=Math.min(...utilitySamples.map((samples)=>samples.length));
+      metrics.temperatureUtilitySamplesC=Array.from({length:utilitySampleCount},(_,index)=>destination.elevationBands.reduce((sum,config)=>sum+bands.find((band)=>band.bandId===config.id)!.temperatureUtilitySamplesC![index]*config.weight,0));
+    } else metrics.temperatureUtilityScore=internalComponents.temperature;
     metrics.sampleYearCount=Math.min(...bands.map((band)=>band.sampleYearCount));
     Object.keys(metrics).forEach((key) => { if (typeof metrics[key] === "number") metrics[key] = round(metrics[key], key.includes("Probability") || key === "dataCompleteness" ? 4 : 1); });
-    metrics.temperatureUtilitySamplesC=metrics.temperatureUtilitySamplesC.map((value:number)=>round(value,1));
+    if(metrics.temperatureUtilitySamplesC) metrics.temperatureUtilitySamplesC=metrics.temperatureUtilitySamplesC.map((value:number)=>round(value,1));
     const publicBands=bands.map((band)=>({...band,components:roundedComponents(band.components)}));
     const confidenceGuard = guardConfidence(confidence, datasetStatus, Math.min(...bands.map((band) => band.samplePointCount)), representativenessApproved);
     const output: ScoredMonth = {month: monthIndex+1, recommendationEligible: true, overallScore: roundHalfAwayFromZero(score), scoreLevel: scoreLevel(score), confidenceScore: roundHalfAwayFromZero(confidenceGuard.score), confidenceLevel: confidenceGuard.level, components:roundedComponents(internalComponents), metrics, bands:publicBands, reasons: [], caveats: ["historical-climatology-not-a-forecast", ...(datasetStatus === "fixture" ? [] : ["unvalidated-grid-wind" as const])], rawComponents: internalComponents, rawOverallScore: score};
     output.reasons = reasonCodes(output);
     return output;
   });
-  const destinationHold = hasPersistentSnowHold(rawMonths);
+  const persistentSnowHold = hasPersistentSnowHold(rawMonths);
+  const precipitationReviewHold = precipitationReviewHolds.has(destination.id);
+  const destinationHold = persistentSnowHold || precipitationReviewHold;
   const months = rawMonths.map((month) => {
     const decision = recommendationDecision(month.rawComponents, month.rawOverallScore, destinationHold);
     const caveats = destinationHold
-      ? [...month.caveats, "persistent-snow-review"]
+      ? [...month.caveats, persistentSnowHold ? "persistent-snow-review" : "precipitation-validation-review"]
       : decision.failingComponents.length
         ? [...month.caveats, "critical-component-floor"]
         : decision.belowFloorComponents.length
@@ -108,8 +118,9 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
     destination, dem, months,
     representativeCell,
     recommendationEligible: !destinationHold && months.some((month) => month.recommendationEligible),
-    ...(destinationHold ? {recommendationHoldReason: "persistent-snow" as const} : {}),
+    ...(destinationHold ? {recommendationHoldReason: persistentSnowHold ? "persistent-snow" as const : "precipitation-validation" as const} : {}),
     datasetStatus,
+    aggregationPolicyVersion:climate.aggregationPolicyVersion ?? "legacy-climate-aggregation-v1",
     climateSource:climate.source ?? "era5-land-compatible-synthetic-fixture",
     climateSourceDataset:climate.sourceDataset,
     climateSourceDoi:climate.sourceDoi,

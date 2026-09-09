@@ -1,6 +1,6 @@
 # Data sources and approval gates
 
-The production climate normal is ERA5-Land 1991–2020. Copernicus DEM GLO-30 supplies terrain matching and destination elevation summaries; the official ERA5-Land invariant geopotential supplies model-grid height for temperature correction; daylight is calculated astronomically. Source assumptions and the official evidence reviewed on 2026-08-31 are recorded in `data-config/methodology/source-semantics.json`; operator approval remains deliberately false.
+The production climate normal is ERA5-Land 1991–2020. The current 315-destination release uses one selected ERA5-Land model cell per destination; its sampling and elevation snapshots use the official ERA5-Land invariant geopotential, and daylight is calculated astronomically. Copernicus DEM GLO-30 remains available only to the separate multi-point terrain workflow and is not used by the current public snapshots. Source assumptions are recorded in `data-config/methodology/source-semantics.json`; the current-release review packet is `data-config/methodology/source-semantics-review-v1.json`. Operator approval remains deliberately false.
 
 ## Copernicus DEM GLO-30
 
@@ -38,6 +38,6 @@ pnpm data:era5 -- --plan
 
 The planning command is credential-free. Actual remote downloads run through `.github/workflows/refresh-real-data.yml`, or locally when `CDSAPI_KEY` is set explicitly.
 
-The default real ingest writes ignored audit artifacts. Publishing committed snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. Run `pnpm preflight:sources` to verify that gate. A pre-change artifact that used a GLO-30 proxy for lapse correction is not eligible for production publication.
+The default real ingest writes ignored audit artifacts. Publishing committed ERA5-Land snapshots additionally requires `approved: true`, a named approver and a valid timestamp for `era5Land`. The release report derives its required approvals from the sources named by the current snapshots; it requires Copernicus DEM approval only when a release actually contains DEM-backed sampling or elevation snapshots. The standalone `pnpm preflight:sources` command intentionally checks both source families because it guards the complete ingest toolchain. A pre-change artifact that used a GLO-30 proxy for lapse correction is not eligible for production publication.
 
-The live site remains a synthetic fixture until all five real climate snapshots are generated, reviewed, committed, rebuilt and redeployed. Removing the fixture label without completing that chain is prohibited.
+The current 315-destination site is built from committed ERA5-Land snapshots and remains provisional and `noindex`. All snapshots use the boundary-aware `observation-validity-v1` aggregation after an exact-source, cache-only global recomputation and hash-gated migration review. The public claim is restricted to the selected model cell. Independent review holds and production approvals remain fail-closed; no deployment step may silently promote the dataset to production.

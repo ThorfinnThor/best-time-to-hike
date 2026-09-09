@@ -8,6 +8,7 @@ export function routeCatalog(): StaticRoute[] {
   const output: StaticRoute[] = [];
   for (const locale of locales) {
     output.push({locale,segments:[]},{locale,segments:["finder"]},{locale,segments:[routes.compare[locale]]});
+    for (const key of ["rankings", "warm", "snowFree", "lowRain"] as const) output.push({locale, segments:[routes[key][locale]]});
     for (const key of ["methodology","about","privacy","imprint","credits"] as const) output.push({locale,segments:[routes[key][locale]]});
     for (const destination of getAllDestinations()) {
       output.push({locale,segments:[routes.destination[locale],destination.slug]});
