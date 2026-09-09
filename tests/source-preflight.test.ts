@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { requireApprovedSource } from "../scripts/import/source-preflight";
 
-test("real source ingest remains blocked until an operator approves semantics", () => {
-  assert.throws(() => requireApprovedSource("era5Land"), /BLOCKED_SOURCE_SEMANTICS/);
+test("current ERA5-Land source is approved while future DEM ingest remains blocked", () => {
+  assert.doesNotThrow(() => requireApprovedSource("era5Land"));
   assert.throws(() => requireApprovedSource("copernicusDem"), /BLOCKED_SOURCE_SEMANTICS/);
 });
