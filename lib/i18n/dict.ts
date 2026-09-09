@@ -399,6 +399,8 @@ export const DICT = {
     },
     ranking: {
       heading: "Best hiking destinations",
+      chooseMonth: "Choose your travel month",
+      chooseMonthIntro: "Select a month to see hiking destinations that match this category. No month is selected for you.",
       headingIn: (month: string) => `Best hiking destinations in ${month}`,
       intro: "Pre-ranked by hiking suitability, then confidence. Affiliate economics never influence the order.",
       themeTitle: (theme: string, month: string) => `${theme} in ${month}`,
@@ -923,6 +925,8 @@ export const DICT = {
     },
     ranking: {
       heading: "Beste Wanderziele",
+      chooseMonth: "Wähle deinen Reisemonat",
+      chooseMonthIntro: "Wähle einen Monat, um passende Wanderziele für diese Kategorie zu sehen. Kein Monat ist vorausgewählt.",
       headingIn: (month: string) => `Beste Wanderziele im ${month}`,
       intro: "Vorsortiert nach Wanderwert, dann Datenvertrauen. Affiliate-Provisionen spielen keine Rolle.",
       themeTitle: (theme: string, month: string) => `${theme} im ${month}`,

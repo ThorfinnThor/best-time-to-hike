@@ -22,6 +22,7 @@ import { areaById } from "@/lib/seo/areas";
 import operator from "@/config/operator.json";
 import { blockingComponents } from "@/lib/scoring/recommendations";
 import { AreaRankingPage } from "@/components/hiking/AreaRankingPage";
+import { RankingMonthSelectionPage } from "@/components/hiking/RankingMonths";
 import { JsonLd } from "@/components/seo/JsonLd";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ComparisonTool } from "@/components/compare/ComparisonTool";
@@ -140,6 +141,8 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
   switch (page.kind) {
     case "home": return <><JsonLd data={webSiteLd(locale)}/><JsonLd data={organisationLd()}/><HomePage locale={locale}/></>;
     case "finder": return <FinderPage locale={locale}/>;
+    case "rankingIndex": return <RankingMonthSelectionPage locale={locale}/>;
+    case "themeIndex": return <RankingMonthSelectionPage locale={locale} theme={page.theme}/>;
     case "destination": { const destination=getDestination(page.slug); if(!destination) notFound();
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)},
                    {name: taxonomyLabel(locale, "continents", destination.continent), path: pathFor({kind:"finder"}, locale)},

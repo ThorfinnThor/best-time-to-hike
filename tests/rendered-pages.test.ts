@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { DICT } from "../lib/i18n/dict";
 import { getDestinationIndex } from "../lib/data/load";
+import { locales, monthName, themeKeys } from "../lib/i18n/config";
+import { links } from "../lib/i18n/links";
 
 /**
  * Assertions against the built HTML.
@@ -34,6 +36,34 @@ const PAGES = [
   "en/best-hiking-destinations/june/index.html",
   "en/methodology/index.html",
 ];
+
+test("category links open unselected month pickers in both languages", {skip: !built}, () => {
+  for (const locale of locales) {
+    const home = page(`${locale}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+    const header = /<header[\s\S]*?<\/header>/.exec(home)![0];
+    for (const theme of [undefined, ...themeKeys]) {
+      const path = theme ? links.themeIndex(locale, theme) : links.rankingIndex(locale);
+      if (theme !== "snowFree") assert.ok(header.includes(`href="${path}/"`), `${path} missing from header`);
+      const html = page(`${path.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+      const picker = /<nav class="ranking-months"[\s\S]*?<\/nav>/.exec(html)![0];
+      assert.equal((picker.match(/<a /g) ?? []).length, 12);
+      assert.doesNotMatch(picker, /aria-current/);
+      assert.equal((html.match(/<h1[\s>]/g) ?? []).length, 1);
+      for (let month = 1; month <= 12; month++) {
+        const target = theme ? links.themeRanking(locale, theme, month) : links.ranking(locale, month);
+        assert.ok(picker.includes(`href="${target}/"`), `${target} missing from picker`);
+        assert.ok(picker.includes(monthName(month, locale)));
+        assert.ok(existsSync(`${OUT}${target}/index.html`), `${target} not exported`);
+        const result = page(`${target.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+        const switcher = /<nav class="ranking-months"[\s\S]*?<\/nav>/.exec(result)![0];
+        assert.equal((switcher.match(/aria-current="page"/g) ?? []).length, 1);
+        assert.match(switcher, new RegExp(`aria-current="page"[^>]*>${monthName(month, locale)}<`));
+        const another = month === 12 ? 1 : month + 1;
+        assert.ok(switcher.includes(`href="${theme ? links.themeRanking(locale, theme, another) : links.ranking(locale, another)}/"`));
+      }
+    }
+  }
+});
 
 test("no page prints a taxonomy or destination id as text", {skip: !built}, () => {
   // east-africa-highlands reached readers from two components while all 62

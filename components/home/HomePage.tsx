@@ -50,7 +50,7 @@ export function HomePage({ locale }: { locale: Locale }) {
             <h2>{content.destinations}</h2>
             <p>{content.destinationSub}</p>
           </div>
-          <Link className="section-link" href={links.ranking(locale, 6)}>{content.rankings} →</Link>
+          <Link className="section-link" href={links.rankingIndex(locale)}>{content.rankings} →</Link>
         </div>
         <div className="destination-summary-grid">
           {destinations.map((destination) => {

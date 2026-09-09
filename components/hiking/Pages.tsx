@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Comparison, ComponentScores, Locale, PublicDestination, Ranking } from "@/lib/data/types";
-import { monthName, monthNameShort } from "@/lib/i18n/config";
+import { monthName, monthNameShort, themeKeys, themes } from "@/lib/i18n/config";
 import { cellLabel, degreesC, metreRange, metres } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, rankingPath } from "@/lib/i18n/links";
@@ -12,6 +12,7 @@ import { ScoreChart } from "./ScoreChart";
 import { ComponentGrid } from "./ComponentGrid";
 import { DayRange } from "./DayRange";
 import { DestinationImage } from "@/components/media/DestinationImage";
+import { RankingMonths } from "./RankingMonths";
 
 
 function RecommendationReviewNotice({locale, destination}:{locale:Locale; destination:PublicDestination}) {
@@ -110,7 +111,8 @@ function rankingThemeLabel(theme: string, locale: Locale): string {
 
 export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
   const copy = t(locale);
-  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
+  const theme = themeKeys.find((key) => themes[key] === ranking.theme || key === ranking.theme);
+  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p><RankingMonths locale={locale} theme={theme} selectedMonth={ranking.month}/></section><section className="ranking-list">{ranking.entries.map((entry)=><Link href={destinationPath(locale,entry.slug,ranking.month)} key={entry.slug}><span className="ranking-number">{String(entry.rank).padStart(2,"0")}</span><div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet*100)}% {copy.common.wetDays}</p></div><ScoreRing score={entry.score} size="small" locale={locale}/></Link>)}</section><MethodNote locale={locale}/></>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {
