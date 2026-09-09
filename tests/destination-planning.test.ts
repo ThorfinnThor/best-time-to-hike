@@ -1,15 +1,14 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { planningPilots, isPlanningPilot, typicalWetDays, planningNumber, daylightDuration } from "../lib/presentation/destination-planning";
+import { hikingSources, typicalWetDays, planningNumber, daylightDuration } from "../lib/presentation/destination-planning";
 import { planningCopy } from "../lib/i18n/planning";
-import { getDestination } from "../lib/data/load";
+import { getAllDestinations } from "../lib/data/load";
 import { links } from "../lib/i18n/links";
 
-test("planning pilot is restricted to five explicit destinations", () => {
-  assert.deepEqual(Object.keys(planningPilots).sort(), ["chamonix", "dolomites", "madeira", "mallorca", "tenerife"]);
-  assert.equal(isPlanningPilot("banff"), false);
-  assert.equal(isPlanningPilot("toString"), false);
+test("verified local sources are optional and bilingual planning copy stays aligned", () => {
+  assert.deepEqual(Object.keys(hikingSources).sort(), ["chamonix", "dolomites", "madeira", "mallorca", "tenerife"]);
+  assert.equal(hikingSources.banff, undefined);
   assert.deepEqual(Object.keys(planningCopy.en), Object.keys(planningCopy.de));
 });
 
@@ -28,13 +27,20 @@ test("readable metrics preserve frequencies, calendar length and nonzero values"
 const built = existsSync("out/en/index.html");
 const html = (path: string) => readFileSync(`out${path}/index.html`, "utf8").replace(/<script[\s\S]*?<\/script>/g, "");
 
-test("five pilots render useful metrics and only link eligible months in both languages", {skip: !built}, () => {
-  for (const locale of ["en", "de"] as const) for (const slug of Object.keys(planningPilots)) {
-    const destination = getDestination(slug)!;
+test("every destination renders useful metrics and only links eligible months in both languages", {skip: !built}, () => {
+  for (const locale of ["en", "de"] as const) for (const destination of getAllDestinations()) {
+    const { slug } = destination;
     const overview = html(links.destination(locale, slug));
     const table = /<table class="planning-table"[\s\S]*?<\/table>/.exec(overview)![0];
     assert.equal((table.match(/<tr>/g) ?? []).length, 13);
     assert.doesNotMatch(overview, /class="score-ring/);
+    assert.equal(overview.includes('class="planning-best"'), destination.recommendationEligible);
+    if (destination.recommendationHoldReason) {
+      assert.match(overview, /recommendation-review/);
+      assert.doesNotMatch(table, /<a /);
+    }
+    const source = hikingSources[slug];
+    assert.equal(overview.includes('target="_blank"'), Boolean(source), slug);
     for (const month of destination.months) {
       const path = links.destinationMonth(locale, slug, month.month);
       assert.equal(table.includes(`href="${path}/"`), month.recommendationEligible, path);
@@ -45,7 +51,8 @@ test("five pilots render useful metrics and only link eligible months in both la
       assert.ok(detail.includes(planningCopy[locale].percentile));
       assert.ok(detail.includes(planningCopy[locale].snowNote));
       assert.ok(detail.includes(planningCopy[locale].wind));
-      assert.ok(detail.includes(planningPilots[slug].url));
+      if (source) assert.ok(detail.includes(source.url));
+      else assert.ok(!detail.includes(planningCopy[locale].routes), slug);
     }
   }
 });

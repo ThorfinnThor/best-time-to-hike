@@ -4,12 +4,12 @@ import { monthName } from "@/lib/i18n/config";
 import { links } from "@/lib/i18n/links";
 import { planningCopy } from "@/lib/i18n/planning";
 import { cellLabel, degreesC, metres } from "@/lib/format";
-import { daylightDuration, planningNumber as number, planningPilots, planningRules as rules, typicalWetDays } from "@/lib/presentation/destination-planning";
+import { daylightDuration, planningNumber as number, hikingSources, planningRules as rules, typicalWetDays } from "@/lib/presentation/destination-planning";
 
 export function PlanningContext({ destination, locale }: { destination: PublicDestination; locale: Locale }) {
   const c = planningCopy[locale];
   const cell = destination.representativeCell;
-  const source = planningPilots[destination.slug];
+  const source = Object.hasOwn(hikingSources, destination.slug) ? hikingSources[destination.slug] : undefined;
   return <div className="planning-context">
     <div><h3>{c.scope}</h3><p>{c.scopeText}</p><p><strong>{c.elevation}: {metres(cell.modelElevationM, locale)}</strong> · {c.period}: {rules.normal.startYear}–{rules.normal.endYear}</p><p>{c.wind}</p>
       <details><summary>{c.definitions}</summary>
