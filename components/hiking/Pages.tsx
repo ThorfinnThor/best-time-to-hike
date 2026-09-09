@@ -9,7 +9,8 @@ import { COMPONENT_KEYS, CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type
 import { dayShapeDomain } from "@/lib/hiking/day-shape";
 import { ScoreRing } from "./ScoreRing";
 import { ScoreChart } from "./ScoreChart";
-import { ComponentGrid } from "./ComponentGrid";
+import { DestinationPlanning, MonthPlanning } from "./DestinationPlanning";
+import { isPlanningPilot } from "@/lib/presentation/destination-planning";
 import { DayRange } from "./DayRange";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { RankingExplorer } from "./RankingMonths";
@@ -29,6 +30,7 @@ function failing(components: ComponentScores): ComponentKey[] {
 
 export function DestinationPage({destination,locale}:{destination:PublicDestination;locale:Locale}) {
   const copy = t(locale); const c = copy.destination;
+  const pilot = isPlanningPilot(destination.slug);
   const held = destination.recommendationHoldReason === "persistent-snow";
   const unavailable = !destination.recommendationEligible;
   const hasEligibleMonth = destination.months.some((month)=>month.recommendationEligible);
@@ -37,9 +39,9 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const closed = destination.months.filter((month)=>!month.recommendationEligible);
   return <>
     
-    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div>{unavailable ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
+    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div>{unavailable || pilot ? null : <ScoreRing score={peak} locale={locale}/>}</div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
-    {!unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
+    {pilot ? <DestinationPlanning destination={destination} locale={locale}/> : !unavailable ? <section className="content-section"><div className="section-heading"><div><span className="eyebrow">12 {copy.common.months}</span><h2>{c.best}</h2></div><p>{destination.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p></div><ScoreChart months={destination.months} locale={locale} slug={destination.slug}/></section> : null}
     {unavailable && !hasEligibleMonth && !held ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.noEligibleMonthTitle}</strong><p>{copy.notices.noEligibleMonthBody}</p></div></aside> : null}
     <section className="content-section split"><div><span className="eyebrow">{unavailable ? c.provenanceEyebrow : c.elevation}</span><h2>{unavailable ? c.selectedCellHeading : c.referencePointHeading}</h2><p>{held ? c.heldBody : unavailable ? c.unavailableBody : c.scopeBody}</p><p>{cellLabel(cell.lat, cell.lon)} · {metres(cell.modelElevationM, locale)}</p></div><div className="elevation-list">{destination.elevationBands.map((band)=><div key={band.id}><span>{band.id.replaceAll("-"," ")}</span><strong>{metreRange(band.minM, band.maxM, locale)}</strong><small>{Math.round(band.weight*100)}% {copy.common.weight}</small></div>)}</div></section>
     {closed.length ? <section className="content-section closed-months"><div className="section-heading"><div><span className="eyebrow">{c.closedEyebrow}</span><h2>{c.closedHeading(closed.length)}</h2><p>{c.closedIntro}</p></div></div>
@@ -68,6 +70,7 @@ function belowFloor(components: ComponentScores): ComponentKey[] {
 
 export function MonthPage({destination,month,locale}:{destination:PublicDestination;month:number;locale:Locale}) {
   const copy = t(locale); const c = copy.destination; const m = copy.month;
+  const pilot = isPlanningPilot(destination.slug);
   const data = destination.months[month-1];
   // Adjacent months that the gate withholds no longer have a route, so the nav
   // steps to the nearest one that does.
@@ -89,11 +92,12 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
     {data.recommendationEligible && data.caveats.includes("non-critical-component-floor")
       ? <aside className="method-note below-floor" role="status"><span>ⓘ</span><div><strong>{copy.notices.belowFloorTitle}</strong><p>{copy.notices.belowFloorBody(belowFloor(data.components).map((key)=>copy.components[key]).join(", "))}</p></div></aside>
       : null}
-    <section className="month-hero"><div><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.heading(destination.name, monthName(month,locale))}</h1><p>{c.method}</p></div><ScoreRing score={data.overallScore} level={data.scoreLevel} locale={locale}/></section>
-    <section className="stats-strip"><div><span>{c.confidence}</span><strong>{data.confidenceScore}%</strong></div><div><span>{copy.common.meanTemperature}</span><strong>{degreesC(data.metrics.temperatureHikingMeanC, locale)}</strong></div><div><span>{copy.common.wetDays}</span><strong>{Math.round(data.metrics.wetDayProbability*100)}%</strong></div><div><span>{copy.common.daylight}</span><strong>{data.metrics.daylightHoursMean}h</strong></div></section>
-    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.why}</span><h2>{m.componentsHeading}</h2></div></div><ComponentGrid components={data.components} locale={locale}/></section>
-    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{copy.dayShape.eyebrow}</span><h2>{copy.dayShape.heading}</h2></div></div><DayRange metrics={data.metrics} domain={dayShapeDomain(destination.months.filter((item)=>item.metrics))} locale={locale}/></section>
-    <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.elevation}</span><h2>{destination.elevationBands.length===1 ? m.selectedCellHeading : m.bandsHeading}</h2></div></div><div className="band-table">{data.bands.map((band)=><div key={band.bandId}><div><strong>{band.bandId.replaceAll("-"," ")}</strong><span>{metres(band.targetElevationM, locale)}</span></div><ScoreRing score={band.overallScore ?? 0} size="small" locale={locale}/><div><span>{degreesC(band.temperatureHikingMeanC, locale)}</span><small>{Math.round(band.snowDayProbability*100)}% {copy.common.snowDays}</small></div></div>)}</div></section>
+    <section className="month-hero"><div><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.heading(destination.name, monthName(month,locale))}</h1><p>{c.method}</p></div>{pilot ? null : <ScoreRing score={data.overallScore} level={data.scoreLevel} locale={locale}/>}</section>
+    {pilot ? <MonthPlanning destination={destination} data={data} locale={locale}/> : <>
+      <section className="stats-strip"><div><span>{copy.common.meanTemperature}</span><strong>{degreesC(data.metrics.temperatureHikingMeanC, locale)}</strong></div><div><span>{copy.common.wetDays}</span><strong>{Math.round(data.metrics.wetDayProbability*100)}%</strong></div><div><span>{copy.common.snowDays}</span><strong>{Math.round(data.metrics.snowDayProbability*100)}%</strong></div><div><span>{copy.common.daylight}</span><strong>{data.metrics.daylightHoursMean}h</strong></div></section>
+      <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{copy.dayShape.eyebrow}</span><h2>{copy.dayShape.heading}</h2></div></div><DayRange metrics={data.metrics} domain={dayShapeDomain(destination.months.filter((item)=>item.metrics))} locale={locale}/></section>
+      <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.elevation}</span><h2>{destination.elevationBands.length===1 ? m.selectedCellHeading : m.bandsHeading}</h2></div></div><div className="band-table">{data.bands.map((band)=><div key={band.bandId}><div><strong>{band.bandId.replaceAll("-"," ")}</strong><span>{metres(band.targetElevationM, locale)}</span></div><ScoreRing score={band.overallScore ?? 0} size="small" locale={locale}/><div><span>{degreesC(band.temperatureHikingMeanC, locale)}</span><small>{Math.round(band.snowDayProbability*100)}% {copy.common.snowDays}</small></div></div>)}</div></section>
+    </>}
     <nav className="month-nav" aria-label={m.adjacentAria}>{previous && previous!==month ? <Link href={destinationPath(locale,destination.slug,previous)}>← {monthName(previous,locale)}</Link> : <span/>}<Link href={destinationPath(locale,destination.slug)}>{destination.name}</Link>{next && next!==month ? <Link href={destinationPath(locale,destination.slug,next)}>{monthName(next,locale)} →</Link> : <span/>}</nav>
     <MethodNote locale={locale}/>
   </>;
