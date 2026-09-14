@@ -147,6 +147,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
   </>;
 
   return <section className={compact ? "finder finder-compact" : "finder"} aria-label={copy.finder.aria}>
+    <div className={compact ? undefined : "finder-filter-panel"}>
     <form onSubmit={(event) => {event.preventDefault(); if (navigates) { goToFinder(preferences); return; } setSubmitted(true);}}>
       <div className="finder-controls">
         <label><span>{copy.finder.month}</span>
@@ -226,8 +227,9 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
       {PRESETS.map((preset, index) => <button type="button" key={copy.finder.presets[index]} onClick={() => applyPreset(preset)}>{copy.finder.presets[index]}</button>)}
       {!compact ? <button type="button" onClick={() => {setPreferences(defaultPreferences); setSavedOnly(false); setVisible(PAGE);}}>{copy.finder.reset}</button> : null}
     </div>
+    </div>
 
-    {showResults ? <>
+    {showResults ? <div className={compact ? undefined : "finder-results"}>
       {!compact ? <div className="finder-summary">
         <h2 aria-live="polite">{copy.finder.resultCount(filtered.length)}</h2>
         {savedReady && saved.length > 1 ? <Link className="compare-saved-link" href={`${links.compareIndex(locale)}?d=${saved.slice(0, 4).join(",")}`}>
@@ -288,6 +290,6 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
           </button>
         : null}
       {compact && filtered.length ? <Link className="text-link" href={links.finder(locale)}>{copy.finder.allResults}</Link> : null}
-    </> : null}
+    </div> : null}
   </section>;
 }

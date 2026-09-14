@@ -70,6 +70,16 @@ test("category links open unselected month pickers in both languages", {skip: !b
   }
 });
 
+test("finder controls and results render as separate layout panels", {skip: !built}, () => {
+  for (const locale of locales) {
+    const finder = page(`${locale}/finder/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+    const filters = finder.indexOf('class="finder-filter-panel"');
+    const results = finder.indexOf('class="finder-results"');
+    assert.ok(filters >= 0, `${locale} finder filter panel missing`);
+    assert.ok(results > filters, `${locale} finder results panel missing or misplaced`);
+  }
+});
+
 test("no page prints a taxonomy or destination id as text", {skip: !built}, () => {
   // east-africa-highlands reached readers from two components while all 62
   // regions had labels in both locales. Matching against the real id sets
