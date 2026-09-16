@@ -127,5 +127,5 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
     retrievedAt:climate.retrievedAt ?? dem.retrievedAt ?? "2026-08-31T00:00:00.000Z"
   };
 });
-writeJson("generated/intermediate/scored.json", scored);
+writeJson(process.env.BTH_SCORED_OUTPUT?.trim() || "generated/intermediate/scored.json", scored);
 console.log(`Scored ${scored.length * 12} destination-months.`);
