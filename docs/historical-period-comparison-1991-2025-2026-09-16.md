@@ -1,62 +1,134 @@
 # Historical-period comparison: 1991–2025
 
-Status: **staging only — not a production release**.
+Status: **conditional scientific pass; Golden Case sign-off still required; not a production release**.
 
-The GitHub Actions staging run `35073854396` completed successfully. It
-retrieved one selected ERA5-Land grid point for each of the 315 active
-destinations, with the padded UTC range `1990-12-31` through `2026-01-01` and
-`306,864` hourly observations per point. The resulting 315 climate snapshots
-all contain 35 complete years (1991–2025), with no missing year in the
-aggregation metadata.
+## Superseded evidence
 
-The candidate was scored with the existing weights, curves and eligibility
-gates. No calibration or publication decision was made in this step.
+GitHub Actions run `35073854396` and its comparison are superseded. That run
+rounded monthly climate metrics before scoring and therefore did not apply the
+same aggregation contract as the 1991–2020 baseline. Its reported score deltas,
+eligibility changes and maximum change must not be used for a release decision.
+
+The corrected evidence is GitHub Actions run
+[`35092846294`](https://github.com/ThorfinnThor/best-time-to-hike/actions/runs/35092846294)
+at commit `3919be180e8f2493566a825cb9f5346852b0b04a`. It uses the unchanged
+`observation-validity-v1` aggregation, unrounded metrics, and the frozen scoring
+weights, curves, gates and holds.
+
+## Evidence integrity
+
+- Artifact: `real-data-staging-35092846294`
+- 315 ERA5-Land representative cells and 3,780 destination-months
+- 306,864 padded hourly observations per cell
+- 35 complete years per month for 1991–2025 and completeness `1`
+- 950 manifest files, 221,099,613 uncompressed bytes
+- Manifest SHA-256:
+  `48d18cce336eeeb281ab86cadd6b033ecca26299b1c4385a9851897b97e170a8`
+- Comparison SHA-256:
+  `1d5cc8e0999654c33864f33ae4380cc365565d2a6712215f2e92b60949e66ce4`
+- All 950 file sizes and SHA-256 values verified with zero mismatches
+- Locally reproduced comparison is byte-identical to the workflow comparison
+
+The candidate remains explicitly marked `provisional` and
+`candidate-not-published`.
 
 ## Comparison with the current 1991–2020 release
 
-- 315 destinations compared.
-- 3,384 months had a score in both periods; held/null months are excluded from
-  the numeric comparison.
-- Mean score change: `+0.057` points.
-- Mean absolute score change: `0.379` points.
-- Largest absolute score change: `29` points.
-- 17 month-level eligibility changes occurred. These are the cases that need
-  scientific review before any production switch.
+- 3,384 public scores are numerically comparable; held/null months are excluded.
+- Mean exact score change: `+0.1371` points.
+- Mean absolute exact score change: `0.3572` points.
+- Maximum absolute exact score change: `3.5803` points (Torres del Paine,
+  January).
+- 17 month-level recommendation-eligibility changes.
+- 33 exact critical-component threshold crossings, of which 17 change public
+  eligibility and 16 remain blocked or held by another rule.
+- 28 destinations change one of their displayed best months, except Torres del
+  Paine, which adds January.
+- No scientific hold changes.
+- No change for any of the 33 reviewed extreme or held destinations.
+- No change to any monthly number-one ranking.
 
-| Destination | Month | 1991–2020 | 1991–2025 | Old score | New score |
-|---|---:|---|---|---:|---:|
-| durmitor | 11 | eligible | blocked | 48 | 46 |
-| torres-del-paine | 1 | blocked | eligible | 49 | 54 |
-| gran-paradiso | 10 | blocked | eligible | 48 | 49 |
-| beskids | 4 | eligible | blocked | 60 | 49 |
-| arches | 12 | blocked | eligible | 49 | 55 |
-| grand-canyon | 12 | blocked | eligible | 49 | 60 |
-| great-smoky-mountains | 2 | blocked | eligible | 49 | 52 |
-| chapada-dos-veadeiros | 9 | eligible | blocked | 72 | 49 |
-| coorg | 4 | eligible | blocked | 56 | 49 |
-| flinders-ranges | 3 | eligible | blocked | 78 | 49 |
-| low-tatras | 4 | eligible | blocked | 61 | 49 |
-| monti-sibillini | 12 | blocked | eligible | 49 | 51 |
-| yorkshire-dales | 1 | eligible | blocked | 45 | 45 |
-| kashmir-pahalgam | 6 | blocked | eligible | 49 | 66 |
-| zhangjiajie | 8 | eligible | blocked | 60 | 49 |
-| cape-breton-highlands | 5 | blocked | eligible | 49 | 63 |
-| lanin | 5 | eligible | blocked | 48 | 45 |
+### Public eligibility changes
 
-The comparison is reproducible with:
+All 17 changes are explained by the existing critical-component gate at an
+exact component score of `20`; none is caused by rounding or a new rule.
 
-```sh
-pnpm science:compare-period
-```
+| Destination | Month | 1991–2020 | 1991–2025 | Crossing |
+|---|---:|---|---|---|
+| Torres del Paine | January | blocked | eligible | Snow `17.5986 → 32.4731` |
+| Garmisch-Partenkirchen | May | blocked | eligible | Snow `12.8674 → 27.0661` |
+| Gran Paradiso | October | blocked | eligible | Snow `19.0323 → 23.2565` |
+| Gran Sasso | March | blocked | eligible | Snow `19.7581 → 23.8710` |
+| Arches | December | blocked | eligible | Snow `17.9677 → 22.3963` |
+| Grand Canyon | December | blocked | eligible | Snow `19.0941 → 23.8710` |
+| Great Smoky Mountains | February | blocked | eligible | Snow `19.3565 → 22.9932` |
+| Cerro Castillo | December | blocked | eligible | Snow `18.8441 → 22.0276` |
+| Chapada dos Veadeiros | September | eligible | blocked | Heat stress `22.1537 → 19.8270` |
+| Almaty Mountains | June | blocked | eligible | Snow `17.7500 → 23.6825` |
+| Coorg | April | eligible | blocked | Heat stress `23.3093 → 19.1698` |
+| Flinders Ranges | March | eligible | blocked | Heat stress `21.9220 → 19.2984` |
+| Monti Sibillini | December | blocked | eligible | Snow `18.8710 → 22.2734` |
+| Kashmir Pahalgam | June | blocked | eligible | Snow `19.9167 → 23.6825` |
+| Zhangjiajie | August | eligible | blocked | Heat stress `22.0968 → 19.4988` |
+| Cape Breton Highlands | May | blocked | eligible | Snow `19.6057 → 21.9816` |
+| Rara | April | blocked | eligible | Snow `17.0000 → 22.6667` |
 
-The machine-readable output is written to
-`generated/intermediate/historical-period-comparison.json` and is intentionally
-ignored by Git because it is derived staging evidence.
+The newly eligible snow cases reflect lower 35-year snow-day or conditional
+snow-depth averages. The four newly blocked heat cases reflect higher hot-day
+or severe-hot-day frequencies. These are expected period-extension effects at
+a deliberately strict gate boundary.
 
-## Interpretation
+### Metric stability across all 3,780 months
 
-The overall distribution is stable, but the 17 gate-boundary changes are not
-safe to auto-publish. They must be checked against the Golden Cases and the
-independent precipitation/extreme-weather evidence. The active production
-dataset therefore remains 1991–2020 until the Sol scientific review accepts
-or rejects these changes.
+| Metric | Mean absolute change | 95th percentile | Maximum |
+|---|---:|---:|---:|
+| Hiking-hours temperature | `0.124 °C` | `0.309 °C` | `0.527 °C` |
+| Wet-day probability | `0.00662` | `0.0172` | `0.04424` |
+| Monthly precipitation | `3.07 mm` | `9.34 mm` | `74.88 mm` |
+| Snow-day probability | `0.00478` | `0.0247` | `0.0949` |
+| Conditional snow depth | `0.00525 m` | `0.0294 m` | `0.1198 m` |
+
+The maximum precipitation change is at held Rwenzori and is approximately a
+one-percent annual-period change; it does not create a public recommendation or
+a new anomaly.
+
+## Golden Cases
+
+The baseline result is 33 agreements, 2 partial agreements, 0 disagreements
+and 6 cases without an independent seasonal answer. The corrected candidate is
+34 agreements, 1 partial agreement, 0 disagreements and 6 without an answer.
+
+Two signed registry entries nevertheless need explicit reviewer approval:
+
+1. **Atlas Mountains:** the candidate changes from `[May, June, July]` to
+   `[May, June, September]`, which fully agrees with the independent season
+   `[April, May, June, September, October]`. Remove the obsolete accepted
+   deviation and re-sign the case.
+2. **Annapurna:** the candidate changes from `[May, September, October]` to
+   `[May, October, November]`. It now matches two independent months instead of
+   one; May remains the documented deviation. Update and re-sign the accepted
+   deviation.
+
+Torres del Paine changes from `[February, March]` to
+`[January, February, March]` and continues to agree with its independent season.
+
+## Scientific decision
+
+The corrected 1991–2025 candidate passes the period-migration review because:
+
+- the baseline and candidate use the same validity aggregation and scoring
+  method;
+- overall changes are small;
+- every eligibility change is traceable to an exact, existing threshold;
+- no hold or reviewed-extreme result changes;
+- Golden Case agreement improves; and
+- no unexplained metric discontinuity was found.
+
+This decision accepts the **historical-period migration only**. It does not
+authorize an automatic threshold or weight change, and it does not authorize a
+production publication. Production migration remains blocked until the Atlas
+Mountains and Annapurna Golden Case records are explicitly approved and the
+Golden gate is rerun successfully.
+
+The machine-readable decision is recorded in
+`data-config/methodology/historical-period-1991-2025-review-v1.json`.

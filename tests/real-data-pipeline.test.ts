@@ -141,3 +141,76 @@ test("historical-period review covers every mandatory scientific comparison", ()
   ]) assert.match(comparison, new RegExp(requiredSection));
   assert.match(comparison, /productionReleaseApproval:false/);
 });
+
+test("1991-2025 scientific decision is reproducible and remains blocked for production", () => {
+  const review = JSON.parse(
+    readFileSync("data-config/methodology/historical-period-1991-2025-review-v1.json", "utf8"),
+  ) as {
+    status: string;
+    productionReleaseApproval: boolean;
+    evidence: {
+      githubActionsRun: number;
+      artifactManifestSha256: string;
+      comparisonSha256: string;
+      verifiedManifestFiles: number;
+    };
+    integrity: {
+      destinationCount: number;
+      monthCount: number;
+      aggregationPolicyVersion: string;
+      prematureMetricRounding: boolean;
+      weightsCurvesAndGatesFrozen: boolean;
+      holdChanges: number;
+      extremeDestinationChanges: number;
+    };
+    comparison: {
+      eligibilityChanges: {total: number};
+      criticalComponentCrossings: number;
+      bestMonthChanges: number;
+      goldenCaseChanges: number;
+    };
+    scientificDecision: {
+      periodMigrationAccepted: boolean;
+      automaticThresholdOrWeightChangeAuthorized: boolean;
+      productionMigrationAuthorized: boolean;
+    };
+    remainingApprovalItems: Array<{destination: string}>;
+    nextStep: {model: string};
+  };
+
+  assert.equal(review.status, "conditional-scientific-pass-awaiting-golden-case-signoff");
+  assert.equal(review.productionReleaseApproval, false);
+  assert.equal(review.evidence.githubActionsRun, 35092846294);
+  assert.match(review.evidence.artifactManifestSha256, /^[a-f0-9]{64}$/);
+  assert.match(review.evidence.comparisonSha256, /^[a-f0-9]{64}$/);
+  assert.equal(review.evidence.verifiedManifestFiles, 950);
+  assert.equal(review.integrity.destinationCount, 315);
+  assert.equal(review.integrity.monthCount, 3780);
+  assert.equal(review.integrity.aggregationPolicyVersion, "observation-validity-v1");
+  assert.equal(review.integrity.prematureMetricRounding, false);
+  assert.equal(review.integrity.weightsCurvesAndGatesFrozen, true);
+  assert.equal(review.integrity.holdChanges, 0);
+  assert.equal(review.integrity.extremeDestinationChanges, 0);
+  assert.equal(review.comparison.eligibilityChanges.total, 17);
+  assert.equal(review.comparison.criticalComponentCrossings, 33);
+  assert.equal(review.comparison.bestMonthChanges, 28);
+  assert.equal(review.comparison.goldenCaseChanges, 3);
+  assert.equal(review.scientificDecision.periodMigrationAccepted, true);
+  assert.equal(review.scientificDecision.automaticThresholdOrWeightChangeAuthorized, false);
+  assert.equal(review.scientificDecision.productionMigrationAuthorized, false);
+  assert.deepEqual(
+    review.remainingApprovalItems.map(({destination}) => destination).sort(),
+    ["annapurna", "atlas-mountains"],
+  );
+  assert.equal(review.nextStep.model, "sol");
+});
+
+test("published historical-period review points only to corrected evidence", () => {
+  const report = readFileSync("docs/historical-period-comparison-1991-2025-2026-09-16.md", "utf8");
+  assert.match(report, /35073854396.*superseded/s);
+  assert.match(report, /35092846294/);
+  assert.match(report, /Maximum absolute exact score change: `3\.5803`/);
+  assert.match(report, /production publication/);
+  assert.doesNotMatch(report, /Largest absolute score change: `29`/);
+  assert.doesNotMatch(report, /\| durmitor \| 11 \|/i);
+});

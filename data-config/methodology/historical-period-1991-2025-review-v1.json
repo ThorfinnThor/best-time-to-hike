@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "reviewDate": "2026-09-16",
+  "status": "conditional-scientific-pass-awaiting-golden-case-signoff",
+  "productionReleaseApproval": false,
+  "scope": "1991-2020 versus 1991-2025 comparison for all 315 selected ERA5-Land representative cells and 3780 destination-months",
+  "evidence": {
+    "githubActionsRun": 35092846294,
+    "gitCommitSha": "3919be180e8f2493566a825cb9f5346852b0b04a",
+    "artifactName": "real-data-staging-35092846294",
+    "artifactManifestSha256": "48d18cce336eeeb281ab86cadd6b033ecca26299b1c4385a9851897b97e170a8",
+    "comparisonSha256": "1d5cc8e0999654c33864f33ae4380cc365565d2a6712215f2e92b60949e66ce4",
+    "verifiedManifestFiles": 950,
+    "verifiedManifestBytes": 221099613
+  },
+  "integrity": {
+    "destinationCount": 315,
+    "monthCount": 3780,
+    "hourlyObservationsPerCell": 306864,
+    "completeYearsPerMonth": 35,
+    "minimumDataCompleteness": 1,
+    "aggregationPolicyVersion": "observation-validity-v1",
+    "prematureMetricRounding": false,
+    "weightsCurvesAndGatesFrozen": true,
+    "holdChanges": 0,
+    "extremeDestinationChanges": 0
+  },
+  "comparison": {
+    "meanScoreDelta": 0.1371,
+    "meanAbsoluteScoreDelta": 0.3572,
+    "maximumAbsoluteScoreDelta": 3.5803,
+    "eligibilityChanges": {
+      "total": 17,
+      "newlyEligibleFromSnow": 13,
+      "newlyIneligibleFromHeatStress": 4
+    },
+    "criticalComponentCrossings": 33,
+    "bestMonthChanges": 28,
+    "goldenCaseChanges": 3,
+    "monthlyNumberOneRankingChanges": 0
+  },
+  "scientificDecision": {
+    "periodMigrationAccepted": true,
+    "rationale": "The corrected candidate uses the same unrounded observation-validity aggregation and frozen scoring policy as the baseline. Changes are small overall, every eligibility change is explained by an exact configured critical-component crossing, no scientific hold changes, no reviewed extreme destination changes, and no unexplained metric discontinuity was found.",
+    "automaticThresholdOrWeightChangeAuthorized": false,
+    "productionMigrationAuthorized": false
+  },
+  "remainingApprovalItems": [
+    {
+      "code": "GOLDEN_ATLAS_STALE_DEVIATION",
+      "destination": "atlas-mountains",
+      "baselineEngineMonths": [5, 6, 7],
+      "candidateEngineMonths": [5, 6, 9],
+      "independentExpectedMonths": [4, 5, 6, 9, 10],
+      "requiredDecision": "Remove the now-unnecessary accepted deviation and re-sign the Golden Case because the candidate fully agrees with the independent season label."
+    },
+    {
+      "code": "GOLDEN_ANNAPURNA_STALE_DEVIATION",
+      "destination": "annapurna",
+      "baselineEngineMonths": [5, 9, 10],
+      "candidateEngineMonths": [5, 10, 11],
+      "independentExpectedMonths": [3, 4, 10, 11],
+      "requiredDecision": "Update and re-sign the accepted deviation. The candidate improves from one to two months inside the independent season, while May remains the documented disagreement."
+    }
+  ],
+  "nextStep": {
+    "model": "sol",
+    "action": "Obtain explicit reviewer approval for the two Golden Case registry changes, rerun the Golden gate, then hand the mechanical production migration to Luna."
+  }
+}
