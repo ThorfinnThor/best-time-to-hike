@@ -4,6 +4,8 @@ Normal code changes run the offline gate: rebuild from committed snapshots, vali
 
 Candidate batch 1 uses the manual `Refresh real static data` workflow with `publish=false` and `candidate_batch=1`. An optional comma-separated `destinations` input limits the staging run. Candidate mode rebuilds sourced geometry, DEM profiles, isolated configs, sampling and ERA5-Land outputs under `generated/intermediate/candidate-batch-1/`; the workflow rejects `publish=true` for every candidate batch. Before upload, `candidate:validate` proves the request-plan, invariant-orography, sampling, 1991–2020 completeness and canonical raw hashes agree. A checksummed `staging-evidence-manifest.json` then inventories the compact evidence bundle; bulky raw observations are omitted after their hashes have been verified and retained in climate provenance.
 
+The same workflow now accepts a `period` input. Selecting `1991-2025` uses the staged historical-average method in `data-config/methodology/historical-period-1991-2025-v1.json`, requests the padded UTC range `1990-12-31/2026-01-01`, and does not alter the active 1991–2020 release until the migration gates pass.
+
 The full gate is `pnpm verify`. A successful run also proves export determinism and writes `generated/reports/release-report.json`. That report is diagnostic and cannot approve a source or Golden label; unresolved gates remain explicit `BLOCKED_*` entries.
 
 `pnpm data:quality` writes the companion `generated/reports/data-quality.json`. Its configured warnings cover abrupt adjacent-month temperature changes, low completeness, identical cross-destination climate vectors, collapsed sampling coordinates, and strong elevation mismatch. Warnings are review signals and are never silently corrected.

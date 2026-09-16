@@ -10,6 +10,7 @@ import { maximumSeparationKm } from "../../lib/hiking/sampling";
 import { interpolate, overallScore, scoreComponents, type Curve } from "../../lib/scoring";
 import curves from "../../data-config/scoring/curves.json";
 import climateAggregation from "../../data-config/methodology/climate-aggregation-v1.json";
+import historicalPeriod from "../../data-config/methodology/historical-period-1991-2025-v1.json";
 import { requireApprovedSource } from "./source-preflight";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 
@@ -59,6 +60,47 @@ interface RequestPlanEntry {
   lon: number;
   consumers: Array<{destinationId:string;bandId:string;samplePointId:string}>;
   request: Record<string, unknown>;
+}
+
+interface ImportPeriod {
+  startYear: number;
+  endYear: number;
+  coreStartDate: string;
+  coreEndDate: string;
+  requestStartDate: string;
+  requestEndDate: string;
+  expectedObservationCount: number;
+  label: string;
+  classification: "wmo-standard-normal" | "project-defined-historical-climate-average";
+}
+
+const LEGACY_PERIOD: ImportPeriod = {
+  startYear: 1991,
+  endYear: 2020,
+  coreStartDate: "1991-01-01",
+  coreEndDate: "2020-12-31",
+  requestStartDate: "1991-01-01",
+  requestEndDate: "2020-12-31",
+  expectedObservationCount: 262_992,
+  label: "1991–2020",
+  classification: "wmo-standard-normal"
+};
+
+const HISTORICAL_PERIOD: ImportPeriod = {
+  startYear: historicalPeriod.period.startYear,
+  endYear: historicalPeriod.period.endYear,
+  coreStartDate: historicalPeriod.retrieval.aggregationLocalDateStart,
+  coreEndDate: historicalPeriod.retrieval.aggregationLocalDateEnd,
+  requestStartDate: historicalPeriod.retrieval.utcRequestStart.slice(0, 10),
+  requestEndDate: historicalPeriod.retrieval.utcRequestEnd.slice(0, 10),
+  expectedObservationCount: historicalPeriod.retrieval.expectedPaddedUtcHours,
+  label: "1991–2025",
+  classification: "project-defined-historical-climate-average"
+};
+
+function periodFromArguments(argumentsSet: Set<string>): ImportPeriod {
+  if (argumentsSet.has("--period=1991-2025") || argumentsSet.has("--historical-1991-2025")) return HISTORICAL_PERIOD;
+  return LEGACY_PERIOD;
 }
 
 const VARIABLES = [
@@ -158,7 +200,7 @@ function roundClimateMetrics(metrics: ReturnType<typeof aggregateBandPointMetric
   })) as unknown as ReturnType<typeof aggregateBandPointMetrics>;
 }
 
-function buildPlan(destinations: DestinationConfig[], samplingRoot: string): RequestPlanEntry[] {
+function buildPlan(destinations: DestinationConfig[], samplingRoot: string, period: ImportPeriod): RequestPlanEntry[] {
   const entries = new Map<string, RequestPlanEntry>();
   for (const destination of destinations) {
     const samplingPath = `${samplingRoot}/${destination.slug}.json`;
@@ -173,7 +215,7 @@ function buildPlan(destinations: DestinationConfig[], samplingRoot: string): Req
             dataset: "reanalysis-era5-land-timeseries",
             variable: VARIABLES,
             location: {longitude:point.lon,latitude:point.lat},
-            date: ["1991-01-01/2020-12-31"],
+            date: [`${period.requestStartDate}/${period.requestEndDate}`],
             data_format: "netcdf"
           }
         };
@@ -187,6 +229,7 @@ function buildPlan(destinations: DestinationConfig[], samplingRoot: string): Req
 
 async function main() {
   const argumentsSet = new Set(process.argv.slice(2));
+  const period = periodFromArguments(argumentsSet);
   const planOnly = argumentsSet.has("--plan");
   const publish = argumentsSet.has("--publish");
   const provisional = argumentsSet.has("--provisional");
@@ -209,7 +252,7 @@ async function main() {
   const destinations = readJson<DestinationConfig[]>(destinationPath)
     .filter((destination) => destination.active && (!requestedSlugs.size || requestedSlugs.has(destination.slug)));
   if (requestedSlugs.size && destinations.length !== requestedSlugs.size) throw new Error(`Unknown or inactive destination in request: ${[...requestedSlugs].join(",")}`);
-  const plan = buildPlan(destinations, samplingRoot);
+  const plan = buildPlan(destinations, samplingRoot, period);
   const orographyConfig = readJson<any>("data-config/methodology/era5-land-orography-v1.json");
   const representativenessConfig = readJson<any>("data-config/methodology/era5-land-representativeness-v1.json");
   const modelOrographyGate = representativenessConfig.modelOrography;
@@ -223,7 +266,19 @@ async function main() {
       downloadBytes: orographyConfig.downloadBytes,
       downloadSha256: orographyConfig.downloadSha256
     },
-    climateNormal: {startYear:1991,endYear:2020},
+    ...(period.classification === "wmo-standard-normal"
+      ? { climateNormal: {startYear: period.startYear, endYear: period.endYear} }
+      : {
+          historicalPeriod: {
+            startYear: period.startYear,
+            endYear: period.endYear,
+            classification: period.classification,
+            coreLocalDateStart: period.coreStartDate,
+            coreLocalDateEnd: period.coreEndDate
+          }
+        }),
+    requestDateRange: {start: period.requestStartDate, end: period.requestEndDate},
+    expectedObservationCount: period.expectedObservationCount,
     uniquePointCount: plan.length,
     entries: plan
   });
@@ -272,10 +327,10 @@ async function main() {
       const entry = pendingDownloads[nextDownload++];
       const rawPath = `${stagingRoot}/era5-raw/${entry.key}.ndjson.gz`;
       const metadataPath = `${stagingRoot}/era5-raw/${entry.key}.meta.json`;
-      console.log(`Downloading ERA5-Land 1991–2020 for ${entry.key} at ${entry.lat.toFixed(1)}, ${entry.lon.toFixed(1)}...`);
+      console.log(`Downloading ERA5-Land ${period.label} for ${entry.key} at ${entry.lat.toFixed(1)}, ${entry.lon.toFixed(1)}...`);
       await runPython("scripts/import/download_era5.py", [
         "--lat",String(entry.lat),"--lon",String(entry.lon),
-        "--start-date","1991-01-01","--end-date","2020-12-31",
+        "--start-date",period.requestStartDate,"--end-date",period.requestEndDate,
         "--output",rawPath,"--metadata",metadataPath
       ], "ERA5_DOWNLOAD001");
     }
@@ -316,16 +371,16 @@ async function main() {
       const expectedRequest = {
         variable: VARIABLES,
         location: {longitude:point.lon,latitude:point.lat},
-        date: ["1991-01-01/2020-12-31"],
+        date: [`${period.requestStartDate}/${period.requestEndDate}`],
         data_format: "netcdf"
       };
-      if (metadata.observationCount !== 262_992
+      if (metadata.observationCount !== period.expectedObservationCount
         || metadata.dataset !== "reanalysis-era5-land-timeseries"
         || metadata.datasetDoi !== "10.24381/ee82e357"
         || metadata.precipitationSemantics !== "INCREMENTAL_PER_TIMESTEP_M"
         || metadata.snowCoverSemantics !== "FRACTION_0_TO_1"
-        || metadata.firstUtcInstant !== "1991-01-01T00:00:00.000Z"
-        || metadata.lastUtcInstant !== "2020-12-31T23:00:00.000Z"
+        || metadata.firstUtcInstant !== `${period.requestStartDate}T00:00:00.000Z`
+        || metadata.lastUtcInstant !== `${period.requestEndDate}T23:00:00.000Z`
         || metadata.canonicalObservation?.encoding !== "gzip-ndjson-utf8"
         || metadata.canonicalObservation?.gzipMtime !== 0
         || !/^[a-f0-9]{64}$/.test(metadata.canonicalObservation?.sha256 ?? "")
@@ -363,8 +418,8 @@ async function main() {
           era5LandGridElevationM: pointOrography.era5LandGridElevationM,
           targetElevationM: consumer.targetElevationM,
           precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
-          startYear: 1991,
-          endYear: 2020
+          startYear: period.startYear,
+          endYear: period.endYear
         });
         result.monthly.forEach((metrics, monthIndex) => {
           try {
@@ -388,7 +443,7 @@ async function main() {
         const weightedPoints = results.map((result) => ({sampleWeight:result.point.sampleWeight,metrics:result.monthly[monthIndex]}));
         const metrics = roundClimateMetrics(aggregateBandPointMetrics(weightedPoints));
         const yearlyScores: number[] = [];
-        for (let year = 1991; year <= 2020; year += 1) {
+        for (let year = period.startYear; year <= period.endYear; year += 1) {
           const yearlyPointMetrics = results.map((result) => aggregateMonthlyClimate(result.daily, monthIndex + 1, {
             timezone: destination.timezone,
             lat: result.point.lat,
@@ -444,7 +499,17 @@ async function main() {
       source: "era5-land-timeseries",
       sourceDataset: "reanalysis-era5-land-timeseries",
       sourceDoi: "10.24381/ee82e357",
-      climateNormal: {startYear:1991,endYear:2020},
+      ...(period.classification === "wmo-standard-normal"
+        ? { climateNormal: {startYear: period.startYear, endYear: period.endYear} }
+        : {
+            historicalPeriod: {
+              startYear: period.startYear,
+              endYear: period.endYear,
+              classification: period.classification,
+              coreLocalDateStart: period.coreStartDate,
+              coreLocalDateEnd: period.coreEndDate
+            }
+          }),
       retrievedAt,
       precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
       temperatureElevationCorrection: {

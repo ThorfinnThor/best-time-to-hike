@@ -20,6 +20,14 @@ on:
           - none
           - "1"
         default: none
+      period:
+        description: "Historical period to retrieve and stage"
+        required: true
+        type: choice
+        options:
+          - "1991-2020"
+          - "1991-2025"
+        default: "1991-2020"
 
 permissions:
   contents: write
@@ -64,7 +72,7 @@ jobs:
         run: |
           pnpm data:dem
           pnpm data:sampling
-          pnpm data:era5 -- --refresh
+          pnpm data:era5 -- --refresh --period=${{ inputs.period }}
 
       - name: Stage candidate geometry, DEM, sampling, and ERA5-Land data
         if: ${{ inputs.publish == false && inputs.candidate_batch == '1' }}
@@ -73,14 +81,14 @@ jobs:
           pnpm data:dem-profile
           pnpm data:candidate-prepare
           pnpm data:sampling
-          pnpm data:era5 -- --refresh
+          pnpm data:era5 -- --refresh --period=${{ inputs.period }}
 
       - name: Build approved committed snapshots
         if: ${{ inputs.publish == true && inputs.candidate_batch == 'none' }}
         run: |
           pnpm data:dem -- --publish
           pnpm data:sampling -- --publish
-          pnpm data:era5 -- --publish --refresh
+          pnpm data:era5 -- --publish --refresh --period=${{ inputs.period }}
           pnpm verify
 
       - name: Validate candidate staging contracts

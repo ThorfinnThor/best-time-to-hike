@@ -1,0 +1,108 @@
+{
+  "schemaVersion": 1,
+  "decisionDate": "2026-09-16",
+  "decisionStatus": "approved-for-staging-implementation",
+  "productionReleaseApproval": false,
+  "scope": "All 315 selected ERA5-Land representative cells and every derived monthly hiking result",
+  "period": {
+    "startYear": 1991,
+    "endYear": 2025,
+    "completeCalendarYears": 35,
+    "classification": "project-defined-historical-climate-average",
+    "isWmoClimatologicalStandardNormal": false,
+    "publicLabelEn": "Based on the last 35 complete years (1991-2025)",
+    "publicLabelDe": "Basierend auf den letzten 35 vollständigen Jahren (1991-2025)",
+    "prohibitedLabels": [
+      "WMO climate normal 1991-2025",
+      "WMO-Klimanormal 1991-2025",
+      "forecast",
+      "current weather"
+    ]
+  },
+  "source": {
+    "datasetId": "reanalysis-era5-land-timeseries",
+    "datasetDoi": "10.24381/ee82e357",
+    "requiredProductState": "consolidated-final-era5-land",
+    "minimumFinalizationLagDaysAfterPeriodEnd": 90,
+    "earliestAcceptedRetrievalDate": "2026-03-31",
+    "nearRealTimeEra5LandTAllowed": false,
+    "rationale": "CDS replaces ERA5-Land-T with consolidated ERA5-Land about two months after the month in question. The additional margin prevents preliminary 2025 values from entering the historical average.",
+    "officialEvidence": [
+      "https://cds.climate.copernicus.eu/datasets/reanalysis-era5-land-timeseries?tab=overview",
+      "https://confluence.ecmwf.int/spaces/CKB/pages/140385202/ERA5-Land+data+documentation",
+      "https://community.wmo.int/site/knowledge-hub/programmes-and-initiatives/climate-services/wmo-climatological-normals"
+    ]
+  },
+  "retrieval": {
+    "aggregationLocalDateStart": "1991-01-01",
+    "aggregationLocalDateEnd": "2025-12-31",
+    "utcRequestStart": "1990-12-31T00:00:00Z",
+    "utcRequestEnd": "2026-01-01T23:00:00Z",
+    "expectedCoreUtcHours": 306816,
+    "expectedPaddedUtcHours": 306864,
+    "boundaryPolicy": "Retrieve one complete UTC day before and after the target period, then aggregate only local calendar dates from 1991-01-01 through 2025-12-31. This supplies complete boundary days for IANA offsets from UTC-12 through UTC+14.",
+    "requiredHourlyVariables": [
+      "temperatureK",
+      "dewpointK",
+      "windUMs",
+      "windVMs",
+      "precipitationM",
+      "snowCover",
+      "snowDepthM"
+    ],
+    "rawSeriesRequirements": [
+      "Every expected UTC instant is present exactly once and ordered strictly ascending",
+      "Every required variable is present at every expected UTC instant after the existing documented small-negative artifact treatment",
+      "Resolved grid coordinates, model elevation, request metadata, importer hash and canonical observation hash are retained",
+      "Any missing or duplicate hour rejects the cell from publication; no temporal interpolation or imputation is allowed"
+    ]
+  },
+  "aggregation": {
+    "yearWeighting": "equal-calendar-year-weight",
+    "dayWeightingWithinYearMonth": "equal-valid-local-day-weight",
+    "hourWeightingWithinAcceptedDay": "equal-valid-hour-weight",
+    "leapYearPolicy": "February 29 contributes to its own year-month, but each complete year-month receives the same final weight. Leap years therefore do not receive extra weight in the 35-year result.",
+    "eventProbability": "Calculate each complete year-month event fraction first, then average the 35 yearly fractions equally.",
+    "precipitationTotal": "Calculate each complete local-calendar year-month total first, then average the 35 totals equally.",
+    "missingData": "No imputation. The new ingest must be complete; existing per-metric validity rules remain a diagnostic safeguard and may not be used to publish a deliberately incomplete 1991-2025 source series.",
+    "minimumValidYearsPerMonthMetric": 32,
+    "minimumValidYearsRationale": "This preserves the existing 90 percent rule as a diagnostic fallback (ceil(35 x 0.9)); production ingest is nevertheless required to contain all 35 years."
+  },
+  "scoringMigration": {
+    "decision": "freeze-current-scoring-during-period-migration",
+    "weightsSha256": "4980b8832f1deb8e4742513b29a3d7dd226dcfa85900a2b2188b55c7f3a00bdb",
+    "curvesSha256": "f302a3c3babbaceafc0ede3caa31a5527c972df34dbd84b2ec4ae1cf5e46714c",
+    "recommendationEligibilitySha256": "01633b667baf12e46c0de1762d96f9eee385fa9cfde14eedf7386d6e86aa1689",
+    "seasonCalibrationSha256": "3d042b216736f769a5da9e3d5152a37e009126f1302a9ba69dfbda4334d6bf95",
+    "rationale": "Changing the time period and the scoring method simultaneously would make cause attribution impossible. Thresholds and weights remain fixed until the 1991-2020 versus 1991-2025 comparison has been reviewed.",
+    "automaticRecalibrationAllowed": false
+  },
+  "mandatoryComparisonReview": {
+    "baselinePeriod": { "startYear": 1991, "endYear": 2020 },
+    "candidatePeriod": { "startYear": 1991, "endYear": 2025 },
+    "reviewAll": [
+      "recommendation-eligibility changes",
+      "critical-component gate crossings",
+      "best-month membership changes",
+      "persistent-snow or independent-precipitation hold changes",
+      "Golden Case changes",
+      "changes at previously identified scientific extreme destinations"
+    ],
+    "rankedDiagnostics": [
+      "largest absolute monthly overall-score changes",
+      "largest monthly temperature changes",
+      "largest wet-day and precipitation-total changes",
+      "largest snow-day and snow-depth changes",
+      "largest ranking movements"
+    ],
+    "interpretation": "A flagged change requires explanation and review; it is not automatically an error and must not be tuned away merely to preserve the old result."
+  },
+  "publicationGates": [
+    "All 315 source cells pass padded-hour and variable completeness checks",
+    "All public aggregates are regenerated from the canonical 1991-2025 hourly records",
+    "The baseline comparison and mandatory reviews are complete",
+    "Golden Cases and held destinations are re-audited",
+    "Schemas, provenance, UI copy, SEO copy and reports no longer mislabel 1991-2025 as a climate normal",
+    "Technical verification, scientific audit and explicit production approval pass"
+  ]
+}
