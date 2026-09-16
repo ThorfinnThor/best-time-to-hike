@@ -68,10 +68,20 @@ jobs:
         run: exit 1
 
       - name: Stage real DEM, sampling, and ERA5-Land data
-        if: ${{ inputs.publish == false && inputs.candidate_batch == 'none' }}
+        if: ${{ inputs.publish == false && inputs.candidate_batch == 'none' && inputs.period == '1991-2020' }}
         run: |
           pnpm data:dem
           pnpm data:sampling
+          pnpm data:era5 -- --refresh --period=${{ inputs.period }}
+
+      - name: Reuse approved spatial snapshots for historical-period migration
+        if: ${{ inputs.publish == false && inputs.candidate_batch == 'none' && inputs.period == '1991-2025' }}
+        run: |
+          mkdir -p generated/intermediate/real-dem generated/intermediate/real-sampling
+          cp data-snapshots/dem/*.json generated/intermediate/real-dem/
+          cp data-snapshots/sampling/*.json generated/intermediate/real-sampling/
+          test "$(find generated/intermediate/real-dem -maxdepth 1 -name '*.json' | wc -l)" -eq 315
+          test "$(find generated/intermediate/real-sampling -maxdepth 1 -name '*.json' | wc -l)" -eq 315
           pnpm data:era5 -- --refresh --period=${{ inputs.period }}
 
       - name: Stage candidate geometry, DEM, sampling, and ERA5-Land data
