@@ -40,6 +40,22 @@ test('staging: 26 years are insufficient, 27 complete years are sufficient',()=>
   assert.equal(result.interannual.validInterannualYearCount,27);assert.equal(result.interannual.scoreStandardDeviation,0);
   assert.equal(result.metrics.sampleYearCount,27);assert.ok(result.metrics.dataCompleteness!>0.89&&result.metrics.dataCompleteness!<0.91);
 });
+test('historical staging: 1991-2025 uses all 35 years with the approved 32-year fallback',()=>{
+  const period={startYear:1991,endYear:2025,minimumValidYears:32};
+  assert.equal(aggregateValidMonth(years(31),6,period).metrics.temperatureHikingMeanC,null);
+  const result=aggregateValidMonth(years(35),6,period);
+  assert.equal(result.metrics.temperatureHikingMeanC,20);
+  assert.equal(result.metrics.sampleYearCount,35);
+  assert.equal(result.interannual.validInterannualYearCount,35);
+  assert.equal(result.coverage.validYearsByMetric.temperatureHikingMeanC,35);
+  assert.equal(result.metrics.dataCompleteness,1);
+});
+test('historical staging preserves exact snow depth around the scoring threshold',()=>{
+  const snowDays=years(35).map(day=>({...day,snowDay:true,snowCoverDaily:1,snowDepthDailyM:0.199}));
+  const result=aggregateValidMonth(snowDays,6,{startYear:1991,endYear:2025,minimumValidYears:32});
+  assert.ok(Math.abs(result.metrics.snowDepthMeanOnSnowDaysM!-0.199)<1e-12);
+  assert.notEqual(result.metrics.snowDepthMeanOnSnowDaysM,0.2);
+});
 test('staging: one missing rainfall day invalidates that year total but not event frequency',()=>{
   const days=years(27);days[0]={...days[0],precipitationDailyMm:null};
   const r=aggregateValidMonth(days,6);assert.equal(r.metrics.precipitationMonthlyMeanMm,null);assert.equal(r.metrics.wetDayProbability,1);

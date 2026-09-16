@@ -15,6 +15,18 @@ export interface ValidDay extends DailyPointClimate {
   validity: { expectedHours: number; expectedHikingHours: number; validHoursByVariable: Record<string,number>; excludedDaysByReason: string[] };
 }
 
+export interface ValidityPeriod {
+  startYear: number;
+  endYear: number;
+  minimumValidYears: number;
+}
+
+const defaultPeriod: ValidityPeriod = {
+  startYear: policy.normal.startYear,
+  endYear: policy.normal.endYear,
+  minimumValidYears: policy.monthly.minimumValidYears,
+};
+
 export function expectedDayHours(date: string, timezone: string) {
   const midnight = Date.parse(`${date}T00:00:00.000Z`);
   const hours: Date[] = [];
@@ -79,8 +91,12 @@ function quantile(values:Weighted[],p:number) {
   return sorted.at(-1)!.value;
 }
 
-export function aggregateValidMonth(days: ValidDay[], month: number) {
+export function aggregateValidMonth(days: ValidDay[], month: number, configuredPeriod: ValidityPeriod = defaultPeriod) {
   if(!Number.isInteger(month)||month<1||month>12) throw Error('Month must be 1..12');
+  const period = configuredPeriod;
+  if(!Number.isInteger(period.startYear)||!Number.isInteger(period.endYear)||period.endYear<period.startYear
+    ||!Number.isInteger(period.minimumValidYears)||period.minimumValidYears<1
+    ||period.minimumValidYears>period.endYear-period.startYear+1) throw Error('Invalid validity period');
   const identities=new Set<string>();
   for(const day of days) {
     if(identities.has(day.localDate)) throw Error('Duplicate local day');
@@ -91,7 +107,7 @@ export function aggregateValidMonth(days: ValidDay[], month: number) {
   const yearlyMetrics:Record<number,Record<string,number|null>>={};
   const audit:Record<string,{expectedDays:number;validDaysByMetric:Record<string,number>}>={};
   const temperatureYears:Weighted[][]=[];
-  for(let year=policy.normal.startYear;year<=policy.normal.endYear;year++) {
+  for(let year=period.startYear;year<=period.endYear;year++) {
     yearlyMetrics[year]={};
     const prefix=`${year}-${String(month).padStart(2,'0')}-`;
     const selected=days.filter(d=>d.localDate.startsWith(prefix));
@@ -130,31 +146,31 @@ export function aggregateValidMonth(days: ValidDay[], month: number) {
   }
   const metricKeys=['temperatureHikingMeanC','relativeHumidityHikingMeanPct','windHikingMeanKmh','highWindHourProbability','severeWindHourProbability','hotDayProbability','severeHotDayProbability','snowDayProbability','wetDayProbability','heavyRainDayProbability','precipitationMonthlyMeanMm','snowDepthMeanOnSnowDaysM'];
   const validYearsByMetric=Object.fromEntries(metricKeys.map(k=>[k,(yearly[k]??[]).length]));
-  const metrics:Record<string,number|null>=Object.fromEntries(metricKeys.map(k=>[k,validYearsByMetric[k]>=policy.monthly.minimumValidYears?average(yearly[k]):null]));
+  const metrics:Record<string,number|null>=Object.fromEntries(metricKeys.map(k=>[k,validYearsByMetric[k]>=period.minimumValidYears?average(yearly[k]):null]));
   // Conditional depth requires enough valid snow-event years, not 27 years containing snow.
-  if(validYearsByMetric.snowDayProbability>=policy.monthly.minimumValidYears)
+  if(validYearsByMetric.snowDayProbability>=period.minimumValidYears)
     metrics.snowDepthMeanOnSnowDaysM=average(yearly.snowDepthMeanOnSnowDaysM??[])??0;
-  const samples=temperatureYears.length>=policy.monthly.minimumValidYears?temperatureYears.flat():[];
+  const samples=temperatureYears.length>=period.minimumValidYears?temperatureYears.flat():[];
   metrics.temperatureHikingP10C=quantile(samples,.1);metrics.temperatureHikingP90C=quantile(samples,.9);
   metrics.temperatureUtilityScore=samples.length?samples.reduce((s,x)=>s+interpolate(x.value,curves.temperature as Curve)*x.weight,0)/temperatureYears.length:null;
   const daylight:number[]=[];
-  if(days.length) for(let year=policy.normal.startYear;year<=policy.normal.endYear;year++) {
+  if(days.length) for(let year=period.startYear;year<=period.endYear;year++) {
     const values:number[]=[];
     for(let date=1;date<=new Date(Date.UTC(year,month,0)).getUTCDate();date++)
       values.push(daylightForLocalDate(`${year}-${String(month).padStart(2,'0')}-${String(date).padStart(2,'0')}`,days[0].lat,days[0].lon,days[0].timezone).daylightHours);
     daylight.push(average(values)!);
   }
   metrics.daylightHoursMean=average(daylight);
-  for(let year=policy.normal.startYear;year<=policy.normal.endYear;year++) yearlyMetrics[year].daylightHoursMean=daylight[year-policy.normal.startYear]??null;
-  const expectedRawCells=Array.from({length:policy.normal.endYear-policy.normal.startYear+1},(_,yearIndex)=>{
-    const year=policy.normal.startYear+yearIndex;
+  for(let year=period.startYear;year<=period.endYear;year++) yearlyMetrics[year].daylightHoursMean=daylight[year-period.startYear]??null;
+  const expectedRawCells=Array.from({length:period.endYear-period.startYear+1},(_,yearIndex)=>{
+    const year=period.startYear+yearIndex;
     return Array.from({length:new Date(Date.UTC(year,month,0)).getUTCDate()},(_,dayIndex)=>
       expectedDayHours(`${year}-${String(month).padStart(2,'0')}-${String(dayIndex+1).padStart(2,'0')}`,days[0]?.timezone??'UTC').length*config.requiredHourlyVariables.length
     ).reduce((sum,value)=>sum+value,0);
   }).reduce((sum,value)=>sum+value,0);
   const selectedMonthDays=days.filter(day=>{
     const year=Number(day.localDate.slice(0,4));
-    return Number(day.localDate.slice(5,7))===month&&year>=policy.normal.startYear&&year<=policy.normal.endYear;
+    return Number(day.localDate.slice(5,7))===month&&year>=period.startYear&&year<=period.endYear;
   });
   metrics.dataCompleteness=expectedRawCells?Math.min(1,selectedMonthDays.reduce((sum,day)=>sum+day.rawPresentCellCount,0)/expectedRawCells):null;
   metrics.sampleYearCount=new Set(selectedMonthDays.filter(day=>day.rawPresentCellCount>0).map(day=>Number(day.localDate.slice(0,4)))).size;

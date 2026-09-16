@@ -6,6 +6,7 @@ import { createInterface } from "node:readline";
 import type { BandClimateMonth, DestinationConfig } from "../../lib/data/types";
 import { aggregateBandPointMetrics } from "../../lib/hiking/band-climate";
 import { aggregateMonthlyClimate, aggregatePointClimate, type DailyPointClimate, type HourlyClimateObservation, type MonthlyPointClimate } from "../../lib/hiking/climate";
+import { aggregateValidDays, aggregateValidMonth } from "../../lib/hiking/climate-validity";
 import { maximumSeparationKm } from "../../lib/hiking/sampling";
 import { interpolate, overallScore, scoreComponents, type Curve } from "../../lib/scoring";
 import curves from "../../data-config/scoring/curves.json";
@@ -50,8 +51,9 @@ interface OrographySnapshot {
 
 interface PointResult {
   point: SamplingPoint;
-  daily: DailyPointClimate[];
-  monthly: MonthlyPointClimate[];
+  daily?: DailyPointClimate[];
+  monthly?: MonthlyPointClimate[];
+  validityMonthly?: ReturnType<typeof aggregateValidMonth>[];
 }
 
 interface RequestPlanEntry {
@@ -241,6 +243,9 @@ async function main() {
   }
   if (candidateBatch !== null && publish) throw new Error("ERA5_REQUEST001 candidate batches cannot be published");
   if (publish && provisional) throw new Error("ERA5_REQUEST001 --publish and --provisional are mutually exclusive");
+  if (publish && period.classification === "project-defined-historical-climate-average") {
+    throw new Error("BLOCKED_HISTORICAL_PERIOD_RELEASE: 1991-2025 remains staging-only until the scientific comparison and production approval pass");
+  }
   const destinationArgument = [...argumentsSet].find((value) => value.startsWith("--destination="));
   const selectedSlug = destinationArgument?.slice("--destination=".length);
   const requestedSlugs = new Set((selectedSlug ? [selectedSlug] : (process.env.BTH_DESTINATIONS ?? "").split(","))
@@ -411,15 +416,29 @@ async function main() {
       const observations = await readHourlyObservations(rawPath);
       if (observations.length !== metadata.observationCount) throw new Error(`ERA5_REQUEST001 raw observation count mismatch for ${key}`);
       for (const consumer of consumers) {
-        const result = aggregatePointClimate(observations, {
+        const aggregationOptions = {
           timezone: destination.timezone,
           lat: consumer.lat,
           lon: consumer.lon,
           era5LandGridElevationM: pointOrography.era5LandGridElevationM,
           targetElevationM: consumer.targetElevationM,
-          precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
+          precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M" as const,
+        };
+        if (period.classification === "project-defined-historical-climate-average") {
+          const days = aggregateValidDays(observations, aggregationOptions);
+          const validityPeriod = {
+            startYear: period.startYear,
+            endYear: period.endYear,
+            minimumValidYears: historicalPeriod.aggregation.minimumValidYearsPerMonthMetric,
+          };
+          const validityMonthly = Array.from({length:12}, (_, monthIndex) => aggregateValidMonth(days, monthIndex + 1, validityPeriod));
+          pointResults.set(consumer.id, { point: consumer, validityMonthly });
+          continue;
+        }
+        const result = aggregatePointClimate(observations, {
+          ...aggregationOptions,
           startYear: period.startYear,
-          endYear: period.endYear
+          endYear: period.endYear,
         });
         result.monthly.forEach((metrics, monthIndex) => {
           try {
@@ -440,11 +459,43 @@ async function main() {
       const samplingBand = sampling.bands[bandConfig.id];
       const results = (samplingBand.points as SamplingPoint[]).map((point) => pointResults.get(point.id)!);
       const months: BandClimateMonth[] = Array.from({length:12}, (_, monthIndex) => {
-        const weightedPoints = results.map((result) => ({sampleWeight:result.point.sampleWeight,metrics:result.monthly[monthIndex]}));
+        const points = results.map((result) => result.point);
+        const demBand = dem.bands[bandConfig.id];
+        const structure = {
+          month: monthIndex + 1,
+          bandId: bandConfig.id,
+          targetElevationM: samplingBand.targetElevationM,
+          meanElevationMismatchM: round(points.reduce((sum, point) => sum + point.elevationMismatchM * point.sampleWeight, 0), 1),
+          samplePointCount: points.length,
+          samplePointMaxSeparationKm: round(maximumSeparationKm(points), 1),
+          polygonEquivalentDiameterKm: round(diameterKm, 1),
+          terrainReliefM: round(demBand.maxM - demBand.minM, 1),
+        };
+        if (period.classification === "project-defined-historical-climate-average") {
+          if (results.length !== 1 || points[0].sampleWeight !== 1 || !results[0].validityMonthly) {
+            throw new Error(`ERA5_AGG002 historical validity aggregation requires one weight-1 representative point for ${destination.id}/${bandConfig.id}`);
+          }
+          const validity = results[0].validityMonthly[monthIndex];
+          if (!validity.scoringInputsAvailable || validity.interannual.scoreStandardDeviation === null
+            || validity.interannual.validInterannualYearCount !== period.endYear - period.startYear + 1) {
+            throw new Error(`ERA5_AGG002 incomplete historical validity result for ${destination.id}/${bandConfig.id}/${monthIndex + 1}`);
+          }
+          return {
+            ...validity.metrics,
+            ...structure,
+            interannualScoreSd: validity.interannual.scoreStandardDeviation,
+            validInterannualYearCount: validity.interannual.validInterannualYearCount,
+            scoringInputsAvailable: validity.scoringInputsAvailable,
+            missingScoringInputs: validity.missingScoringInputs,
+            observationCoverage: validity.coverage,
+            interannualYearlyScores: validity.interannual.yearlyScores,
+          } as unknown as BandClimateMonth;
+        }
+        const weightedPoints = results.map((result) => ({sampleWeight:result.point.sampleWeight,metrics:result.monthly![monthIndex]}));
         const metrics = roundClimateMetrics(aggregateBandPointMetrics(weightedPoints));
         const yearlyScores: number[] = [];
         for (let year = period.startYear; year <= period.endYear; year += 1) {
-          const yearlyPointMetrics = results.map((result) => aggregateMonthlyClimate(result.daily, monthIndex + 1, {
+          const yearlyPointMetrics = results.map((result) => aggregateMonthlyClimate(result.daily!, monthIndex + 1, {
             timezone: destination.timezone,
             lat: result.point.lat,
             lon: result.point.lon,
@@ -472,18 +523,9 @@ async function main() {
           })));
         }
         if (!yearlyScores.length) throw new Error(`ERA5_AGG001 no valid interannual scores for ${destination.id}/${bandConfig.id}/${monthIndex + 1}`);
-        const points = results.map((result) => result.point);
-        const demBand = dem.bands[bandConfig.id];
         return {
           ...metrics,
-          month: monthIndex + 1,
-          bandId: bandConfig.id,
-          targetElevationM: samplingBand.targetElevationM,
-          meanElevationMismatchM: round(points.reduce((sum, point) => sum + point.elevationMismatchM * point.sampleWeight, 0), 1),
-          samplePointCount: points.length,
-          samplePointMaxSeparationKm: round(maximumSeparationKm(points), 1),
-          polygonEquivalentDiameterKm: round(diameterKm, 1),
-          terrainReliefM: round(demBand.maxM - demBand.minM, 1),
+          ...structure,
           interannualScoreSd: round(populationStandardDeviation(yearlyScores), 1),
           validInterannualYearCount: yearlyScores.length
         };
@@ -493,7 +535,9 @@ async function main() {
     const retrievedAt = pointMetadata.map((metadata) => metadata.climate.retrievedAt).sort().at(-1);
     const snapshot = {
       schemaVersion: 2,
-      datasetStatus: provisional ? "provisional" : candidateBatch === null ? "production" : "staging",
+      datasetStatus: period.classification === "project-defined-historical-climate-average"
+        ? "provisional"
+        : provisional ? "provisional" : candidateBatch === null ? "production" : "staging",
       destinationId: destination.id,
       fixture: false,
       source: "era5-land-timeseries",
@@ -508,8 +552,11 @@ async function main() {
               classification: period.classification,
               coreLocalDateStart: period.coreStartDate,
               coreLocalDateEnd: period.coreEndDate
-            }
-          }),
+          }
+        }),
+      ...(period.classification === "project-defined-historical-climate-average"
+        ? { aggregationPolicyVersion: "observation-validity-v1", migrationStatus: "candidate-not-published" }
+        : {}),
       retrievedAt,
       precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
       temperatureElevationCorrection: {
