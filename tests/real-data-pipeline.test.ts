@@ -121,3 +121,23 @@ test("1991-2025 uses observation-validity aggregation and remains staging-only",
   assert.match(climateImporter, /aggregationPolicyVersion: "observation-validity-v1"/);
   assert.match(climateImporter, /BLOCKED_HISTORICAL_PERIOD_RELEASE/);
 });
+
+test("historical-period review covers every mandatory scientific comparison", () => {
+  const comparison = readFileSync("scripts/validate/compare-historical-period.ts", "utf8");
+  for (const requiredSection of [
+    "recommendationEligibility",
+    "criticalComponentGateCrossings",
+    "bestMonthChanges",
+    "holdChanges",
+    "goldenCases",
+    "extremeDestinations",
+    "largestOverallScoreChanges",
+    "largestTemperatureChanges",
+    "largestWetDayChanges",
+    "largestPrecipitationTotalChanges",
+    "largestSnowDayChanges",
+    "largestSnowDepthChanges",
+    "largestRankingMovements",
+  ]) assert.match(comparison, new RegExp(requiredSection));
+  assert.match(comparison, /productionReleaseApproval:false/);
+});
