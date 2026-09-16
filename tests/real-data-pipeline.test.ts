@@ -152,6 +152,7 @@ test("1991-2025 scientific decision is reproducible and remains blocked for prod
       githubActionsRun: number;
       artifactManifestSha256: string;
       comparisonSha256: string;
+      postSignoffComparisonSha256: string;
       verifiedManifestFiles: number;
     };
     integrity: {
@@ -174,15 +175,23 @@ test("1991-2025 scientific decision is reproducible and remains blocked for prod
       automaticThresholdOrWeightChangeAuthorized: boolean;
       productionMigrationAuthorized: boolean;
     };
+    goldenCaseSignoff: {
+      approvedBy: string;
+      approvedAt: string;
+      gatePassed: boolean;
+      gateResult: {agrees: number; partly: number; disagrees: number; noAnswer: number; acceptedDeviations: number};
+      decisions: Array<{destination: string; engineMonths: number[]}>;
+    };
     remainingApprovalItems: Array<{destination: string}>;
     nextStep: {model: string};
   };
 
-  assert.equal(review.status, "conditional-scientific-pass-awaiting-golden-case-signoff");
+  assert.equal(review.status, "scientifically-approved-for-mechanical-migration");
   assert.equal(review.productionReleaseApproval, false);
   assert.equal(review.evidence.githubActionsRun, 35092846294);
   assert.match(review.evidence.artifactManifestSha256, /^[a-f0-9]{64}$/);
   assert.match(review.evidence.comparisonSha256, /^[a-f0-9]{64}$/);
+  assert.equal(review.evidence.postSignoffComparisonSha256, "f546f3559a91165303c19878fb0e6d0159d2873431b6a23640ed8dddb513a0aa");
   assert.equal(review.evidence.verifiedManifestFiles, 950);
   assert.equal(review.integrity.destinationCount, 315);
   assert.equal(review.integrity.monthCount, 3780);
@@ -197,12 +206,19 @@ test("1991-2025 scientific decision is reproducible and remains blocked for prod
   assert.equal(review.comparison.goldenCaseChanges, 3);
   assert.equal(review.scientificDecision.periodMigrationAccepted, true);
   assert.equal(review.scientificDecision.automaticThresholdOrWeightChangeAuthorized, false);
-  assert.equal(review.scientificDecision.productionMigrationAuthorized, false);
+  assert.equal(review.scientificDecision.productionMigrationAuthorized, true);
+  assert.equal(review.goldenCaseSignoff.approvedBy, "ThorfinnThor");
+  assert.ok(Number.isFinite(Date.parse(review.goldenCaseSignoff.approvedAt)));
+  assert.equal(review.goldenCaseSignoff.gatePassed, true);
+  assert.deepEqual(review.goldenCaseSignoff.gateResult, {agrees: 34, partly: 1, disagrees: 0, noAnswer: 6, acceptedDeviations: 5});
   assert.deepEqual(
-    review.remainingApprovalItems.map(({destination}) => destination).sort(),
+    review.goldenCaseSignoff.decisions.map(({destination}) => destination).sort(),
     ["annapurna", "atlas-mountains"],
   );
-  assert.equal(review.nextStep.model, "sol");
+  assert.deepEqual(review.goldenCaseSignoff.decisions.find(({destination}) => destination === "atlas-mountains")?.engineMonths, [5, 6, 9]);
+  assert.deepEqual(review.goldenCaseSignoff.decisions.find(({destination}) => destination === "annapurna")?.engineMonths, [5, 10, 11]);
+  assert.deepEqual(review.remainingApprovalItems, []);
+  assert.equal(review.nextStep.model, "luna");
 });
 
 test("published historical-period review points only to corrected evidence", () => {
@@ -210,7 +226,7 @@ test("published historical-period review points only to corrected evidence", () 
   assert.match(report, /35073854396.*superseded/s);
   assert.match(report, /35092846294/);
   assert.match(report, /Maximum absolute exact score change: `3\.5803`/);
-  assert.match(report, /production publication/);
+  assert.match(report, /production-release approval/);
   assert.doesNotMatch(report, /Largest absolute score change: `29`/);
   assert.doesNotMatch(report, /\| durmitor \| 11 \|/i);
 });

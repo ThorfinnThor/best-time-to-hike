@@ -4,6 +4,14 @@ export interface GoldenCase {
   approvedBy: string | null;
   approvedAt: string | null;
   acceptedDeviation?: { reason: string; recordedBy: string; recordedAt: string; engineMonths: number[] };
+  historicalPeriodApprovals?: Array<{
+    startYear: number;
+    endYear: number;
+    approvedBy: string;
+    approvedAt: string;
+    engineMonths: number[];
+    acceptedDeviation: GoldenCase["acceptedDeviation"] | null;
+  }>;
 }
 
 const validMonths = (months: number[]) => Array.isArray(months)
@@ -59,4 +67,39 @@ export function reviewGoldenCases(
     },
     cases,
   };
+}
+
+/** Apply an explicitly signed engine-answer review without rewriting the independent label. */
+export function reviewGoldenCasesForPeriod(
+  golden: { status: string; cases: GoldenCase[] },
+  destinations: { slug: string; bestMonths: number[]; recommendationHoldReason?: string }[],
+  period: { startYear: number; endYear: number },
+) {
+  const approvals = new Map(golden.cases.flatMap((item) => {
+    const matches = item.historicalPeriodApprovals?.filter((approval) =>
+      approval.startYear === period.startYear && approval.endYear === period.endYear) ?? [];
+    if (matches.length > 1) throw new Error(`${item.slug}: duplicate historical-period approval`);
+    return matches.map((approval) => [item.slug, approval] as const);
+  }));
+  const effective = {
+    ...golden,
+    cases: golden.cases.map((item) => {
+      const approval = approvals.get(item.slug);
+      if (!approval) return item;
+      const { acceptedDeviation: _oldDeviation, ...withoutDeviation } = item;
+      return approval.acceptedDeviation
+        ? { ...withoutDeviation, acceptedDeviation: approval.acceptedDeviation }
+        : withoutDeviation;
+    }),
+  };
+  const review = reviewGoldenCases(effective, destinations);
+  for (const item of review.cases) {
+    const approval = approvals.get(item.slug);
+    if (!approval) continue;
+    if (!signed(approval.approvedBy, approval.approvedAt)
+      || !validMonths(approval.engineMonths)) item.errors.push("invalid-period-approval");
+    if (!sameMonths(item.engineMonths, approval.engineMonths)) item.errors.push("stale-period-approval");
+  }
+  review.passed = review.passed && review.cases.every((item) => !item.errors.length);
+  return review;
 }

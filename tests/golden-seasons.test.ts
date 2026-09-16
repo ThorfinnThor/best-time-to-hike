@@ -38,6 +38,14 @@ interface GoldenCase {
    * would have hidden it.
    */
   acceptedDeviation?: {reason: string; recordedBy: string; recordedAt: string; engineMonths: number[]};
+  historicalPeriodApprovals?: Array<{
+    startYear: number;
+    endYear: number;
+    approvedBy: string;
+    approvedAt: string;
+    engineMonths: number[];
+    acceptedDeviation: GoldenCase["acceptedDeviation"] | null;
+  }>;
 }
 
 const golden = loadGoldenCases() as {status: string; cases: GoldenCase[]};

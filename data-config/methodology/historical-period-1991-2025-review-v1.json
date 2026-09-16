@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "reviewDate": "2026-09-16",
-  "status": "conditional-scientific-pass-awaiting-golden-case-signoff",
+  "status": "scientifically-approved-for-mechanical-migration",
   "productionReleaseApproval": false,
   "scope": "1991-2020 versus 1991-2025 comparison for all 315 selected ERA5-Land representative cells and 3780 destination-months",
   "evidence": {
@@ -10,6 +10,7 @@
     "artifactName": "real-data-staging-35092846294",
     "artifactManifestSha256": "48d18cce336eeeb281ab86cadd6b033ecca26299b1c4385a9851897b97e170a8",
     "comparisonSha256": "1d5cc8e0999654c33864f33ae4380cc365565d2a6712215f2e92b60949e66ce4",
+    "postSignoffComparisonSha256": "f546f3559a91165303c19878fb0e6d0159d2873431b6a23640ed8dddb513a0aa",
     "verifiedManifestFiles": 950,
     "verifiedManifestBytes": 221099613
   },
@@ -43,9 +44,36 @@
     "periodMigrationAccepted": true,
     "rationale": "The corrected candidate uses the same unrounded observation-validity aggregation and frozen scoring policy as the baseline. Changes are small overall, every eligibility change is explained by an exact configured critical-component crossing, no scientific hold changes, no reviewed extreme destination changes, and no unexplained metric discontinuity was found.",
     "automaticThresholdOrWeightChangeAuthorized": false,
-    "productionMigrationAuthorized": false
+    "productionMigrationAuthorized": true
   },
-  "remainingApprovalItems": [
+  "goldenCaseSignoff": {
+    "approvedBy": "ThorfinnThor",
+    "approvedAt": "2026-09-16T21:02:07Z",
+    "periodStartYear": 1991,
+    "periodEndYear": 2025,
+    "gatePassed": true,
+    "gateResult": {
+      "agrees": 34,
+      "partly": 1,
+      "disagrees": 0,
+      "noAnswer": 6,
+      "acceptedDeviations": 5
+    },
+    "decisions": [
+      {
+        "destination": "atlas-mountains",
+        "engineMonths": [5, 6, 9],
+        "decision": "Remove the period-specific accepted deviation because every candidate best month falls inside the independently approved season. The 1991-2020 deviation remains unchanged until the production dataset is migrated."
+      },
+      {
+        "destination": "annapurna",
+        "engineMonths": [5, 10, 11],
+        "decision": "Accept the period-specific deviation for May while recording that October and November now agree with the independent season. The independent label remains unchanged."
+      }
+    ]
+  },
+  "remainingApprovalItems": [],
+  "supersededApprovalItems": [
     {
       "code": "GOLDEN_ATLAS_STALE_DEVIATION",
       "destination": "atlas-mountains",
@@ -64,7 +92,7 @@
     }
   ],
   "nextStep": {
-    "model": "sol",
-    "action": "Obtain explicit reviewer approval for the two Golden Case registry changes, rerun the Golden gate, then hand the mechanical production migration to Luna."
+    "model": "luna",
+    "action": "Mechanically migrate the approved 1991-2025 snapshots, provenance text and public exports, then run the full verification suite before a final Sol release audit."
   }
 }

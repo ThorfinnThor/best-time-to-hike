@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { reviewGoldenCases, type GoldenCase } from "../scripts/lib/golden-review";
+import { reviewGoldenCases, reviewGoldenCasesForPeriod, type GoldenCase } from "../scripts/lib/golden-review";
 
 function fixture() {
   const cases: GoldenCase[] = Array.from({ length: 30 }, (_, index) => ({
@@ -55,4 +55,29 @@ test("a scientific review hold quarantines the engine answer without rewriting t
   assert.deepEqual(review.excludedForScientificReview, ["destination-0"]);
   assert.deepEqual(review.cases[0].expectedMonths, [6, 7, 8]);
   assert.deepEqual(review.cases[0].errors, []);
+});
+
+test("a signed period review changes the engine exception without rewriting the independent label", () => {
+  const { golden, destinations } = fixture();
+  golden.cases[0].acceptedDeviation = {
+    reason: "The current production answer has a reviewed mismatch that stays valid until the period migration is published.",
+    recordedBy: "reviewer", recordedAt: "2026-09-07", engineMonths: [5, 10],
+  };
+  golden.cases[0].historicalPeriodApprovals = [{
+    startYear: 1991,
+    endYear: 2025,
+    approvedBy: "ThorfinnThor",
+    approvedAt: "2026-09-16T21:02:07Z",
+    engineMonths: [6, 7, 8],
+    acceptedDeviation: null,
+  }];
+  const review = reviewGoldenCasesForPeriod(golden, destinations, {startYear: 1991, endYear: 2025});
+  assert.equal(review.passed, true);
+  assert.deepEqual(review.cases[0].expectedMonths, [6, 7, 8]);
+  assert.equal(review.cases[0].acceptedDeviation, false);
+
+  destinations[0].bestMonths = [6, 7, 9];
+  const stale = reviewGoldenCasesForPeriod(golden, destinations, {startYear: 1991, endYear: 2025});
+  assert.equal(stale.passed, false);
+  assert.ok(stale.cases[0].errors.includes("stale-period-approval"));
 });

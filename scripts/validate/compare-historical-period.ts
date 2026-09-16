@@ -4,7 +4,7 @@ import type { BandClimateMonth, ComponentScores, PublicDestination, PublicMonth 
 import { overallScore, scoreComponents } from "../../lib/scoring";
 import { bestMonthsFor, CRITICAL_COMPONENT_KEYS } from "../../lib/scoring/recommendations";
 import { loadGoldenCases } from "../lib/golden-cases";
-import { reviewGoldenCases } from "../lib/golden-review";
+import { reviewGoldenCases, reviewGoldenCasesForPeriod } from "../lib/golden-review";
 import { ROOT } from "../lib/io";
 
 type HoldReason = "persistent-snow" | "precipitation-validation";
@@ -149,7 +149,7 @@ for (let monthIndex=0;monthIndex<12;monthIndex+=1) {
 const golden = loadGoldenCases();
 const candidateForReview = scored.map((item)=>({slug:item.destination.slug,bestMonths:bestMonthsFor(item.months),recommendationHoldReason:item.recommendationHoldReason}));
 const baselineGolden = reviewGoldenCases(golden, baseline);
-const candidateGolden = reviewGoldenCases(golden, candidateForReview);
+const candidateGolden = reviewGoldenCasesForPeriod(golden, candidateForReview, {startYear:1991,endYear:2025});
 const baselineGoldenBySlug = new Map(baselineGolden.cases.map((item)=>[item.slug,item]));
 const goldenCaseChanges = candidateGolden.cases.filter((item)=>{
   const old = baselineGoldenBySlug.get(item.slug)!;

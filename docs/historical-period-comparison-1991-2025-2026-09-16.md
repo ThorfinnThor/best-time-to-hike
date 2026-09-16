@@ -1,6 +1,6 @@
 # Historical-period comparison: 1991–2025
 
-Status: **conditional scientific pass; Golden Case sign-off still required; not a production release**.
+Status: **scientifically approved for mechanical migration; not yet a production release**.
 
 ## Superseded evidence
 
@@ -98,16 +98,23 @@ The baseline result is 33 agreements, 2 partial agreements, 0 disagreements
 and 6 cases without an independent seasonal answer. The corrected candidate is
 34 agreements, 1 partial agreement, 0 disagreements and 6 without an answer.
 
-Two signed registry entries nevertheless need explicit reviewer approval:
+The two changed registry entries were explicitly re-approved by
+`ThorfinnThor` on 2026-09-16 for the 1991–2025 period:
 
 1. **Atlas Mountains:** the candidate changes from `[May, June, July]` to
    `[May, June, September]`, which fully agrees with the independent season
-   `[April, May, June, September, October]`. Remove the obsolete accepted
-   deviation and re-sign the case.
+   `[April, May, June, September, October]`. The obsolete accepted deviation
+   was removed for the candidate period and the case was re-signed.
 2. **Annapurna:** the candidate changes from `[May, September, October]` to
    `[May, October, November]`. It now matches two independent months instead of
-   one; May remains the documented deviation. Update and re-sign the accepted
-   deviation.
+   one; May remains the documented deviation. The updated deviation was
+   re-signed without changing the independent label.
+
+After applying these two period-specific decisions, the candidate Golden gate
+passes with 34 agreements, 1 partial agreement, 0 disagreements, 6 cases
+without an independent answer and 5 accepted deviations. The signed
+post-review comparison has SHA-256
+`f546f3559a91165303c19878fb0e6d0159d2873431b6a23640ed8dddb513a0aa`.
 
 Torres del Paine changes from `[February, March]` to
 `[January, February, March]` and continues to agree with its independent season.
@@ -125,10 +132,12 @@ The corrected 1991–2025 candidate passes the period-migration review because:
 - no unexplained metric discontinuity was found.
 
 This decision accepts the **historical-period migration only**. It does not
-authorize an automatic threshold or weight change, and it does not authorize a
-production publication. Production migration remains blocked until the Atlas
-Mountains and Annapurna Golden Case records are explicitly approved and the
-Golden gate is rerun successfully.
+authorize an automatic threshold or weight change, and it is not itself the
+final production-release approval. The Atlas Mountains and Annapurna decisions
+are stored as period-specific approvals, so the current 1991–2020 Golden
+records remain unchanged until the corresponding public data are migrated.
+The next step is the mechanical snapshot, provenance and public-export
+migration, followed by the final Sol release audit.
 
 The machine-readable decision is recorded in
 `data-config/methodology/historical-period-1991-2025-review-v1.json`.
