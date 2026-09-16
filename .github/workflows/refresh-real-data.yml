@@ -93,6 +93,20 @@ jobs:
           pnpm data:sampling
           pnpm data:era5 -- --refresh --period=${{ inputs.period }}
 
+      - name: Compare historical-period staging against production baseline
+        if: ${{ inputs.publish == false && inputs.candidate_batch == 'none' && inputs.period == '1991-2025' }}
+        env:
+          BTH_CLIMATE_ROOT: generated/intermediate/real-climate
+          BTH_DEM_ROOT: generated/intermediate/real-dem
+          BTH_SAMPLING_ROOT: generated/intermediate/real-sampling
+          BTH_NORMALIZED_OUTPUT: generated/intermediate/normalized-1991-2025.json
+          BTH_NORMALIZED_INPUT: generated/intermediate/normalized-1991-2025.json
+          BTH_SCORED_OUTPUT: generated/intermediate/scored-1991-2025.json
+        run: |
+          pnpm data:normalize
+          pnpm data:score
+          pnpm science:compare-period
+
       - name: Build approved committed snapshots
         if: ${{ inputs.publish == true && inputs.candidate_batch == 'none' }}
         run: |
@@ -122,6 +136,7 @@ jobs:
             generated/intermediate/real-climate
             generated/intermediate/era5-invariants
             generated/intermediate/era5-request-plan.json
+            generated/intermediate/historical-period-comparison.json
             generated/intermediate/staging-evidence-manifest.json
             generated/intermediate/candidate-batch-1
             !generated/intermediate/candidate-batch-1/era5-raw

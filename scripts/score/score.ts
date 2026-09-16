@@ -12,7 +12,7 @@ type ScoredMonth = Omit<PublicMonth, "components" | "overallScore" | "scoreLevel
 type RepresentativeCell = {lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string};
 const representativeOverrides = readJson<{overrides:Record<string,{label:string;reason:string}>}>("data-config/sources/representative-cell-overrides.json").overrides;
 const precipitationReviewHolds = new Set(independentClimateHolds.destinationIds);
-const normalized = readJson<Normalized[]>("generated/intermediate/normalized.json");
+const normalized = readJson<Normalized[]>(process.env.BTH_NORMALIZED_INPUT?.trim() || "generated/intermediate/normalized.json");
 
 function weightedComponents(bands: InternalBandMonth[], destination: DestinationConfig): ComponentScores {
   const result = {temperature:0,precipitation:0,snow:0,heatStress:0,wind:0,daylight:0};

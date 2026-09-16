@@ -30,6 +30,8 @@ const evidencePaths = candidateBatch === null
       `${stagingRoot}/era5-request-plan.json`,
       "generated/intermediate/era5-invariants/era5-land-geopotential.nc"
     ];
+const historicalComparisonPath = `${stagingRoot}/historical-period-comparison.json`;
+if (existsSync(join(ROOT, historicalComparisonPath))) evidencePaths.push(historicalComparisonPath);
 
 const missingEvidencePaths = evidencePaths.filter((path) => !existsSync(join(ROOT, path)));
 if (missingEvidencePaths.length) {
