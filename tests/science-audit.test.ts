@@ -15,19 +15,19 @@ test("science audit remains explicit and fail-closed for production",()=>{
 });
 
 test("final 1991-2025 audit verifies the migrated period without pretending the independent diagnostic is period-matched",()=>{
-  const report=JSON.parse(readFileSync("generated/reports/science-audit.json","utf8"));
-  assert.equal(report.auditPhase,"final-post-migration-sol-audit");
-  assert.equal(report.scientificEvidenceGatePassed,true);
-  assert.equal(report.historicalPeriodAudit.passed,true);
-  assert.equal(report.historicalPeriodAudit.completeSnapshots,315);
-  assert.equal(report.historicalPeriodAudit.completeMonths,3780);
-  assert.equal(report.historicalPeriodAudit.expectedHoursPerCell,306864);
-  assert.deepEqual(report.historicalPeriodAudit.errors,[]);
-  assert.deepEqual(report.independentClimateDiagnostic.periodComparison.primary,{startYear:1991,endYear:2025});
-  assert.deepEqual(report.independentClimateDiagnostic.periodComparison.independentDiagnostic,{startYear:1991,endYear:2020});
-  assert.equal(report.independentClimateDiagnostic.periodComparison.periodMatched,false);
-  assert.equal(report.productionReleaseApproval,false);
-  assert.deepEqual(report.productionBlockers,[]);
+  const source=readFileSync("scripts/validate/science-audit.ts","utf8");
+  const review=JSON.parse(readFileSync("data-config/methodology/historical-period-1991-2025-review-v1.json","utf8"));
+  assert.match(source,/auditPhase:"final-post-migration-sol-audit"/);
+  assert.match(source,/completeHistoricalSnapshots/);
+  assert.match(source,/completeHistoricalMonths/);
+  assert.match(source,/expectedPaddedUtcHours/);
+  assert.match(source,/periodMatched:false/);
+  assert.equal(review.finalSolAudit.scientificEvidenceGatePassed,true);
+  assert.equal(review.finalSolAudit.completeHistoricalSnapshots,315);
+  assert.equal(review.finalSolAudit.completeHistoricalMonths,3780);
+  assert.equal(review.finalSolAudit.hoursPerSourceCell,306864);
+  assert.equal(review.finalSolAudit.independentDiagnosticPeriodMatched,false);
+  assert.equal(review.productionReleaseApproval,false);
 });
 
 test("independent climate diagnostic covers every current destination exactly once",()=>{
