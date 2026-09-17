@@ -35,8 +35,9 @@ test('staging: expected local hours include DST and fractional offsets',()=>{
 const template=aggregateValidDays(full(),options)[0];
 function years(count:number):ValidDay[]{return Array.from({length:count},(_,y)=>Array.from({length:30},(_,d)=>({...template,localDate:`${1991+y}-06-${String(d+1).padStart(2,'0')}`}))).flat();}
 test('staging: 26 years are insufficient, 27 complete years are sufficient',()=>{
-  assert.equal(aggregateValidMonth(years(26),6).metrics.temperatureHikingMeanC,null);
-  const result=aggregateValidMonth(years(27),6);assert.equal(result.metrics.temperatureHikingMeanC,20);assert.equal(result.scoringInputsAvailable,true);assert.equal(result.metrics.snowDepthMeanOnSnowDaysM,0);
+  const legacyPeriod={startYear:1991,endYear:2020,minimumValidYears:27};
+  assert.equal(aggregateValidMonth(years(26),6,legacyPeriod).metrics.temperatureHikingMeanC,null);
+  const result=aggregateValidMonth(years(27),6,legacyPeriod);assert.equal(result.metrics.temperatureHikingMeanC,20);assert.equal(result.scoringInputsAvailable,true);assert.equal(result.metrics.snowDepthMeanOnSnowDaysM,0);
   assert.equal(result.interannual.validInterannualYearCount,27);assert.equal(result.interannual.scoreStandardDeviation,0);
   assert.equal(result.metrics.sampleYearCount,27);assert.ok(result.metrics.dataCompleteness!>0.89&&result.metrics.dataCompleteness!<0.91);
 });
@@ -58,13 +59,14 @@ test('historical staging preserves exact snow depth around the scoring threshold
 });
 test('staging: one missing rainfall day invalidates that year total but not event frequency',()=>{
   const days=years(27);days[0]={...days[0],precipitationDailyMm:null};
-  const r=aggregateValidMonth(days,6);assert.equal(r.metrics.precipitationMonthlyMeanMm,null);assert.equal(r.metrics.wetDayProbability,1);
+  const r=aggregateValidMonth(days,6,{startYear:1991,endYear:2020,minimumValidYears:27});assert.equal(r.metrics.precipitationMonthlyMeanMm,null);assert.equal(r.metrics.wetDayProbability,1);
   assert.equal(r.coverage.validYearsByMetric.precipitationMonthlyMeanMm,26);
 });
 test('staging: equal year weight and 90% monthly day boundary',()=>{
+  const legacyPeriod={startYear:1991,endYear:2020,minimumValidYears:27};
   const days=years(27);for(let i=0;i<30;i++) days[i]={...days[i],temperatureMeanHikingC:10,adjustedTemperaturesHikingC:[10]};
-  days.splice(0,3);let r=aggregateValidMonth(days,6);assert.ok(Math.abs(r.metrics.temperatureHikingMeanC!-(10+26*20)/27)<1e-10);
-  days.splice(0,1);r=aggregateValidMonth(days,6);assert.equal(r.metrics.temperatureHikingMeanC,null);
+  days.splice(0,3);let r=aggregateValidMonth(days,6,legacyPeriod);assert.ok(Math.abs(r.metrics.temperatureHikingMeanC!-(10+26*20)/27)<1e-10);
+  days.splice(0,1);r=aggregateValidMonth(days,6,legacyPeriod);assert.equal(r.metrics.temperatureHikingMeanC,null);
 });
 test('staging: duplicate dates are rejected',()=>assert.throws(()=>aggregateValidMonth([template,template],6),/Duplicate/));
 test('staging: empty hiking window cannot manufacture weather statistics',()=>{
@@ -88,7 +90,7 @@ test('staging: interannual spread uses complete yearly score vectors only',()=>{
 test('staging: local boundary dates outside the normal cannot create a 31st sample year',()=>{
   const days=years(27);
   days.push({...template,localDate:'1990-06-30'});
-  const result=aggregateValidMonth(days,6);
+  const result=aggregateValidMonth(days,6,{startYear:1991,endYear:2020,minimumValidYears:27});
   assert.equal(result.metrics.sampleYearCount,27);
   assert.ok(result.metrics.dataCompleteness!>0.89&&result.metrics.dataCompleteness!<0.91);
 });

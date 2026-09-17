@@ -3,7 +3,7 @@ import type { ComponentScores, PublicDestination } from "../../lib/data/types";
 import { roundHalfAwayFromZero, scoreComponents } from "../../lib/scoring";
 import { BEST_MONTH_COMPONENT_KEYS, COMPONENT_KEYS, CRITICAL_COMPONENT_KEYS } from "../../lib/scoring/recommendations";
 import { loadGoldenCases } from "../lib/golden-cases";
-import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
+import { reviewGoldenCasesForPeriod, type GoldenCase } from "../lib/golden-review";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 
 type Destination = {id:string;slug:string;countryCode:string;timezone:string;coordinates:{lat:number;lon:number};elevationBands:Array<{id:string;minM:number;maxM:number;weight:number}>};
@@ -85,7 +85,7 @@ for(const destination of destinations){
   const modelElevation=point?.representativeModelElevationM??point?.gridElevationM??point?.targetElevationM;
   if(point&&Math.abs(point.lat*10-Math.round(point.lat*10))>config.spatialPolicy.gridCoordinateToleranceDegrees*10)rowErrors.push("latitude-not-on-0.1-degree-grid");
   if(point&&Math.abs(point.lon*10-Math.round(point.lon*10))>config.spatialPolicy.gridCoordinateToleranceDegrees*10)rowErrors.push("longitude-not-on-0.1-degree-grid");
-  if(!download||climate.sourceDownloads.length!==1||download.observationCount!==config.spatialPolicy.requiredClimateObservationCount1991To2020)rowErrors.push("invalid-source-observation-count");
+  if(!download||climate.sourceDownloads.length!==1||download.observationCount!==config.spatialPolicy.requiredClimateObservationCount1991To2025)rowErrors.push("invalid-source-observation-count");
   if(point&&download&&(!close(point.lat,download.request.location.latitude,config.spatialPolicy.gridCoordinateToleranceDegrees)||!close(point.lon,download.request.location.longitude,config.spatialPolicy.gridCoordinateToleranceDegrees)))rowErrors.push("sampling-request-coordinate-mismatch");
   if(point&&download&&(!close(point.lat,download.resolvedLocation.latitude,config.spatialPolicy.gridCoordinateToleranceDegrees)||!close(point.lon,download.resolvedLocation.longitude,config.spatialPolicy.gridCoordinateToleranceDegrees)))rowErrors.push("sampling-resolved-coordinate-mismatch");
   if(point&&externalEntry&&(!close(point.lat,externalEntry.requestedCoordinates.lat,config.spatialPolicy.gridCoordinateToleranceDegrees)||!close(point.lon,externalEntry.requestedCoordinates.lon,config.spatialPolicy.gridCoordinateToleranceDegrees)))rowErrors.push("independent-diagnostic-request-coordinate-mismatch");
@@ -99,7 +99,7 @@ for(const destination of destinations){
   }
   const distanceKm=point?haversineKm(destination.coordinates,{lat:point.lat,lon:point.lon}):null;
   const independentRouteEvidence=replacements.replacements?.[destination.id]?.approval===true;
-  coordinateRows.push({destinationId:destination.id,destinationCoordinates:destination.coordinates,representativeCell:point?{lat:point.lat,lon:point.lon,modelElevationM:modelElevation}:null,centroidToCellKm:distanceKm===null?null:round(distanceKm,2),sourceObservationCountPassed:download?.observationCount===config.spatialPolicy.requiredClimateObservationCount1991To2020,internalCoordinateChainPassed:rowErrors.length===0,independentRouteEvidence,claimScope:independentRouteEvidence?"named-route-supported-cell":"selected-model-cell-only",errors:rowErrors});
+  coordinateRows.push({destinationId:destination.id,destinationCoordinates:destination.coordinates,representativeCell:point?{lat:point.lat,lon:point.lon,modelElevationM:modelElevation}:null,centroidToCellKm:distanceKm===null?null:round(distanceKm,2),sourceObservationCountPassed:download?.observationCount===config.spatialPolicy.requiredClimateObservationCount1991To2025,internalCoordinateChainPassed:rowErrors.length===0,independentRouteEvidence,claimScope:independentRouteEvidence?"named-route-supported-cell":"selected-model-cell-only",errors:rowErrors});
   errors.push(...rowErrors.map((error)=>`${destination.id}: ${error}`));
 }
 
@@ -135,7 +135,7 @@ for(const floor of config.sensitivity.bestMonthComponentFloorAlternatives){
   sensitivityScenarios.push({type:"best-month-component-floor",value:floor,changedDestinationCount:changed.length,changedDestinations:changed});
 }
 
-const goldenReview=reviewGoldenCases(golden,publicDestinations);
+const goldenReview=reviewGoldenCasesForPeriod(golden,publicDestinations,{startYear:1991,endYear:2025});
 const hunza=externalComparisons.find((item)=>item.destinationId==="hunza")!;
 const independentRouteEvidenceCount=coordinateRows.filter((row)=>row.independentRouteEvidence).length;
 const legacySnapshotCount=publicDestinations.filter((destination)=>destination.aggregationPolicyVersion==="legacy-climate-aggregation-v1").length;

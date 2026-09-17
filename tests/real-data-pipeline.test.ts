@@ -114,12 +114,15 @@ test("lapse correction is wired to pinned ERA5-Land orography, not GLO-30 terrai
   assert.match(sampler, /terrainElevationM: point\.terrainElevationM/);
 });
 
-test("1991-2025 uses observation-validity aggregation and remains staging-only", () => {
+test("1991-2025 uses observation-validity aggregation and requires explicit migration approval", () => {
   const climateImporter = readFileSync("scripts/import/fetch-era5.ts", "utf8");
   assert.match(climateImporter, /aggregateValidDays\(observations, aggregationOptions\)/);
   assert.match(climateImporter, /aggregateValidMonth\(days, monthIndex \+ 1, validityPeriod\)/);
   assert.match(climateImporter, /aggregationPolicyVersion: "observation-validity-v1"/);
   assert.match(climateImporter, /BLOCKED_HISTORICAL_PERIOD_RELEASE/);
+  const historicalPeriod = JSON.parse(readFileSync("data-config/methodology/historical-period-1991-2025-v1.json", "utf8")) as {decisionStatus:string;productionMigrationAuthorized:boolean};
+  assert.equal(historicalPeriod.decisionStatus, "approved-for-production-migration");
+  assert.equal(historicalPeriod.productionMigrationAuthorized, true);
 });
 
 test("historical-period review covers every mandatory scientific comparison", () => {

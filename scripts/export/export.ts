@@ -6,11 +6,12 @@ import scoringWeights from "../../data-config/scoring/weights.json";
 import { bestMonthsFor, COMPONENT_KEYS } from "../../lib/scoring/recommendations";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
-type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]; recommendationEligible:boolean; recommendationHoldReason?:"persistent-snow"|"precipitation-validation"; representativeCell:{lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string}; datasetStatus:DatasetStatus; aggregationPolicyVersion:string; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; retrievedAt:string};
+type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]; recommendationEligible:boolean; recommendationHoldReason?:"persistent-snow"|"precipitation-validation"; representativeCell:{lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string}; datasetStatus:DatasetStatus; aggregationPolicyVersion:string; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; historicalPeriod?:{startYear:number;endYear:number;classification:string}; climateNormal?:{startYear:number;endYear:number}; retrievedAt:string};
 const scored = readJson<Scored[]>("generated/intermediate/scored.json");
 const statuses = new Set(scored.map((item) => item.datasetStatus));
 if (statuses.size !== 1) throw new Error(`EXPORT001 mixed dataset statuses: ${[...statuses].join(", ")}`);
 const datasetStatus = [...statuses][0];
+const period = scored[0]?.historicalPeriod ?? scored[0]?.climateNormal ?? {startYear:1991,endYear:2025};
 const updatedAt = scored.map((item) => item.retrievedAt).sort().at(-1) ?? "2026-08-31T00:00:00.000Z";
 const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months, recommendationEligible, recommendationHoldReason, representativeCell, aggregationPolicyVersion, climateSource, climateSourceDataset, climateSourceDoi}) => {
   const eligibleMonths = months.filter((item) => item.recommendationEligible && item.overallScore !== null);
@@ -118,5 +119,8 @@ function files(dir: string): string[] { return readdirSync(dir,{withFileTypes:tr
 const dataRoot = join(ROOT,"public/data/hiking");
 const existing = files(dataRoot).filter((path)=>!path.endsWith("manifest.json"));
 const fileChecksums = Object.fromEntries(existing.sort().map((path)=>[relative(dataRoot,path),sha256(readFileSync(path))]));
-writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:scoringWeights.algorithmVersion,datasetVersion:datasetStatus==="fixture"?"fixture-2026-08-31.1":"era5-land-representative-point-1991-2020-v1",datasetStatus,generatedAt:updatedAt,climateNormal:{startYear:1991,endYear:2020},sourceVersions:{climate:datasetStatus==="fixture"?"synthetic-era5-compatible-fixture":"reanalysis-era5-land-timeseries DOI 10.24381/ee82e357",elevation:datasetStatus==="fixture"?"synthetic-dem-compatible-fixture":"ERA5-Land auxiliary invariant geopotential pinned SHA-256"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
+const publicHistoricalPeriod = "classification" in period
+  ? {startYear: period.startYear, endYear: period.endYear, classification: period.classification}
+  : undefined;
+writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:scoringWeights.algorithmVersion,datasetVersion:datasetStatus==="fixture"?"fixture-2026-08-31.1":`era5-land-representative-point-${period.startYear}-${period.endYear}-v1`,datasetStatus,generatedAt:updatedAt,climateNormal:{startYear:period.startYear,endYear:period.endYear},historicalPeriod:publicHistoricalPeriod,sourceVersions:{climate:datasetStatus==="fixture"?"synthetic-era5-compatible-fixture":"reanalysis-era5-land-timeseries DOI 10.24381/ee82e357",elevation:datasetStatus==="fixture"?"synthetic-dem-compatible-fixture":"ERA5-Land auxiliary invariant geopotential pinned SHA-256"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
 console.log(`Exported ${publicDestinations.length} destinations, ${rankingIds.length} rankings and ${comparisons.length} comparisons.`);

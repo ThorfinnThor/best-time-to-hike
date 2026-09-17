@@ -1,6 +1,7 @@
 import { ImageResponse } from "next/og";
 import { SITE } from "@/lib/site";
 import { getManifest } from "@/lib/data/load";
+import { historicalPeriodDescription } from "@/lib/methodology/historical-period";
 
 export const dynamic = "force-static";
 export const size = {width: 1200, height: 630};
@@ -18,7 +19,7 @@ export const alt = "BestTimeToHike";
  */
 export default function Image() {
   const manifest = getManifest();
-  const summary = `${manifest.destinationCount} destinations scored from the ERA5-Land ${manifest.climateNormal.startYear}-${manifest.climateNormal.endYear} climate normal. Historical climatology, not a forecast.`;
+  const summary = `${manifest.destinationCount} destinations scored from the ERA5-Land historical climatology for ${historicalPeriodDescription.en}. Not a forecast.`;
   return new ImageResponse(
     (
       <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between",

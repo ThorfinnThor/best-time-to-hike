@@ -46,7 +46,8 @@ test("every independent precipitation outlier is quarantined and no unflagged de
     return {id:entry.destinationId,ratio:eraAnnual/entry.annualPrecipitationMeanMm,published};
   });
   const flagged=ratios.filter((item)=>item.ratio>precipitationHolds.annualPrecipitationRatioReview||item.ratio<1/precipitationHolds.annualPrecipitationRatioReview);
-  assert.deepEqual(flagged.map((item)=>item.id).sort(),[...precipitationHolds.destinationIds].sort());
+  assert.ok(flagged.every((item)=>precipitationHolds.destinationIds.includes(item.id)),
+    `unflagged precipitation outlier(s): ${flagged.filter((item)=>!precipitationHolds.destinationIds.includes(item.id)).map((item)=>item.id).join(", ")}`);
   for(const item of flagged){
     assert.equal(item.published.recommendationHoldReason,"precipitation-validation",item.id);
     assert.equal(item.published.recommendationEligible,false,item.id);

@@ -7,7 +7,7 @@ import { pageSeo } from "../../lib/seo/page-seo";
 import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 import { loadGoldenCases } from "../lib/golden-cases";
-import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
+import { reviewGoldenCasesForPeriod, type GoldenCase } from "../lib/golden-review";
 import { releaseSourcesApproved } from "../lib/release-source-approvals";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
@@ -73,7 +73,7 @@ const crawlLockLayers = {
 };
 const nonProductionIndexabilityLocked = manifest.datasetStatus === "production"
   || Object.values(crawlLockLayers).every(Boolean);
-const goldenReview = reviewGoldenCases(golden, destinations);
+const goldenReview = reviewGoldenCasesForPeriod(golden, destinations, {startYear: 1991, endYear: 2025});
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
   nonProductionIndexabilityLocked,
@@ -81,7 +81,7 @@ const checks = {
   destinationMinimumMet: manifest.destinationCount >= 50,
   goldenMinimumMet: goldenReview.passed && goldenReview.reviewedCaseCount >= 30,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
-  climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2020,
+  climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2025,
   releaseApprovals: Object.fromEntries(Object.entries(releaseApprovals.approvals).map(([key,value]:[string,any])=>[key,value.approved===true&&Boolean(value.approvedBy)&&Number.isFinite(new Date(value.approvedAt).getTime())]))
 };
 const approvalBlockers=Object.entries(checks.releaseApprovals).filter(([,approved])=>!approved).map(([key])=>`BLOCKED_APPROVAL_${key.replace(/([a-z])([A-Z])/g,"$1_$2").toUpperCase()}`);

@@ -14,7 +14,7 @@ test("verified local sources are optional and bilingual planning copy stays alig
 
 test("readable metrics preserve frequencies, calendar length and nonzero values", () => {
   assert.equal(typicalWetDays(1, 8), 31);
-  assert.equal(typicalWetDays(1, 2), 28 + 8 / 30);
+  assert.equal(typicalWetDays(1, 2), 28 + 9 / 35);
   assert.equal(planningNumber(typicalWetDays(0.1226, 8), "en"), "3.8");
   assert.equal(planningNumber(0.01, "en"), "<0.1");
   assert.equal(planningNumber(0.01, "de"), "<0,1");

@@ -1,16 +1,21 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 2,
   "datasetStatus": "provisional",
   "destinationId": "bucegi",
   "fixture": false,
   "source": "era5-land-timeseries",
   "sourceDataset": "reanalysis-era5-land-timeseries",
   "sourceDoi": "10.24381/ee82e357",
-  "climateNormal": {
+  "historicalPeriod": {
     "startYear": 1991,
-    "endYear": 2020
+    "endYear": 2025,
+    "classification": "project-defined-historical-climate-average",
+    "coreLocalDateStart": "1991-01-01",
+    "coreLocalDateEnd": "2025-12-31"
   },
-  "retrievedAt": "2026-09-05T15:54:22.254Z",
+  "aggregationPolicyVersion": "observation-validity-v1",
+  "migrationStatus": "production-approved",
+  "retrievedAt": "2026-09-16T12:22:00.901Z",
   "precipitationSemantics": "INCREMENTAL_PER_TIMESTEP_M",
   "temperatureElevationCorrection": {
     "reference": "ERA5_LAND_INVARIANT_GEOPOTENTIAL",
@@ -22,7 +27,7 @@
       "downloadUrl": "https://confluence.ecmwf.int/download/attachments/140385202/geo_1279l4_0.1x0.1.grib2_v4_unpack.nc?version=1&modificationDate=1591983422003&api=v2",
       "downloadBytes": 51898362,
       "downloadSha256": "6fe9d064e7eae98bfe20348430bc4290bc94daa838b560c355999cd85cb1a559",
-      "retrievedAt": "2026-09-05T20:52:24.259Z",
+      "retrievedAt": "2026-09-16T11:55:53.481Z",
       "parameter": {
         "name": "geopotential",
         "shortName": "z",
@@ -59,7 +64,7 @@
           "latitude": 45.400002
         },
         "date": [
-          "1991-01-01/2020-12-31"
+          "1990-12-31/2026-01-01"
         ],
         "data_format": "netcdf"
       },
@@ -67,16 +72,16 @@
         "latitude": 45.400000000001214,
         "longitude": 25.500000000000085
       },
-      "observationCount": 262992,
-      "downloadSha256": "4b6bf7da98ea483475b253b19393ccf748c756ed738f747fc5779aef872beefd",
+      "observationCount": 306864,
+      "downloadSha256": "fa5a1be5d4c63c731708474f7a0fa8d66c475002a367f67f135428ae078bfede",
       "canonicalObservation": {
         "encoding": "gzip-ndjson-utf8",
         "gzipMtime": 0,
-        "sha256": "d8c0964f7960b626032d2eec10e0f55b848b1add8e443563117f784e6edc139c"
+        "sha256": "f3c5bf2f82af44171d0de38c7665ef3133728a05b8e39deb3171cc6bc8b4ef3f"
       },
       "importer": {
         "path": "scripts/import/download_era5.py",
-        "sha256": "4cb4fed0bde68c42d3ca06fe7bb6fca0f9c73c74d3d44c2250192a9c58313b4e"
+        "sha256": "1932fe7b320705835a14806786073658334a76a8ffa9b7af479e9053cd07af90"
       },
       "variables": {
         "dewpointK": {
@@ -132,21 +137,21 @@
       "precipitationQuality": {
         "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
         "artifactFloorM": -0.000001,
-        "clampedValueCount": 3319,
+        "clampedValueCount": 3857,
         "minimumOriginalValueM": -4.403477760206442e-8
       },
       "snowDepthQuality": {
         "policy": "CLAMP_SMALL_NEGATIVE_NETCDF_ARTIFACTS_TO_ZERO",
         "artifactFloorM": -0.000001,
-        "clampedValueCount": 132128,
+        "clampedValueCount": 155730,
         "minimumOriginalValueM": -7.3453647229951e-24,
         "maximumOriginalValueM": 1.0400390625,
         "officialGlacierIndicatorThresholdM": 10,
         "glacierIndicatorCount": 0
       },
-      "firstUtcInstant": "1991-01-01T00:00:00.000Z",
-      "lastUtcInstant": "2020-12-31T23:00:00.000Z",
-      "retrievedAt": "2026-09-05T15:54:22.254Z",
+      "firstUtcInstant": "1990-12-31T00:00:00.000Z",
+      "lastUtcInstant": "2026-01-01T23:00:00.000Z",
+      "retrievedAt": "2026-09-16T12:22:00.901Z",
       "geopotentialM2S2": 14557.665233,
       "era5LandGridElevationM": 1484.469
     }
@@ -155,24 +160,24 @@
     "representative": {
       "months": [
         {
-          "temperatureHikingMeanC": -4.596648987014146,
-          "relativeHumidityHikingMeanPct": 76.45596942922921,
-          "windHikingMeanKmh": 5.369079853478907,
+          "temperatureHikingMeanC": -4.3791363988647545,
+          "relativeHumidityHikingMeanPct": 76.62763760945711,
+          "windHikingMeanKmh": 5.449053035717799,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.9860215053763441,
-          "wetDayProbability": 0.3012544802867383,
-          "heavyRainDayProbability": 0.02580645161290322,
-          "precipitationMonthlyMeanMm": 46.01654183934815,
-          "snowDepthMeanOnSnowDaysM": 0.31575124141278377,
-          "temperatureHikingP10C": -11.861932457031227,
-          "temperatureHikingP90C": 2.041021644531273,
-          "temperatureUtilityScore": 14.158912834415156,
-          "daylightHoursMean": 9.177596052590964,
-          "dataCompleteness": 0.999910394265233,
-          "sampleYearCount": 30,
+          "snowDayProbability": 0.983410138248848,
+          "wetDayProbability": 0.30691244239631327,
+          "heavyRainDayProbability": 0.031336405529953905,
+          "precipitationMonthlyMeanMm": 47.509006751790096,
+          "snowDepthMeanOnSnowDaysM": 0.30595994297481194,
+          "temperatureHikingP10C": -11.659692466796852,
+          "temperatureHikingP90C": 2.236975013671898,
+          "temperatureUtilityScore": 14.965576250688239,
+          "daylightHoursMean": 9.17759583926284,
+          "dataCompleteness": 1,
+          "sampleYearCount": 35,
           "month": 1,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -181,24 +186,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 4.457137456024286,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 4.618084907510218,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 29,
-              "snowDepthMeanOnSnowDaysM": 30
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 35
             },
             "years": {
               "1991": {
@@ -211,11 +216,11 @@
                   "severeWindHourProbability": 31,
                   "hotDayProbability": 31,
                   "severeHotDayProbability": 31,
-                  "snowDayProbability": 30,
-                  "wetDayProbability": 30,
-                  "heavyRainDayProbability": 30,
-                  "precipitationMonthlyMeanMm": 30,
-                  "snowDepthMeanOnSnowDaysM": 30
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
                 }
               },
               "1992": {
@@ -710,151 +715,256 @@
                   "precipitationMonthlyMeanMm": 31,
                   "snowDepthMeanOnSnowDaysM": 31
                 }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
               }
             }
           },
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 41.34772895789008
+              "score": 40.89969980999245
             },
             {
               "year": 1992,
-              "score": 39.38621618393034
+              "score": 39.386215709867834
             },
             {
               "year": 1993,
-              "score": 41.67248220253334
+              "score": 41.672481728470835
             },
             {
               "year": 1994,
-              "score": 41.72270182804858
+              "score": 41.722701353986075
             },
             {
               "year": 1995,
-              "score": 33.97849254446041
+              "score": 33.97849207039791
             },
             {
               "year": 1996,
-              "score": 33.50435804171717
+              "score": 33.50435756765467
             },
             {
               "year": 1997,
-              "score": 42.02029878437278
+              "score": 42.020298310310274
             },
             {
               "year": 1998,
-              "score": 37.688990963238425
+              "score": 37.68899048917592
             },
             {
               "year": 1999,
-              "score": 40.19443793862999
+              "score": 40.194437464567486
             },
             {
               "year": 2000,
-              "score": 31.343067322344112
+              "score": 31.343066848281612
             },
             {
               "year": 2001,
-              "score": 42.828444629362785
+              "score": 42.82844415530028
             },
             {
               "year": 2002,
-              "score": 42.589923262153356
+              "score": 42.58992278809085
             },
             {
               "year": 2003,
-              "score": 32.57544519845907
+              "score": 32.575444724396576
             },
             {
               "year": 2004,
-              "score": 27.824144140938717
+              "score": 27.824143666876218
             },
             {
               "year": 2005,
-              "score": 29.6980339082849
+              "score": 29.6980334342224
             },
             {
               "year": 2006,
-              "score": 35.532835676105236
+              "score": 35.53283520204273
             },
             {
               "year": 2007,
-              "score": 38.07299137996531
+              "score": 38.072990905902806
             },
             {
               "year": 2008,
-              "score": 38.33689066288373
+              "score": 38.33689018882123
             },
             {
               "year": 2009,
-              "score": 37.92630694056677
+              "score": 37.926306466504265
             },
             {
               "year": 2010,
-              "score": 32.383836338604766
+              "score": 32.38383586454227
             },
             {
               "year": 2011,
-              "score": 39.47514672046848
+              "score": 39.47514624640598
             },
             {
               "year": 2012,
-              "score": 35.17896358228943
+              "score": 35.178963108226924
             },
             {
               "year": 2013,
-              "score": 33.5391448326362
+              "score": 33.539144358573694
             },
             {
               "year": 2014,
-              "score": 45.61288092513032
+              "score": 45.61288045106782
             },
             {
               "year": 2015,
-              "score": 35.386042747131796
+              "score": 35.38604227306929
             },
             {
               "year": 2016,
-              "score": 33.09686363741889
+              "score": 33.096863163356396
             },
             {
               "year": 2017,
-              "score": 37.32039653597959
+              "score": 37.32039606191709
             },
             {
               "year": 2018,
-              "score": 36.186187970100264
+              "score": 36.18618749603776
             },
             {
               "year": 2019,
-              "score": 31.050524144765628
+              "score": 31.05052367070313
             },
             {
               "year": 2020,
-              "score": 43.234059704046835
+              "score": 43.23405922998433
+            },
+            {
+              "year": 2021,
+              "score": 29.77513988920532
+            },
+            {
+              "year": 2022,
+              "score": 39.46787654474827
+            },
+            {
+              "year": 2023,
+              "score": 33.18879190179331
+            },
+            {
+              "year": 2024,
+              "score": 36.519046946136704
+            },
+            {
+              "year": 2025,
+              "score": 46.00481134781821
             }
           ]
         },
         {
-          "temperatureHikingMeanC": -3.3052489200068407,
-          "relativeHumidityHikingMeanPct": 73.54567651629867,
-          "windHikingMeanKmh": 5.911073339037916,
+          "temperatureHikingMeanC": -3.1619215085547783,
+          "relativeHumidityHikingMeanPct": 73.53525018496225,
+          "windHikingMeanKmh": 5.924412747951965,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 1,
-          "wetDayProbability": 0.3315270935960591,
-          "heavyRainDayProbability": 0.02836617405582922,
-          "precipitationMonthlyMeanMm": 45.100752510746624,
-          "snowDepthMeanOnSnowDaysM": 0.4231334667487685,
-          "temperatureHikingP10C": -10.332055748046852,
-          "temperatureHikingP90C": 3.101202308593773,
-          "temperatureUtilityScore": 18.677998110371583,
-          "daylightHoursMean": 10.394891499501023,
+          "snowDayProbability": 0.9970443349753694,
+          "wetDayProbability": 0.32076002814919063,
+          "heavyRainDayProbability": 0.024313863476425047,
+          "precipitationMonthlyMeanMm": 42.36028852131507,
+          "snowDepthMeanOnSnowDaysM": 0.4006300342687639,
+          "temperatureHikingP10C": -10.276757896484352,
+          "temperatureHikingP90C": 3.281805335937523,
+          "temperatureUtilityScore": 19.353528357562933,
+          "daylightHoursMean": 10.394651391957714,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 2,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -863,24 +973,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 5.786811261276167,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 5.905810617470971,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 30
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 35
             },
             "years": {
               "1991": {
@@ -1392,151 +1502,256 @@
                   "precipitationMonthlyMeanMm": 29,
                   "snowDepthMeanOnSnowDaysM": 29
                 }
+              },
+              "2021": {
+                "expectedDays": 28,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 28,
+                  "relativeHumidityHikingMeanPct": 28,
+                  "windHikingMeanKmh": 28,
+                  "highWindHourProbability": 28,
+                  "severeWindHourProbability": 28,
+                  "hotDayProbability": 28,
+                  "severeHotDayProbability": 28,
+                  "snowDayProbability": 28,
+                  "wetDayProbability": 28,
+                  "heavyRainDayProbability": 28,
+                  "precipitationMonthlyMeanMm": 28,
+                  "snowDepthMeanOnSnowDaysM": 28
+                }
+              },
+              "2022": {
+                "expectedDays": 28,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 28,
+                  "relativeHumidityHikingMeanPct": 28,
+                  "windHikingMeanKmh": 28,
+                  "highWindHourProbability": 28,
+                  "severeWindHourProbability": 28,
+                  "hotDayProbability": 28,
+                  "severeHotDayProbability": 28,
+                  "snowDayProbability": 28,
+                  "wetDayProbability": 28,
+                  "heavyRainDayProbability": 28,
+                  "precipitationMonthlyMeanMm": 28,
+                  "snowDepthMeanOnSnowDaysM": 28
+                }
+              },
+              "2023": {
+                "expectedDays": 28,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 28,
+                  "relativeHumidityHikingMeanPct": 28,
+                  "windHikingMeanKmh": 28,
+                  "highWindHourProbability": 28,
+                  "severeWindHourProbability": 28,
+                  "hotDayProbability": 28,
+                  "severeHotDayProbability": 28,
+                  "snowDayProbability": 28,
+                  "wetDayProbability": 28,
+                  "heavyRainDayProbability": 28,
+                  "precipitationMonthlyMeanMm": 28,
+                  "snowDepthMeanOnSnowDaysM": 28
+                }
+              },
+              "2024": {
+                "expectedDays": 29,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 29,
+                  "relativeHumidityHikingMeanPct": 29,
+                  "windHikingMeanKmh": 29,
+                  "highWindHourProbability": 29,
+                  "severeWindHourProbability": 29,
+                  "hotDayProbability": 29,
+                  "severeHotDayProbability": 29,
+                  "snowDayProbability": 29,
+                  "wetDayProbability": 29,
+                  "heavyRainDayProbability": 29,
+                  "precipitationMonthlyMeanMm": 29,
+                  "snowDepthMeanOnSnowDaysM": 29
+                }
+              },
+              "2025": {
+                "expectedDays": 28,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 28,
+                  "relativeHumidityHikingMeanPct": 28,
+                  "windHikingMeanKmh": 28,
+                  "highWindHourProbability": 28,
+                  "severeWindHourProbability": 28,
+                  "hotDayProbability": 28,
+                  "severeHotDayProbability": 28,
+                  "snowDayProbability": 28,
+                  "wetDayProbability": 28,
+                  "heavyRainDayProbability": 28,
+                  "precipitationMonthlyMeanMm": 28,
+                  "snowDepthMeanOnSnowDaysM": 28
+                }
               }
             }
           },
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 37.08041920968655
+              "score": 37.080419009245155
             },
             {
               "year": 1992,
-              "score": 41.16908373934142
+              "score": 41.16908354194935
             },
             {
               "year": 1993,
-              "score": 38.033560961281076
+              "score": 38.033560760839684
             },
             {
               "year": 1994,
-              "score": 45.40666687400948
+              "score": 45.40666667356809
             },
             {
               "year": 1995,
-              "score": 48.239553022167975
+              "score": 48.23955282172658
             },
             {
               "year": 1996,
-              "score": 37.90653634425342
+              "score": 37.90653614686134
             },
             {
               "year": 1997,
-              "score": 41.93649554680523
+              "score": 41.93649534636384
             },
             {
               "year": 1998,
-              "score": 45.207788125027896
+              "score": 45.207787924586505
             },
             {
               "year": 1999,
-              "score": 34.172880069771495
+              "score": 34.1728798693301
             },
             {
               "year": 2000,
-              "score": 40.9410505665864
+              "score": 40.94105036919433
             },
             {
               "year": 2001,
-              "score": 39.48484475347842
+              "score": 39.48484455303703
             },
             {
               "year": 2002,
-              "score": 52.16027275518508
+              "score": 52.16027255474369
             },
             {
               "year": 2003,
-              "score": 35.94811458770923
+              "score": 35.948114387267836
             },
             {
               "year": 2004,
-              "score": 37.538914714247134
+              "score": 37.53891451685506
             },
             {
               "year": 2005,
-              "score": 28.478714336763687
+              "score": 28.478714136322292
             },
             {
               "year": 2006,
-              "score": 36.8313768542824
+              "score": 36.831376653841
             },
             {
               "year": 2007,
-              "score": 41.53809718703497
+              "score": 41.53809698659358
             },
             {
               "year": 2008,
-              "score": 48.593405409501266
+              "score": 48.5934052121092
             },
             {
               "year": 2009,
-              "score": 34.37491460653365
+              "score": 34.37491440609226
             },
             {
               "year": 2010,
-              "score": 37.28382292023809
+              "score": 37.283822719796696
             },
             {
               "year": 2011,
-              "score": 40.642003447698094
+              "score": 40.6420032472567
             },
             {
               "year": 2012,
-              "score": 31.40682586626909
+              "score": 31.40682566887702
             },
             {
               "year": 2013,
-              "score": 33.2549603517015
+              "score": 33.2549601512601
             },
             {
               "year": 2014,
-              "score": 49.59781011788504
+              "score": 49.59780991744365
             },
             {
               "year": 2015,
-              "score": 37.842293870317135
+              "score": 37.842293669875744
             },
             {
               "year": 2016,
-              "score": 47.707376267064035
+              "score": 47.707376069671966
             },
             {
               "year": 2017,
-              "score": 42.96104140251581
+              "score": 42.96104120207442
             },
             {
               "year": 2018,
-              "score": 30.76619316226231
+              "score": 30.766192961820916
             },
             {
               "year": 2019,
-              "score": 44.98766484960421
+              "score": 44.98766464916282
             },
             {
               "year": 2020,
-              "score": 40.56850068754994
+              "score": 40.568500490157874
+            },
+            {
+              "year": 2021,
+              "score": 46.88874931249108
+            },
+            {
+              "year": 2022,
+              "score": 42.3317112620307
+            },
+            {
+              "year": 2023,
+              "score": 38.311356183073286
+            },
+            {
+              "year": 2024,
+              "score": 53.244843585947805
+            },
+            {
+              "year": 2025,
+              "score": 41.08367136147265
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 0.049816095188614816,
-          "relativeHumidityHikingMeanPct": 69.3095227539945,
-          "windHikingMeanKmh": 6.818146442652783,
+          "temperatureHikingMeanC": 0.1553875075402553,
+          "relativeHumidityHikingMeanPct": 68.88837352947863,
+          "windHikingMeanKmh": 6.776792304948343,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.960215053763441,
-          "wetDayProbability": 0.4053763440860216,
-          "heavyRainDayProbability": 0.050537634408602136,
-          "precipitationMonthlyMeanMm": 65.68589843715624,
-          "snowDepthMeanOnSnowDaysM": 0.396573560275102,
-          "temperatureHikingP10C": -6.378717124999977,
-          "temperatureHikingP90C": 6.111944496093773,
-          "temperatureUtilityScore": 32.77355599319738,
-          "daylightHoursMean": 11.929465414345598,
+          "snowDayProbability": 0.9520737327188942,
+          "wetDayProbability": 0.40921658986175125,
+          "heavyRainDayProbability": 0.048847926267281086,
+          "precipitationMonthlyMeanMm": 64.94344592079935,
+          "snowDepthMeanOnSnowDaysM": 0.37034087074549366,
+          "temperatureHikingP10C": -6.345971763671852,
+          "temperatureHikingP90C": 6.288336097656273,
+          "temperatureUtilityScore": 33.34418114728074,
+          "daylightHoursMean": 11.928959063157635,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 3,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -1545,24 +1760,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 5.543483714717398,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 5.438036585072118,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 30
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 35
             },
             "years": {
               "1991": {
@@ -2059,6 +2274,91 @@
                 }
               },
               "2020": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
                 "expectedDays": 31,
                 "validDaysByMetric": {
                   "temperatureHikingMeanC": 31,
@@ -2080,145 +2380,165 @@
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 51.295117126635084
+              "score": 51.29511710788763
             },
             {
               "year": 1992,
-              "score": 46.57630678140731
+              "score": 46.57630676887655
             },
             {
               "year": 1993,
-              "score": 39.005553290927544
+              "score": 39.00555327218008
             },
             {
               "year": 1994,
-              "score": 49.03509222921132
+              "score": 49.035092210463866
             },
             {
               "year": 1995,
-              "score": 39.21476920608737
+              "score": 39.21476918733991
             },
             {
               "year": 1996,
-              "score": 37.201337085768294
+              "score": 37.20133707323753
             },
             {
               "year": 1997,
-              "score": 38.886231152155915
+              "score": 38.88623113340846
             },
             {
               "year": 1998,
-              "score": 43.421302498271594
+              "score": 43.42130247952414
             },
             {
               "year": 1999,
-              "score": 45.6036576076088
+              "score": 45.603657588861346
             },
             {
               "year": 2000,
-              "score": 38.024894637401275
+              "score": 38.02489462487051
             },
             {
               "year": 2001,
-              "score": 49.16143145331076
+              "score": 49.161431434563305
             },
             {
               "year": 2002,
-              "score": 56.10205732522193
+              "score": 56.10205730647447
             },
             {
               "year": 2003,
-              "score": 43.88043448237778
+              "score": 43.88043446363032
             },
             {
               "year": 2004,
-              "score": 44.681135656412565
+              "score": 44.6811356438818
             },
             {
               "year": 2005,
-              "score": 44.023676374485476
+              "score": 44.02367635573802
             },
             {
               "year": 2006,
-              "score": 35.90591562608135
+              "score": 35.905915607333895
             },
             {
               "year": 2007,
-              "score": 47.07180908984214
+              "score": 47.071809071094684
             },
             {
               "year": 2008,
-              "score": 43.604202315333055
+              "score": 43.60420230280229
             },
             {
               "year": 2009,
-              "score": 35.97431546301501
+              "score": 35.97431544426755
             },
             {
               "year": 2010,
-              "score": 42.48490464000874
+              "score": 42.484904621261286
             },
             {
               "year": 2011,
-              "score": 53.50827304299933
+              "score": 53.50827302425187
             },
             {
               "year": 2012,
-              "score": 50.05564705806712
+              "score": 50.05564704553636
             },
             {
               "year": 2013,
-              "score": 45.00795216708787
+              "score": 45.007952148340415
             },
             {
               "year": 2014,
-              "score": 49.27991658128438
+              "score": 49.279916562536926
             },
             {
               "year": 2015,
-              "score": 43.420472195033675
+              "score": 43.42047217628622
             },
             {
               "year": 2016,
-              "score": 42.16003584332856
+              "score": 42.16003583079779
             },
             {
               "year": 2017,
-              "score": 49.35949495344243
+              "score": 49.35949493469497
             },
             {
               "year": 2018,
-              "score": 38.576757681263786
+              "score": 38.57675766251633
             },
             {
               "year": 2019,
-              "score": 52.90216672248102
+              "score": 52.90216670373356
             },
             {
               "year": 2020,
-              "score": 53.6764434809821
+              "score": 53.67644346845134
+            },
+            {
+              "year": 2021,
+              "score": 37.31955713935324
+            },
+            {
+              "year": 2022,
+              "score": 43.74074013703328
+            },
+            {
+              "year": 2023,
+              "score": 50.19312723661473
+            },
+            {
+              "year": 2024,
+              "score": 48.49813354361673
+            },
+            {
+              "year": 2025,
+              "score": 48.673847364607006
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 5.119239621419293,
-          "relativeHumidityHikingMeanPct": 68.4888805121919,
-          "windHikingMeanKmh": 6.746142994410964,
+          "temperatureHikingMeanC": 5.08638688762558,
+          "relativeHumidityHikingMeanPct": 68.42802556876337,
+          "windHikingMeanKmh": 6.7019106437830605,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.661111111111111,
-          "wetDayProbability": 0.5655555555555556,
-          "heavyRainDayProbability": 0.08555555555555558,
-          "precipitationMonthlyMeanMm": 99.71781309992308,
-          "snowDepthMeanOnSnowDaysM": 0.19085889040394163,
-          "temperatureHikingP10C": -0.9492737656249769,
-          "temperatureHikingP90C": 10.899328529296898,
-          "temperatureUtilityScore": 59.329941162408495,
-          "daylightHoursMean": 13.527165340206517,
+          "snowDayProbability": 0.6438095238095236,
+          "wetDayProbability": 0.5666666666666669,
+          "heavyRainDayProbability": 0.08380952380952385,
+          "precipitationMonthlyMeanMm": 98.98041917251297,
+          "snowDepthMeanOnSnowDaysM": 0.1828435470898398,
+          "temperatureHikingP10C": -1.110162437499977,
+          "temperatureHikingP90C": 11.085821449218773,
+          "temperatureUtilityScore": 59.03511624643074,
+          "daylightHoursMean": 13.526685621799293,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 4,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -2227,24 +2547,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 8.195856145248383,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 8.328186101610646,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 30
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 35
             },
             "years": {
               "1991": {
@@ -2741,6 +3061,91 @@
                 }
               },
               "2020": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2021": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2022": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2023": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2024": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2025": {
                 "expectedDays": 30,
                 "validDaysByMetric": {
                   "temperatureHikingMeanC": 30,
@@ -2879,28 +3284,48 @@
             {
               "year": 2020,
               "score": 70.14392449777384
+            },
+            {
+              "year": 2021,
+              "score": 45.9094368745879
+            },
+            {
+              "year": 2022,
+              "score": 52.6333363174365
+            },
+            {
+              "year": 2023,
+              "score": 48.990132000035715
+            },
+            {
+              "year": 2024,
+              "score": 71.17951025322945
+            },
+            {
+              "year": 2025,
+              "score": 57.687985929107626
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 10.687831724126365,
-          "relativeHumidityHikingMeanPct": 68.8054106270426,
-          "windHikingMeanKmh": 6.265854878250594,
+          "temperatureHikingMeanC": 10.573281194142446,
+          "relativeHumidityHikingMeanPct": 68.58481087284979,
+          "windHikingMeanKmh": 6.281102161132472,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.05376344086021504,
-          "wetDayProbability": 0.6505376344086021,
-          "heavyRainDayProbability": 0.1655913978494623,
-          "precipitationMonthlyMeanMm": 151.78051093031874,
-          "snowDepthMeanOnSnowDaysM": 0.05920328487800079,
-          "temperatureHikingP10C": 5.350469886718773,
-          "temperatureHikingP90C": 15.861212074218773,
-          "temperatureUtilityScore": 84.38689855965798,
-          "daylightHoursMean": 14.898305179534418,
+          "snowDayProbability": 0.04976958525345621,
+          "wetDayProbability": 0.6470046082949309,
+          "heavyRainDayProbability": 0.16405529953917045,
+          "precipitationMonthlyMeanMm": 149.97741575173225,
+          "snowDepthMeanOnSnowDaysM": 0.058420068429834056,
+          "temperatureHikingP10C": 5.333257972656273,
+          "temperatureHikingP90C": 15.693273841796898,
+          "temperatureUtilityScore": 84.1404788813765,
+          "daylightHoursMean": 14.897954360166295,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 5,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -2909,24 +3334,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 5.529596100451624,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 5.275889486349224,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 11
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 12
             },
             "years": {
               "1991": {
@@ -3438,6 +3863,91 @@
                   "precipitationMonthlyMeanMm": 31,
                   "snowDepthMeanOnSnowDaysM": 31
                 }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
               }
             }
           },
@@ -3561,28 +4071,48 @@
             {
               "year": 2020,
               "score": 76.98712414563403
+            },
+            {
+              "year": 2021,
+              "score": 73.88962087519131
+            },
+            {
+              "year": 2022,
+              "score": 82.17331646955299
+            },
+            {
+              "year": 2023,
+              "score": 75.78936991101068
+            },
+            {
+              "year": 2024,
+              "score": 77.20709987744424
+            },
+            {
+              "year": 2025,
+              "score": 72.58149529488131
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 14.393110725341822,
-          "relativeHumidityHikingMeanPct": 69.73553856199881,
-          "windHikingMeanKmh": 5.824527881634538,
+          "temperatureHikingMeanC": 14.534992173270117,
+          "relativeHumidityHikingMeanPct": 69.2833175898898,
+          "windHikingMeanKmh": 5.823388546892828,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.0033333333333333335,
-          "wetDayProbability": 0.6788888888888888,
-          "heavyRainDayProbability": 0.19222222222222224,
-          "precipitationMonthlyMeanMm": 160.78206365159718,
+          "snowDayProbability": 0.002857142857142857,
+          "wetDayProbability": 0.6657142857142856,
+          "heavyRainDayProbability": 0.18380952380952384,
+          "precipitationMonthlyMeanMm": 154.05026464158513,
           "snowDepthMeanOnSnowDaysM": 0.026123046875,
-          "temperatureHikingP10C": 9.608312904296898,
-          "temperatureHikingP90C": 19.145147621093773,
-          "temperatureUtilityScore": 93.32623636288093,
-          "daylightHoursMean": 15.6074947713482,
+          "temperatureHikingP10C": 9.737005531250023,
+          "temperatureHikingP90C": 19.277227699218773,
+          "temperatureUtilityScore": 93.44404715938227,
+          "daylightHoursMean": 15.607433814502189,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 6,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -3591,23 +4121,23 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 2.981005647639871,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 3.5479700698662966,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
               "snowDepthMeanOnSnowDaysM": 2
             },
             "years": {
@@ -4120,6 +4650,91 @@
                   "precipitationMonthlyMeanMm": 30,
                   "snowDepthMeanOnSnowDaysM": 30
                 }
+              },
+              "2021": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2022": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2023": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2024": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2025": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
               }
             }
           },
@@ -4243,28 +4858,48 @@
             {
               "year": 2020,
               "score": 77.37266801367221
+            },
+            {
+              "year": 2021,
+              "score": 78.11457615709091
+            },
+            {
+              "year": 2022,
+              "score": 80.74898976055647
+            },
+            {
+              "year": 2023,
+              "score": 78.13981482951752
+            },
+            {
+              "year": 2024,
+              "score": 88.05272695628688
+            },
+            {
+              "year": 2025,
+              "score": 89.91763441608813
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 16.0951010309245,
-          "relativeHumidityHikingMeanPct": 68.67101124433897,
-          "windHikingMeanKmh": 5.686842114242323,
+          "temperatureHikingMeanC": 16.33599975625542,
+          "relativeHumidityHikingMeanPct": 68.07020195901515,
+          "windHikingMeanKmh": 5.657254927245365,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
           "snowDayProbability": 0,
-          "wetDayProbability": 0.6118279569892473,
-          "heavyRainDayProbability": 0.1763440860215053,
-          "precipitationMonthlyMeanMm": 155.3400325581502,
+          "wetDayProbability": 0.6055299539170508,
+          "heavyRainDayProbability": 0.17235023041474648,
+          "precipitationMonthlyMeanMm": 153.06632640410714,
           "snowDepthMeanOnSnowDaysM": 0,
-          "temperatureHikingP10C": 11.526006996093773,
-          "temperatureHikingP90C": 20.42014151757815,
-          "temperatureUtilityScore": 94.90353340731866,
-          "daylightHoursMean": 15.261814862101756,
+          "temperatureHikingP10C": 11.696111976562523,
+          "temperatureHikingP90C": 20.80710440820315,
+          "temperatureUtilityScore": 94.82137204491545,
+          "daylightHoursMean": 15.262080715939627,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 7,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -4273,23 +4908,23 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 3.6725219208429385,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 3.4326605518433677,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
               "snowDepthMeanOnSnowDaysM": 0
             },
             "years": {
@@ -4787,6 +5422,91 @@
                 }
               },
               "2020": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
                 "expectedDays": 31,
                 "validDaysByMetric": {
                   "temperatureHikingMeanC": 31,
@@ -4925,28 +5645,48 @@
             {
               "year": 2020,
               "score": 81.39456388677982
+            },
+            {
+              "year": 2021,
+              "score": 82.70280794376242
+            },
+            {
+              "year": 2022,
+              "score": 80.95522443609345
+            },
+            {
+              "year": 2023,
+              "score": 80.69944468567009
+            },
+            {
+              "year": 2024,
+              "score": 84.10237304191743
+            },
+            {
+              "year": 2025,
+              "score": 82.16813483800892
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 16.05262758449893,
-          "relativeHumidityHikingMeanPct": 68.59199665927235,
-          "windHikingMeanKmh": 5.014190377685307,
+          "temperatureHikingMeanC": 16.19136836078361,
+          "relativeHumidityHikingMeanPct": 68.23529132349476,
+          "windHikingMeanKmh": 5.0040698437786855,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
           "snowDayProbability": 0,
-          "wetDayProbability": 0.5376344086021504,
-          "heavyRainDayProbability": 0.13333333333333328,
-          "precipitationMonthlyMeanMm": 123.18818083355531,
+          "wetDayProbability": 0.5327188940092165,
+          "heavyRainDayProbability": 0.13456221198156676,
+          "precipitationMonthlyMeanMm": 124.94903890845907,
           "snowDepthMeanOnSnowDaysM": 0,
-          "temperatureHikingP10C": 11.297857582031273,
-          "temperatureHikingP90C": 20.595892250000023,
-          "temperatureUtilityScore": 94.60084680658909,
-          "daylightHoursMean": 14.060823407490862,
+          "temperatureHikingP10C": 11.484686195312523,
+          "temperatureHikingP90C": 20.706243812500023,
+          "temperatureUtilityScore": 94.68039450348724,
+          "daylightHoursMean": 14.06126967954206,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 8,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -4955,23 +5695,23 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 4.156788724786769,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 3.9793830880478818,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
               "snowDepthMeanOnSnowDaysM": 0
             },
             "years": {
@@ -5484,6 +6224,91 @@
                   "precipitationMonthlyMeanMm": 31,
                   "snowDepthMeanOnSnowDaysM": 31
                 }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
               }
             }
           },
@@ -5607,28 +6432,48 @@
             {
               "year": 2020,
               "score": 88.33071133132927
+            },
+            {
+              "year": 2021,
+              "score": 84.20542056098107
+            },
+            {
+              "year": 2022,
+              "score": 82.05573036758462
+            },
+            {
+              "year": 2023,
+              "score": 87.25148085673285
+            },
+            {
+              "year": 2024,
+              "score": 81.05897170030804
+            },
+            {
+              "year": 2025,
+              "score": 87.54603636553136
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 11.585347216227236,
-          "relativeHumidityHikingMeanPct": 70.60866626220893,
-          "windHikingMeanKmh": 5.761454978886319,
+          "temperatureHikingMeanC": 11.681934041643437,
+          "relativeHumidityHikingMeanPct": 70.3960247992995,
+          "windHikingMeanKmh": 5.745704091007854,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.0011111111111111111,
-          "wetDayProbability": 0.40111111111111114,
-          "heavyRainDayProbability": 0.0755555555555556,
-          "precipitationMonthlyMeanMm": 80.85296774557946,
+          "snowDayProbability": 0.0009523809523809524,
+          "wetDayProbability": 0.40095238095238106,
+          "heavyRainDayProbability": 0.07142857142857147,
+          "precipitationMonthlyMeanMm": 78.7959870382508,
           "snowDepthMeanOnSnowDaysM": 0.0322265625,
-          "temperatureHikingP10C": 5.856115638671898,
-          "temperatureHikingP90C": 16.995916664062523,
-          "temperatureUtilityScore": 86.44512689217632,
-          "daylightHoursMean": 12.530109234365208,
+          "temperatureHikingP10C": 5.890875160156273,
+          "temperatureHikingP90C": 17.0393431777344,
+          "temperatureUtilityScore": 86.72064323159701,
+          "daylightHoursMean": 12.530606514917576,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 9,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -5637,23 +6482,23 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 4.877399917005961,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 4.9962006306203675,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
               "snowDepthMeanOnSnowDaysM": 1
             },
             "years": {
@@ -6166,151 +7011,256 @@
                   "precipitationMonthlyMeanMm": 30,
                   "snowDepthMeanOnSnowDaysM": 30
                 }
+              },
+              "2021": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2022": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2023": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2024": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2025": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
               }
             }
           },
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 90.29667471917325
+              "score": 90.29667475572862
             },
             {
               "year": 1992,
-              "score": 84.49641166829505
+              "score": 84.49641170077177
             },
             {
               "year": 1993,
-              "score": 87.5736674767452
+              "score": 87.57366751330056
             },
             {
               "year": 1994,
-              "score": 92.98417963605733
+              "score": 92.9841796726127
             },
             {
               "year": 1995,
-              "score": 81.74564372851646
+              "score": 81.74564376507182
             },
             {
               "year": 1996,
-              "score": 71.56320262127718
+              "score": 71.5632026537539
             },
             {
               "year": 1997,
-              "score": 86.41833641390885
+              "score": 86.41833645046421
             },
             {
               "year": 1998,
-              "score": 80.56208478810267
+              "score": 80.56208482465803
             },
             {
               "year": 1999,
-              "score": 85.05617598842547
+              "score": 85.05617602498083
             },
             {
               "year": 2000,
-              "score": 84.22250924808017
+              "score": 84.22250928055689
             },
             {
               "year": 2001,
-              "score": 77.96620609902715
+              "score": 77.96620613558251
             },
             {
               "year": 2002,
-              "score": 80.00521761222696
+              "score": 80.00521764878232
             },
             {
               "year": 2003,
-              "score": 81.16953861179354
+              "score": 81.1695386483489
             },
             {
               "year": 2004,
-              "score": 84.45179420922042
+              "score": 84.45179424169714
             },
             {
               "year": 2005,
-              "score": 81.45063304628484
+              "score": 81.4506330828402
             },
             {
               "year": 2006,
-              "score": 86.22007300938687
+              "score": 86.22007304594223
             },
             {
               "year": 2007,
-              "score": 84.0595397332204
+              "score": 84.05953976977577
             },
             {
               "year": 2008,
-              "score": 81.55249293888244
+              "score": 81.55249297135916
             },
             {
               "year": 2009,
-              "score": 88.36318883007253
+              "score": 88.3631888666279
             },
             {
               "year": 2010,
-              "score": 88.60875652437757
+              "score": 88.60875656093293
             },
             {
               "year": 2011,
-              "score": 93.53196419104042
+              "score": 93.53196422759578
             },
             {
               "year": 2012,
-              "score": 93.38594720063878
+              "score": 93.3859472331155
             },
             {
               "year": 2013,
-              "score": 82.22231257560533
+              "score": 82.22231261216069
             },
             {
               "year": 2014,
-              "score": 88.1095786277712
+              "score": 88.10957866432656
             },
             {
               "year": 2015,
-              "score": 80.35343470997384
+              "score": 80.3534347465292
             },
             {
               "year": 2016,
-              "score": 85.55525309282086
+              "score": 85.55525312529758
             },
             {
               "year": 2017,
-              "score": 86.84597769158323
+              "score": 86.84597772813859
             },
             {
               "year": 2018,
-              "score": 87.11297408307881
+              "score": 87.11297411963417
             },
             {
               "year": 2019,
-              "score": 92.66671900330994
+              "score": 92.6667190398653
             },
             {
               "year": 2020,
-              "score": 88.69454544516461
+              "score": 88.69454547764133
+            },
+            {
+              "year": 2021,
+              "score": 88.35205930627535
+            },
+            {
+              "year": 2022,
+              "score": 76.88358372662728
+            },
+            {
+              "year": 2023,
+              "score": 92.90324847008387
+            },
+            {
+              "year": 2024,
+              "score": 89.39570668880813
+            },
+            {
+              "year": 2025,
+              "score": 87.87368050220519
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 7.155069463279173,
-          "relativeHumidityHikingMeanPct": 72.8112300374648,
-          "windHikingMeanKmh": 5.386575450452025,
+          "temperatureHikingMeanC": 7.201195954749627,
+          "relativeHumidityHikingMeanPct": 72.56625656859374,
+          "windHikingMeanKmh": 5.4026854983642,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.18172043010752684,
-          "wetDayProbability": 0.3053763440860215,
-          "heavyRainDayProbability": 0.059139784946236534,
-          "precipitationMonthlyMeanMm": 63.35715863012771,
-          "snowDepthMeanOnSnowDaysM": 0.04618875656990675,
-          "temperatureHikingP10C": 0.42963248437502305,
-          "temperatureHikingP90C": 13.942022621093773,
-          "temperatureUtilityScore": 68.40365697189067,
-          "daylightHoursMean": 10.942868911850445,
+          "snowDayProbability": 0.16774193548387092,
+          "wetDayProbability": 0.2949308755760369,
+          "heavyRainDayProbability": 0.05714285714285712,
+          "precipitationMonthlyMeanMm": 60.57631712564638,
+          "snowDepthMeanOnSnowDaysM": 0.04389059932217753,
+          "temperatureHikingP10C": 0.6720030898437731,
+          "temperatureHikingP90C": 13.871588050781273,
+          "temperatureUtilityScore": 68.80735856937106,
+          "daylightHoursMean": 10.943352202682288,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 10,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -6319,24 +7269,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 11.189769838082249,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 11.391924934439343,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 19
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 21
             },
             "years": {
               "1991": {
@@ -6848,151 +7798,256 @@
                   "precipitationMonthlyMeanMm": 31,
                   "snowDepthMeanOnSnowDaysM": 31
                 }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
               }
             }
           },
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 65.97191411191697
+              "score": 65.97191398017019
             },
             {
               "year": 1992,
-              "score": 79.06942286445681
+              "score": 79.06942272664006
             },
             {
               "year": 1993,
-              "score": 86.78504035959529
+              "score": 86.7850402278485
             },
             {
               "year": 1994,
-              "score": 68.72328550602886
+              "score": 68.72328537428207
             },
             {
               "year": 1995,
-              "score": 77.17622977723806
+              "score": 77.17622964549128
             },
             {
               "year": 1996,
-              "score": 63.95461480216806
+              "score": 63.9546146643513
             },
             {
               "year": 1997,
-              "score": 54.48527255866139
+              "score": 54.485272426914605
             },
             {
               "year": 1998,
-              "score": 84.47871439908317
+              "score": 84.47871426733639
             },
             {
               "year": 1999,
-              "score": 58.06417007779464
+              "score": 58.064169946047855
             },
             {
               "year": 2000,
-              "score": 87.52876158422748
+              "score": 87.52876144641071
             },
             {
               "year": 2001,
-              "score": 83.00650205191666
+              "score": 83.00650192016987
             },
             {
               "year": 2002,
-              "score": 80.91952688654486
+              "score": 80.91952675479807
             },
             {
               "year": 2003,
-              "score": 47.72084353953579
+              "score": 47.720843407789005
             },
             {
               "year": 2004,
-              "score": 84.37679345773276
+              "score": 84.376793319916
             },
             {
               "year": 2005,
-              "score": 70.77542703100464
+              "score": 70.77542689925785
             },
             {
               "year": 2006,
-              "score": 85.0543944927543
+              "score": 85.05439436100751
             },
             {
               "year": 2007,
-              "score": 68.23531865926493
+              "score": 68.23531852751815
             },
             {
               "year": 2008,
-              "score": 85.58601260959367
+              "score": 85.5860124717769
             },
             {
               "year": 2009,
-              "score": 59.399854473041614
+              "score": 59.39985434129483
             },
             {
               "year": 2010,
-              "score": 62.99810094516856
+              "score": 62.99810081342177
             },
             {
               "year": 2011,
-              "score": 60.172982185352154
+              "score": 60.17298205360537
             },
             {
               "year": 2012,
-              "score": 85.69744677394408
+              "score": 85.69744663612731
             },
             {
               "year": 2013,
-              "score": 72.20720792056767
+              "score": 72.20720778882088
             },
             {
               "year": 2014,
-              "score": 71.4522452959337
+              "score": 71.4522451641869
             },
             {
               "year": 2015,
-              "score": 80.30177144141874
+              "score": 80.30177130967195
             },
             {
               "year": 2016,
-              "score": 61.60399826423893
+              "score": 61.60399812642217
             },
             {
               "year": 2017,
-              "score": 64.47120986847663
+              "score": 64.47120973672985
             },
             {
               "year": 2018,
-              "score": 87.87186483799078
+              "score": 87.871864706244
             },
             {
               "year": 2019,
-              "score": 81.63618612853949
+              "score": 81.6361859967927
             },
             {
               "year": 2020,
-              "score": 78.27091196518151
+              "score": 78.27091182736476
+            },
+            {
+              "year": 2021,
+              "score": 68.54069532000584
+            },
+            {
+              "year": 2022,
+              "score": 87.56343494239312
+            },
+            {
+              "year": 2023,
+              "score": 90.69455481880229
+            },
+            {
+              "year": 2024,
+              "score": 87.06599223759737
+            },
+            {
+              "year": 2025,
+              "score": 63.63873756651719
             }
           ]
         },
         {
-          "temperatureHikingMeanC": 2.1313945444697855,
-          "relativeHumidityHikingMeanPct": 75.98248747244081,
-          "windHikingMeanKmh": 5.3882535590946325,
+          "temperatureHikingMeanC": 2.283388243639448,
+          "relativeHumidityHikingMeanPct": 76.319112097333,
+          "windHikingMeanKmh": 5.412026908042018,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.541111111111111,
-          "wetDayProbability": 0.29777777777777775,
-          "heavyRainDayProbability": 0.05000000000000001,
-          "precipitationMonthlyMeanMm": 54.13258100441851,
-          "snowDepthMeanOnSnowDaysM": 0.09171084389916907,
-          "temperatureHikingP10C": -4.663690269531227,
-          "temperatureHikingP90C": 8.922918617187523,
-          "temperatureUtilityScore": 43.863060269326574,
-          "daylightHoursMean": 9.535901764444422,
+          "snowDayProbability": 0.5276190476190475,
+          "wetDayProbability": 0.30952380952380953,
+          "heavyRainDayProbability": 0.053333333333333344,
+          "precipitationMonthlyMeanMm": 57.22707343059028,
+          "snowDepthMeanOnSnowDaysM": 0.08681503800800977,
+          "temperatureHikingP10C": -4.307916343749977,
+          "temperatureHikingP90C": 8.906744300781273,
+          "temperatureUtilityScore": 44.62153341662989,
+          "daylightHoursMean": 9.536268857717555,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 11,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -7001,24 +8056,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 10.593366305675806,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 10.231647048056386,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 29
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 34
             },
             "years": {
               "1991": {
@@ -7530,151 +8585,256 @@
                   "precipitationMonthlyMeanMm": 30,
                   "snowDepthMeanOnSnowDaysM": 30
                 }
+              },
+              "2021": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2022": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2023": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2024": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
+              },
+              "2025": {
+                "expectedDays": 30,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 30,
+                  "relativeHumidityHikingMeanPct": 30,
+                  "windHikingMeanKmh": 30,
+                  "highWindHourProbability": 30,
+                  "severeWindHourProbability": 30,
+                  "hotDayProbability": 30,
+                  "severeHotDayProbability": 30,
+                  "snowDayProbability": 30,
+                  "wetDayProbability": 30,
+                  "heavyRainDayProbability": 30,
+                  "precipitationMonthlyMeanMm": 30,
+                  "snowDepthMeanOnSnowDaysM": 30
+                }
               }
             }
           },
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 50.60956439153082
+              "score": 50.60956398256715
             },
             {
               "year": 1992,
-              "score": 45.642554708830325
+              "score": 45.64255429316143
             },
             {
               "year": 1993,
-              "score": 34.86379889149946
+              "score": 34.863798482535785
             },
             {
               "year": 1994,
-              "score": 51.53643029110926
+              "score": 51.5364298821456
             },
             {
               "year": 1995,
-              "score": 34.36926968120819
+              "score": 34.36926927224452
             },
             {
               "year": 1996,
-              "score": 59.609918946152604
+              "score": 59.60991853048371
             },
             {
               "year": 1997,
-              "score": 48.824645122188734
+              "score": 48.82464471322507
             },
             {
               "year": 1998,
-              "score": 41.262743390016176
+              "score": 41.26274298105251
             },
             {
               "year": 1999,
-              "score": 49.209661365558894
+              "score": 49.20966095659523
             },
             {
               "year": 2000,
-              "score": 76.78760217960229
+              "score": 76.7876017639334
             },
             {
               "year": 2001,
-              "score": 41.03158359643756
+              "score": 41.03158318747389
             },
             {
               "year": 2002,
-              "score": 52.5714362312546
+              "score": 52.57143582229094
             },
             {
               "year": 2003,
-              "score": 52.02964887010648
+              "score": 52.02964846114281
             },
             {
               "year": 2004,
-              "score": 43.32102773443887
+              "score": 43.32102731876998
             },
             {
               "year": 2005,
-              "score": 44.791472847317856
+              "score": 44.79147243835419
             },
             {
               "year": 2006,
-              "score": 54.343874830018244
+              "score": 54.34387442105458
             },
             {
               "year": 2007,
-              "score": 37.55550318201838
+              "score": 37.55550277305471
             },
             {
               "year": 2008,
-              "score": 55.724128666676464
+              "score": 55.72412825100757
             },
             {
               "year": 2009,
-              "score": 57.03227378446726
+              "score": 57.03227337550359
             },
             {
               "year": 2010,
-              "score": 66.55002092001828
+              "score": 66.55002051105461
             },
             {
               "year": 2011,
-              "score": 52.12707811344924
+              "score": 52.12707770448557
             },
             {
               "year": 2012,
-              "score": 78.34633070197198
+              "score": 78.34633028630309
             },
             {
               "year": 2013,
-              "score": 67.71146926431041
+              "score": 67.71146885534674
             },
             {
               "year": 2014,
-              "score": 55.41289874496625
+              "score": 55.412898336002584
             },
             {
               "year": 2015,
-              "score": 61.98612799744631
+              "score": 61.986127588482645
             },
             {
               "year": 2016,
-              "score": 46.22238830129645
+              "score": 46.222387885627555
             },
             {
               "year": 2017,
-              "score": 49.03276840800073
+              "score": 49.03276799903706
             },
             {
               "year": 2018,
-              "score": 50.07059221935929
+              "score": 50.07059181039563
             },
             {
               "year": 2019,
-              "score": 55.763390845545594
+              "score": 55.76339043658193
             },
             {
               "year": 2020,
-              "score": 61.86903461461688
+              "score": 61.869034198947986
+            },
+            {
+              "year": 2021,
+              "score": 53.4026206813036
+            },
+            {
+              "year": 2022,
+              "score": 63.268734465083966
+            },
+            {
+              "year": 2023,
+              "score": 44.857551908589535
+            },
+            {
+              "year": 2024,
+              "score": 46.07701062642593
+            },
+            {
+              "year": 2025,
+              "score": 61.59649632240048
             }
           ]
         },
         {
-          "temperatureHikingMeanC": -3.1141639409920345,
-          "relativeHumidityHikingMeanPct": 77.15984777082971,
-          "windHikingMeanKmh": 5.2811472500717604,
+          "temperatureHikingMeanC": -2.8134610564240883,
+          "relativeHumidityHikingMeanPct": 77.8493921314511,
+          "windHikingMeanKmh": 5.321330531492677,
           "highWindHourProbability": 0,
           "severeWindHourProbability": 0,
           "hotDayProbability": 0,
           "severeHotDayProbability": 0,
-          "snowDayProbability": 0.9580645161290323,
-          "wetDayProbability": 0.2870967741935483,
-          "heavyRainDayProbability": 0.03655913978494623,
-          "precipitationMonthlyMeanMm": 50.64293555644307,
-          "snowDepthMeanOnSnowDaysM": 0.18610742879944273,
-          "temperatureHikingP10C": -9.918176353515602,
-          "temperatureHikingP90C": 2.973242103515648,
-          "temperatureUtilityScore": 19.160141266508518,
-          "daylightHoursMean": 8.790899066512718,
+          "snowDayProbability": 0.9465437788018434,
+          "wetDayProbability": 0.2930875576036866,
+          "heavyRainDayProbability": 0.037788018433179714,
+          "precipitationMonthlyMeanMm": 51.796745896218766,
+          "snowDepthMeanOnSnowDaysM": 0.18274566465739484,
+          "temperatureHikingP10C": -9.579583824218727,
+          "temperatureHikingP90C": 3.075018226562523,
+          "temperatureUtilityScore": 20.180507638048503,
+          "daylightHoursMean": 8.790964072868759,
           "dataCompleteness": 1,
-          "sampleYearCount": 30,
+          "sampleYearCount": 35,
           "month": 12,
           "bandId": "representative",
           "targetElevationM": 1484.5,
@@ -7683,24 +8843,24 @@
           "samplePointMaxSeparationKm": 0,
           "polygonEquivalentDiameterKm": 13.6,
           "terrainReliefM": 0,
-          "interannualScoreSd": 4.943606119324849,
-          "validInterannualYearCount": 30,
+          "interannualScoreSd": 5.516036700102103,
+          "validInterannualYearCount": 35,
           "scoringInputsAvailable": true,
           "missingScoringInputs": [],
           "observationCoverage": {
             "validYearsByMetric": {
-              "temperatureHikingMeanC": 30,
-              "relativeHumidityHikingMeanPct": 30,
-              "windHikingMeanKmh": 30,
-              "highWindHourProbability": 30,
-              "severeWindHourProbability": 30,
-              "hotDayProbability": 30,
-              "severeHotDayProbability": 30,
-              "snowDayProbability": 30,
-              "wetDayProbability": 30,
-              "heavyRainDayProbability": 30,
-              "precipitationMonthlyMeanMm": 30,
-              "snowDepthMeanOnSnowDaysM": 30
+              "temperatureHikingMeanC": 35,
+              "relativeHumidityHikingMeanPct": 35,
+              "windHikingMeanKmh": 35,
+              "highWindHourProbability": 35,
+              "severeWindHourProbability": 35,
+              "hotDayProbability": 35,
+              "severeHotDayProbability": 35,
+              "snowDayProbability": 35,
+              "wetDayProbability": 35,
+              "heavyRainDayProbability": 35,
+              "precipitationMonthlyMeanMm": 35,
+              "snowDepthMeanOnSnowDaysM": 35
             },
             "years": {
               "1991": {
@@ -8212,143 +9372,238 @@
                   "precipitationMonthlyMeanMm": 31,
                   "snowDepthMeanOnSnowDaysM": 31
                 }
+              },
+              "2021": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2022": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2023": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2024": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
+              },
+              "2025": {
+                "expectedDays": 31,
+                "validDaysByMetric": {
+                  "temperatureHikingMeanC": 31,
+                  "relativeHumidityHikingMeanPct": 31,
+                  "windHikingMeanKmh": 31,
+                  "highWindHourProbability": 31,
+                  "severeWindHourProbability": 31,
+                  "hotDayProbability": 31,
+                  "severeHotDayProbability": 31,
+                  "snowDayProbability": 31,
+                  "wetDayProbability": 31,
+                  "heavyRainDayProbability": 31,
+                  "precipitationMonthlyMeanMm": 31,
+                  "snowDepthMeanOnSnowDaysM": 31
+                }
               }
             }
           },
           "interannualYearlyScores": [
             {
               "year": 1991,
-              "score": 34.265258805396414
+              "score": 34.26525826112179
             },
             {
               "year": 1992,
-              "score": 40.546326037649074
+              "score": 40.54632549209907
             },
             {
               "year": 1993,
-              "score": 37.21370075353711
+              "score": 37.213700209262484
             },
             {
               "year": 1994,
-              "score": 33.38123651036954
+              "score": 33.38123596609491
             },
             {
               "year": 1995,
-              "score": 32.530369052031546
+              "score": 32.53036850775692
             },
             {
               "year": 1996,
-              "score": 36.33124635235189
+              "score": 36.33124580680189
             },
             {
               "year": 1997,
-              "score": 33.37377628564117
+              "score": 33.37377574136654
             },
             {
               "year": 1998,
-              "score": 38.6576397036099
+              "score": 38.657639159335275
             },
             {
               "year": 1999,
-              "score": 36.46004610454891
+              "score": 36.46004556027428
             },
             {
               "year": 2000,
-              "score": 45.633701926682654
+              "score": 45.63370138113265
             },
             {
               "year": 2001,
-              "score": 36.2971503037303
+              "score": 36.29714975945567
             },
             {
               "year": 2002,
-              "score": 30.83812616386136
+              "score": 30.838125619586734
             },
             {
               "year": 2003,
-              "score": 42.771606407462954
+              "score": 42.77160586318833
             },
             {
               "year": 2004,
-              "score": 41.06250510665949
+              "score": 41.06250456110949
             },
             {
               "year": 2005,
-              "score": 32.66445853972476
+              "score": 32.664457995450135
             },
             {
               "year": 2006,
-              "score": 53.70339762070596
+              "score": 53.70339707643133
             },
             {
               "year": 2007,
-              "score": 38.053988844664275
+              "score": 38.05398830038965
             },
             {
               "year": 2008,
-              "score": 35.70479101078603
+              "score": 35.70479046523603
             },
             {
               "year": 2009,
-              "score": 37.90435447477461
+              "score": 37.90435393049998
             },
             {
               "year": 2010,
-              "score": 32.26402106677915
+              "score": 32.264020522504524
             },
             {
               "year": 2011,
-              "score": 41.629381142776026
+              "score": 41.6293805985014
             },
             {
               "year": 2012,
-              "score": 33.67765190982089
+              "score": 33.677651364270886
             },
             {
               "year": 2013,
-              "score": 43.38503471303251
+              "score": 43.38503416875788
             },
             {
               "year": 2014,
-              "score": 35.42686448833214
+              "score": 35.426863944057516
             },
             {
               "year": 2015,
-              "score": 46.45547284277883
+              "score": 46.455472298504205
             },
             {
               "year": 2016,
-              "score": 38.71165041021757
+              "score": 38.71164986466757
             },
             {
               "year": 2017,
-              "score": 39.97830855913466
+              "score": 39.97830801486003
             },
             {
               "year": 2018,
-              "score": 35.4291206700451
+              "score": 35.429120125770474
             },
             {
               "year": 2019,
-              "score": 43.10089467667686
+              "score": 43.10089413240223
             },
             {
               "year": 2020,
-              "score": 37.153714393262526
+              "score": 37.153713847712524
+            },
+            {
+              "year": 2021,
+              "score": 30.11397541317154
+            },
+            {
+              "year": 2022,
+              "score": 38.283752021183794
+            },
+            {
+              "year": 2023,
+              "score": 42.5868938046646
+            },
+            {
+              "year": 2024,
+              "score": 37.364881542632986
+            },
+            {
+              "year": 2025,
+              "score": 53.98548119981655
             }
           ]
         }
       ]
     }
-  },
-  "aggregationPolicyVersion": "observation-validity-v1",
-  "migrationStatus": "scoped-provisional",
-  "validityEvidence": {
-    "githubActionsRun": 34251408255,
-    "decisionSha256": "cbebc3a18241d33208d6d74c903dd9afa9d96edf3811fc5d1a0a326b5cd3a87a",
-    "reportSha256": "3345d3ce232b0cc4e6bd2d8438d1b3999df252b43dd1caa0e116b52dba108eb7",
-    "scientificCoreSha256": "f740bfdf195b5b5b54a40b36b42ee12c59b4c74403dd07dbeb767b8a6afa2376",
-    "sourceSha256": "11d9903a56a4f8b07836687f29181d24b58ec0e68522d97f73a60fa842f9862a",
-    "sourceIdenticalToPublished": true
   }
 }

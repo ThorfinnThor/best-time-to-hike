@@ -6,7 +6,7 @@ import recommendationConfig from "../../data-config/methodology/recommendation-e
 import independentClimateHolds from "../../data-config/methodology/independent-climate-review-holds-v1.json";
 import { readJson, round, writeJson } from "../lib/io";
 
-type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; representativenessApproved?:boolean; aggregationPolicyVersion?:string; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; bands: Record<string, {months: BandClimateMonth[]}> } };
+type Normalized = { destination: DestinationConfig; dem: any; sampling: any; climate: { datasetStatus?:DatasetStatus; fixture?:boolean; representativenessApproved?:boolean; aggregationPolicyVersion?:string; source?:string; sourceDataset?:string; sourceDoi?:string; retrievedAt?:string; historicalPeriod?:{startYear:number;endYear:number;classification:string}; climateNormal?:{startYear:number;endYear:number}; bands: Record<string, {months: BandClimateMonth[]}> } };
 type InternalBandMonth = Omit<PublicBandMonth, "components" | "overallScore" | "scoreLevel" | "confidenceScore" | "confidenceLevel"> & {components: ComponentScores; overallScore:number; scoreLevel:ScoreLevel; confidenceScore:number; confidenceLevel:ConfidenceLevel};
 type ScoredMonth = Omit<PublicMonth, "components" | "overallScore" | "scoreLevel" | "confidenceScore" | "confidenceLevel" | "bands"> & {components: ComponentScores; overallScore:number; scoreLevel:ScoreLevel; confidenceScore:number; confidenceLevel:ConfidenceLevel; bands:InternalBandMonth[]; rawComponents: ComponentScores; rawOverallScore: number};
 type RepresentativeCell = {lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string};
@@ -124,6 +124,8 @@ const scored = normalized.map(({destination, dem, sampling, climate}) => {
     climateSource:climate.source ?? "era5-land-compatible-synthetic-fixture",
     climateSourceDataset:climate.sourceDataset,
     climateSourceDoi:climate.sourceDoi,
+    ...(climate.historicalPeriod ? {historicalPeriod: climate.historicalPeriod} : {}),
+    ...(climate.climateNormal ? {climateNormal: climate.climateNormal} : {}),
     retrievedAt:climate.retrievedAt ?? dem.retrievedAt ?? "2026-08-31T00:00:00.000Z"
   };
 });

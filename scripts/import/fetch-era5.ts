@@ -12,6 +12,7 @@ import { interpolate, overallScore, scoreComponents, type Curve } from "../../li
 import curves from "../../data-config/scoring/curves.json";
 import climateAggregation from "../../data-config/methodology/climate-aggregation-v1.json";
 import historicalPeriod from "../../data-config/methodology/historical-period-1991-2025-v1.json";
+import historicalReview from "../../data-config/methodology/historical-period-1991-2025-review-v1.json";
 import { requireApprovedSource } from "./source-preflight";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 
@@ -244,7 +245,11 @@ async function main() {
   if (candidateBatch !== null && publish) throw new Error("ERA5_REQUEST001 candidate batches cannot be published");
   if (publish && provisional) throw new Error("ERA5_REQUEST001 --publish and --provisional are mutually exclusive");
   if (publish && period.classification === "project-defined-historical-climate-average") {
-    throw new Error("BLOCKED_HISTORICAL_PERIOD_RELEASE: 1991-2025 remains staging-only until the scientific comparison and production approval pass");
+    if (!historicalReview.scientificDecision.productionMigrationAuthorized
+      || !historicalReview.goldenCaseSignoff.gatePassed
+      || historicalReview.remainingApprovalItems.length > 0) {
+      throw new Error("BLOCKED_HISTORICAL_PERIOD_RELEASE: 1991-2025 migration requires the signed scientific review and Golden Case gate");
+    }
   }
   const destinationArgument = [...argumentsSet].find((value) => value.startsWith("--destination="));
   const selectedSlug = destinationArgument?.slice("--destination=".length);
@@ -536,7 +541,7 @@ async function main() {
     const snapshot = {
       schemaVersion: 2,
       datasetStatus: period.classification === "project-defined-historical-climate-average"
-        ? "provisional"
+        ? publish ? "production" : "provisional"
         : provisional ? "provisional" : candidateBatch === null ? "production" : "staging",
       destinationId: destination.id,
       fixture: false,
@@ -555,7 +560,7 @@ async function main() {
           }
         }),
       ...(period.classification === "project-defined-historical-climate-average"
-        ? { aggregationPolicyVersion: "observation-validity-v1", migrationStatus: "candidate-not-published" }
+        ? { aggregationPolicyVersion: "observation-validity-v1", migrationStatus: publish ? "production-approved" : "candidate-not-published" }
         : {}),
       retrievedAt,
       precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",

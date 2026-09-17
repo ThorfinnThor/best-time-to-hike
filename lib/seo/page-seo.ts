@@ -7,6 +7,7 @@ import { t, taxonomyLabel, withArticle } from "@/lib/i18n/dict";
 import { evaluateIndexability } from "@/lib/seo/indexability";
 import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
+import { historicalPeriodDescription, historicalPeriodRange } from "@/lib/methodology/historical-period";
 
 /**
  * Title, description and index decision per page.
@@ -48,10 +49,10 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
         : (de ? `Beste Wanderzeit für ${destination.name}` : `Best time to hike ${destination.name}`);
 
   const description = clamp(p.seasonShape === "withheld"
-    ? (de ? `Kein Monat in ${destination.name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten von 1991 bis 2020 zeigen und warum wir die Empfehlung zurückhalten.`
-          : `No month at ${destination.name} clears our climate criteria. What the 1991-2020 ERA5-Land record shows, and why we withhold the recommendation.`)
-    : (de ? `${p.eligibleMonths.length} von zwölf Monaten ${p.eligibleMonths.length === 1 ? "ist" : "sind"} empfehlenswert${p.peakMonth ? `, am besten ${monthName(p.peakMonth, locale)}` : ""}. Temperatur, Regen, Schnee und Tageslicht aus dem Klimanormal 1991 bis 2020.`
-          : `${p.eligibleMonths.length} of twelve months ${p.eligibleMonths.length === 1 ? "is" : "are"} recommendable${p.peakMonth ? `, ${monthName(p.peakMonth, locale)} most of all`: ""}. Temperature, rain, snow and daylight from the 1991-2020 climate normal.`));
+    ? (de ? `Kein Monat in ${destination.name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten für ${historicalPeriodDescription.de} zeigen und warum wir die Empfehlung zurückhalten.`
+          : `No month at ${destination.name} clears our climate criteria. What the ERA5-Land record for ${historicalPeriodDescription.en} shows, and why we withhold the recommendation.`)
+    : (de ? `${p.eligibleMonths.length} von zwölf Monaten ${p.eligibleMonths.length === 1 ? "ist" : "sind"} empfehlenswert${p.peakMonth ? `, am besten ${monthName(p.peakMonth, locale)}` : ""}. Temperatur, Regen, Schnee und Tageslicht aus der historischen Klimatologie ${historicalPeriodRange}.`
+          : `${p.eligibleMonths.length} of twelve months ${p.eligibleMonths.length === 1 ? "is" : "are"} recommendable${p.peakMonth ? `, ${monthName(p.peakMonth, locale)} most of all`: ""}. Temperature, rain, snow and daylight from the historical climatology for ${historicalPeriodDescription.en}.`));
 
   const decision = evaluateIndexability({
     resultCount: p.eligibleMonths.length,
@@ -82,8 +83,8 @@ function monthSeo(destination: PublicDestination, monthNumber: number, locale: L
     : (de ? `${destination.name} im ${label}: nicht empfohlen` : `${destination.name} in ${label}: not recommended`);
 
   const description = clamp(eligible && data
-    ? (de ? `Rund ${Math.round(data.metrics.temperatureHikingMeanC)} Grad, Regen an ${Math.round(data.metrics.wetDayProbability * 100)} Prozent der Tage und ${Math.round(data.metrics.daylightHoursMean)} Stunden Tageslicht im Klimamittel 1991 bis 2020.`
-          : `About ${Math.round(data.metrics.temperatureHikingMeanC)} degrees, rain on ${Math.round(data.metrics.wetDayProbability * 100)} percent of days and ${Math.round(data.metrics.daylightHoursMean)} hours of daylight in the 1991-2020 mean.`)
+    ? (de ? `Rund ${Math.round(data.metrics.temperatureHikingMeanC)} Grad, Regen an ${Math.round(data.metrics.wetDayProbability * 100)} Prozent der Tage und ${Math.round(data.metrics.daylightHoursMean)} Stunden Tageslicht in der historischen Klimatologie ${historicalPeriodRange}.`
+          : `About ${Math.round(data.metrics.temperatureHikingMeanC)} degrees, rain on ${Math.round(data.metrics.wetDayProbability * 100)} percent of days and ${Math.round(data.metrics.daylightHoursMean)} hours of daylight in the historical climatology for ${historicalPeriodDescription.en}.`)
     : (de ? `Für diesen Monat halten wir eine Wanderempfehlung zurück. Welche Klimakomponente die Schwelle unterschreitet und was die Daten stattdessen zeigen.`
           : `We withhold a hiking recommendation for this month. Which climate component falls below the threshold, and what the record shows instead.`));
 
@@ -150,8 +151,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
     case "themeRanking": return {
       title: t(locale).ranking.themeTitle(t(locale).ranking.themes[page.theme], monthName(page.month, locale)),
       description: clamp(de
-        ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus dem Klimanormal 1991 bis 2020.`
-        : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2020 climate normal.`),
+        ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus der historischen Klimatologie ${historicalPeriodRange}.`
+        : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the historical climatology for ${historicalPeriodDescription.en}.`),
       index: getManifest().datasetStatus === "production",
       reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
     case "compare": return {
@@ -162,8 +163,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
     case "home": return {
       title: de ? "Finde deine beste Wanderzeit" : "Find your best hiking season",
       description: clamp(de
-        ? "Wanderziele nach Monat, Temperatur, Regen und Schnee vergleichen, auf Basis des ERA5-Land-Klimanormals 1991 bis 2020."
-        : "Compare hiking destinations by month, temperature, rain and snow, using the ERA5-Land 1991-2020 climate normal."),
+        ? `Wanderziele nach Monat, Temperatur, Regen und Schnee vergleichen, auf Basis der ERA5-Land-Klimatologie ${historicalPeriodRange}.`
+        : `Compare hiking destinations by month, temperature, rain and snow, using the ERA5-Land historical climatology for ${historicalPeriodDescription.en}.`),
       index: getManifest().datasetStatus === "production",
       reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
     case "compareTool": return {

@@ -2,6 +2,7 @@ import { getAllDestinations, getManifest } from "@/lib/data/load";
 import { absoluteUrl } from "@/lib/site";
 import { links } from "@/lib/i18n/links";
 import { profileFor } from "@/lib/seo/profile";
+import { historicalPeriodDescription, historicalPeriodRange } from "@/lib/methodology/historical-period";
 
 export const dynamic = "force-static";
 
@@ -18,16 +19,16 @@ export function GET() {
     "# BestTimeToHike",
     "",
     "> Historical hiking-season suitability for mountain and trail destinations, derived from the",
-    "> ERA5-Land 1991-2020 climate normal. Not a forecast and not trail or safety information.",
+    `> ERA5-Land historical climatology for ${historicalPeriodDescription.en}. Not a forecast and not trail or safety information.`,
     "",
     "## Dataset",
     `- Status: ${manifest.datasetStatus} (algorithm ${manifest.algorithmVersion})`,
-    `- Source: ERA5-Land hourly time series, ${manifest.climateNormal.startYear}-${manifest.climateNormal.endYear}, DOI 10.24381/ee82e357`,
+    `- Source: ERA5-Land hourly time series, ${historicalPeriodRange}, DOI 10.24381/ee82e357`,
     `- Destinations: ${destinations.length}; each represented by one selected 0.1 degree model grid cell`,
     `- Recommendation-eligible destination-months: ${destinations.reduce((sum, d) => sum + d.months.filter((m) => m.recommendationEligible).length, 0)} of ${destinations.length * 12}`,
     "",
     "## What this data does not support",
-    "- It is a climate normal, not a forecast for any date.",
+    "- It is a historical climatology, not a forecast for any date.",
     "- Each destination is one model grid cell, not a whole region and not any specific trail.",
     "- Wind is coarse 10 metre grid wind. It is not exposed-trail or gust information.",
     `- ${withheld.length} destinations carry no recommendation at all; see below.`,

@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { getDestination } from "../lib/data/load";
 import { loadGoldenCases } from "../scripts/lib/golden-cases";
-import { reviewGoldenCases } from "../scripts/lib/golden-review";
+import { reviewGoldenCases, reviewGoldenCasesForPeriod } from "../scripts/lib/golden-review";
 
 /**
  * The engine checked against seasons a person would name.
@@ -86,10 +86,10 @@ test("a signed label carries an approver and a date, and APPROVED means all of t
 
 test("the approved golden set clears the same evidence gate as the release report", () => {
   if (!approved) return;
-  const review = reviewGoldenCases(golden, golden.cases.flatMap((item) => {
+  const review = reviewGoldenCasesForPeriod(golden, golden.cases.flatMap((item) => {
     const destination = getDestination(item.slug);
     return destination ? [destination] : [];
-  }));
+  }), {startYear: 1991, endYear: 2025});
   assert.ok(review.passed, JSON.stringify(review.cases.filter((item) => item.errors.length)));
 });
 
@@ -106,7 +106,9 @@ test("an accepted deviation still describes the disagreement it was written for"
   // A deviation recorded against one answer must not go on quietly covering a
   // different one. If the engine moves, the note is re-read or it is gone.
   for (const item of golden.cases) {
-    const deviation = item.acceptedDeviation;
+    const periodApproval = item.historicalPeriodApprovals?.find((approval) => approval.startYear === 1991 && approval.endYear === 2025);
+    const deviation = periodApproval ? periodApproval.acceptedDeviation : item.acceptedDeviation;
+    if (periodApproval?.acceptedDeviation === null) continue;
     if (!deviation) continue;
     if (getDestination(item.slug)?.recommendationHoldReason) continue;
     assert.ok(item.approvedBy, `${item.slug} records a deviation but is not signed`);

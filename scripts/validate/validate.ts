@@ -52,7 +52,7 @@ for(const [name,curve] of Object.entries(curves))if(Array.isArray(curve)){
   assert(curve.length>=2,`${name}: scoring curve needs at least two points`);
   assert(curve.every((point:any,index:number)=>Array.isArray(point)&&point.length===2&&Number.isFinite(point[0])&&Number.isFinite(point[1])&&point[1]>=0&&point[1]<=100&&(index===0||point[0]>curve[index-1][0])),`${name}: scoring curve points must have increasing x and scores in 0..100`);
 }
-assert(climateAggregation.normal.startYear===1991&&climateAggregation.normal.endYear===2020,"Scientific config climate normal mismatch");
+assert(climateAggregation.normal.startYear===1991&&climateAggregation.normal.endYear===2025,"Scientific config climate normal mismatch");
 assert(climateAggregation.climateAggregationVersion===2&&climateAggregation.temperatureElevationReference==="ERA5_LAND_INVARIANT_GEOPOTENTIAL","Scientific config temperature-elevation reference mismatch");
 assert(climateAggregation.requiredHourlyVariables.length===7&&new Set(climateAggregation.requiredHourlyVariables).size===7,"Required hourly variable registry mismatch");
 assert(demIngestion.sourceProduct==="COP-DEM_GLO-30-DGED"&&demIngestion.verticalUnit==="m"&&demIngestion.horizontalCrs==="EPSG:4326","DEM ingestion source contract mismatch");
@@ -89,7 +89,7 @@ if(manifest.datasetStatus==="production"){
 
 assert(manifest.algorithmVersion===scoringWeights.algorithmVersion,"Manifest algorithm version mismatch");
 assert(validateManifest(manifest), `Manifest schema: ${ajv.errorsText(validateManifest.errors)}`);
-assert(manifest.climateNormal.startYear===1991 && manifest.climateNormal.endYear===2020,"Climate normal must be 1991-2020");
+assert(manifest.climateNormal.startYear===1991 && manifest.climateNormal.endYear===2025,"Published historical climatology must cover 1991-2025");
 const detailFiles = files(join(root,"destinations")).filter((path)=>!path.endsWith("index.json"));
 assert(manifest.destinationCount===detailFiles.length,"Manifest destination count mismatch");
 const samplingPointIds=new Set<string>();
@@ -127,7 +127,11 @@ for (const file of detailFiles) {
   assert(destination.aggregationPolicyVersion===expectedAggregationPolicy,`${destination.slug}: exported aggregation policy differs from its snapshot`);
   if(expectedAggregationPolicy==="observation-validity-v1") {
     assert(validityMigration.scope.includes(destination.id),`${destination.slug}: validity migration is outside the approved scope`);
-    assert(climateSnapshot.schemaVersion===3&&climateSnapshot.migrationStatus==="scoped-provisional",`${destination.slug}: invalid migrated snapshot state`);
+    const migratedHistoricalPeriod = climateSnapshot.historicalPeriod?.startYear === 1991 && climateSnapshot.historicalPeriod?.endYear === 2025;
+    const validMigrationState = migratedHistoricalPeriod
+      ? climateSnapshot.schemaVersion === 2 && climateSnapshot.migrationStatus === "production-approved"
+      : climateSnapshot.schemaVersion === 3 && climateSnapshot.migrationStatus === "scoped-provisional";
+    assert(validMigrationState,`${destination.slug}: invalid migrated snapshot state`);
     assert(destination.months.every((month,index)=>month.bands.every((band)=>
       JSON.stringify(band.observationValidYearsByMetric)===JSON.stringify(climateSnapshot.bands[band.bandId].months[index].observationCoverage.validYearsByMetric)
     )),`${destination.slug}: compact observation coverage differs from snapshot evidence`);
