@@ -186,10 +186,22 @@ test("1991-2025 scientific decision is reproducible and remains blocked for prod
       decisions: Array<{destination: string; engineMonths: number[]}>;
     };
     remainingApprovalItems: Array<{destination: string}>;
+    finalSolAudit: {
+      auditDate: string;
+      auditPhase: string;
+      scientificEvidenceGatePassed: boolean;
+      scientificProductionBlockers: number;
+      completeHistoricalSnapshots: number;
+      completeHistoricalMonths: number;
+      hoursPerSourceCell: number;
+      goldenCaseGatePassed: boolean;
+      independentDiagnosticPeriodMatched: boolean;
+      productionReleaseApproval: boolean;
+    };
     nextStep: {model: string};
   };
 
-  assert.equal(review.status, "scientifically-approved-for-mechanical-migration");
+  assert.equal(review.status, "final-sol-scientific-evidence-gate-passed");
   assert.equal(review.productionReleaseApproval, false);
   assert.equal(review.evidence.githubActionsRun, 35092846294);
   assert.match(review.evidence.artifactManifestSha256, /^[a-f0-9]{64}$/);
@@ -221,6 +233,16 @@ test("1991-2025 scientific decision is reproducible and remains blocked for prod
   assert.deepEqual(review.goldenCaseSignoff.decisions.find(({destination}) => destination === "atlas-mountains")?.engineMonths, [5, 6, 9]);
   assert.deepEqual(review.goldenCaseSignoff.decisions.find(({destination}) => destination === "annapurna")?.engineMonths, [5, 10, 11]);
   assert.deepEqual(review.remainingApprovalItems, []);
+  assert.equal(review.finalSolAudit.auditDate, "2026-09-17");
+  assert.equal(review.finalSolAudit.auditPhase, "post-migration");
+  assert.equal(review.finalSolAudit.scientificEvidenceGatePassed, true);
+  assert.equal(review.finalSolAudit.scientificProductionBlockers, 0);
+  assert.equal(review.finalSolAudit.completeHistoricalSnapshots, 315);
+  assert.equal(review.finalSolAudit.completeHistoricalMonths, 3780);
+  assert.equal(review.finalSolAudit.hoursPerSourceCell, 306864);
+  assert.equal(review.finalSolAudit.goldenCaseGatePassed, true);
+  assert.equal(review.finalSolAudit.independentDiagnosticPeriodMatched, false);
+  assert.equal(review.finalSolAudit.productionReleaseApproval, false);
   assert.equal(review.nextStep.model, "luna");
 });
 
@@ -230,6 +252,7 @@ test("published historical-period review points only to corrected evidence", () 
   assert.match(report, /35092846294/);
   assert.match(report, /Maximum absolute exact score change: `3\.5803`/);
   assert.match(report, /production-release approval/);
+  assert.match(report, /final Sol\s+audit passed on 2026-09-17/);
   assert.doesNotMatch(report, /Largest absolute score change: `29`/);
   assert.doesNotMatch(report, /\| durmitor \| 11 \|/i);
 });

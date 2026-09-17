@@ -13,6 +13,9 @@ const config=readJson<any>("data-config/methodology/science-audit-v1.json");
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
 const releaseProfile=readJson<any>("data-config/methodology/scientific-release-profile-v1.json");
 const precipitationHoldConfig=readJson<any>("data-config/methodology/independent-climate-review-holds-v1.json");
+const historicalPeriodDecision=readJson<any>("data-config/methodology/historical-period-1991-2025-v1.json");
+const historicalPeriodReview=readJson<any>("data-config/methodology/historical-period-1991-2025-review-v1.json");
+const manifest=readJson<any>("public/data/hiking/manifest.json");
 const calibration=readJson<any>("generated/reports/season-alignment-calibration.json");
 const weights=readJson<any>("data-config/scoring/weights.json").overall as Record<keyof ComponentScores,number>;
 const destinations=readJson<Destination[]>("data-config/sources/destinations.json");
@@ -146,7 +149,40 @@ const unmitigatedPrecipitationFlags=externalPrecipitationFlags.filter(item=>!pre
 const precipitationHoldsPublished=publicDestinations.filter(destination=>precipitationHolds.has(destination.id)).every(destination=>destination.recommendationHoldReason==="precipitation-validation"&&!destination.recommendationEligible&&destination.bestMonths.length===0);
 const windExcludedFromDecision=weights.wind===0&&!CRITICAL_COMPONENT_KEYS.includes("wind")&&!BEST_MONTH_COMPONENT_KEYS.includes("wind")&&publicDestinations.every(destination=>destination.provenance.wind.includes("excluded from the score"));
 const calibrationAccepted=calibration.status==="season-alignment-calibration-not-safety-validation"&&calibration.decision?.policy==="retain-expert-baseline"&&calibration.decision?.adoptedCandidate==="baseline"&&calibration.selected.validationF1>=calibration.baseline.validationF1&&releaseProfile.prohibitedClaims.includes("trail-safety-or-go-no-go-advice")&&releaseProfile.prohibitedClaims.includes("empirically-calibrated-probability");
+const historicalPeriodErrors:string[]=[];
+const expectedHistoricalYears=Array.from({length:35},(_,index)=>String(1991+index));
+if(historicalPeriodDecision.period?.startYear!==1991||historicalPeriodDecision.period?.endYear!==2025||historicalPeriodDecision.period?.completeCalendarYears!==35)historicalPeriodErrors.push("historical-period-decision-mismatch");
+if(historicalPeriodDecision.period?.classification!=="project-defined-historical-climate-average"||historicalPeriodDecision.period?.isWmoClimatologicalStandardNormal!==false)historicalPeriodErrors.push("historical-period-classification-mismatch");
+if(historicalPeriodDecision.productionMigrationAuthorized!==true||historicalPeriodReview.scientificDecision?.periodMigrationAccepted!==true||historicalPeriodReview.goldenCaseSignoff?.gatePassed!==true||historicalPeriodReview.remainingApprovalItems?.length!==0)historicalPeriodErrors.push("historical-period-review-not-complete");
+if(manifest.datasetStatus!=="provisional"||manifest.climateNormal?.startYear!==1991||manifest.climateNormal?.endYear!==2025||manifest.historicalPeriod?.classification!=="project-defined-historical-climate-average")historicalPeriodErrors.push("public-manifest-period-or-release-lock-mismatch");
+let completeHistoricalSnapshots=0;
+let completeHistoricalMonths=0;
+for(const destination of destinations){
+  const climate=readJson<any>(`data-snapshots/climate/${destination.id}.json`);
+  const months=Object.values(climate.bands??{}).flatMap((band:any)=>band.months??[]) as any[];
+  const download=climate.sourceDownloads?.[0];
+  const snapshotErrors=[
+    climate.datasetStatus!=="provisional"?"dataset-status":null,
+    climate.migrationStatus!=="production-approved"?"migration-status":null,
+    climate.aggregationPolicyVersion!=="observation-validity-v1"?"aggregation-policy":null,
+    climate.historicalPeriod?.startYear!==1991||climate.historicalPeriod?.endYear!==2025||climate.historicalPeriod?.classification!=="project-defined-historical-climate-average"?"period":null,
+    climate.sourceDataset!==historicalPeriodDecision.source.datasetId||climate.sourceDoi!==historicalPeriodDecision.source.datasetDoi?"source":null,
+    climate.sourceDownloads?.length!==1||download?.observationCount!==historicalPeriodDecision.retrieval.expectedPaddedUtcHours?"observation-count":null,
+    months.length!==12?"month-count":null,
+  ].filter(Boolean);
+  for(const month of months){
+    const years=Object.keys(month.observationCoverage?.years??{}).sort();
+    const monthComplete=month.sampleYearCount===35&&month.validInterannualYearCount===35&&month.dataCompleteness===1
+      &&month.scoringInputsAvailable===true&&month.missingScoringInputs?.length===0
+      &&JSON.stringify(years)===JSON.stringify(expectedHistoricalYears);
+    if(monthComplete)completeHistoricalMonths+=1;
+    else snapshotErrors.push(`month-${month.month}-incomplete`);
+  }
+  if(snapshotErrors.length)historicalPeriodErrors.push(`${destination.id}: ${snapshotErrors.join(",")}`);
+  else completeHistoricalSnapshots+=1;
+}
 const productionBlockers=[
+  ...(historicalPeriodErrors.length?[`${historicalPeriodErrors.length} historical-period migration integrity errors remain`]:[]),
   ...(!cellScopeEnforced?["selected-model-cell claim restriction is not enforced in every public destination"]:[]),
   ...(legacySnapshotCount?[`${legacySnapshotCount} destinations retain the legacy monthly aggregation without observation-validity audit fields`]:[]),
   ...(unmitigatedPrecipitationFlags.length||!precipitationHoldsPublished?[`${unmitigatedPrecipitationFlags.length} precipitation review flags remain without a complete public recommendation hold`]:[]),
@@ -157,16 +193,18 @@ const productionBlockers=[
 const report={
   reportVersion:1,
   auditDate:config.auditDate,
+  auditPhase:"final-post-migration-sol-audit",
   status:errors.length?"failed-internal-integrity":productionBlockers.length?"completed-with-production-restrictions":"scientific-evidence-gate-passed-with-claim-restrictions",
   productionReleaseApproval:false,
   scientificEvidenceGatePassed:errors.length===0&&productionBlockers.length===0,
   scope:config.scope,
   inventory:{destinations:destinations.length,months:publicDestinations.length*12,climateDownloads:destinations.length,externalDiagnosticPoints:external.entries.length,observationValiditySnapshots:destinations.length-legacySnapshotCount,legacyAggregationSnapshots:legacySnapshotCount},
   internalIntegrity:{passed:errors.length===0,errorCount:errors.length,errors,coordinateChainPassed:coordinateRows.filter((row)=>row.internalCoordinateChainPassed).length,sourceObservationCountPassed:coordinateRows.filter((row)=>row.sourceObservationCountPassed).length},
+  historicalPeriodAudit:{passed:historicalPeriodErrors.length===0,startYear:1991,endYear:2025,classification:"project-defined-historical-climate-average",wmoStandardNormal:false,datasetStatus:manifest.datasetStatus,completeSnapshots:completeHistoricalSnapshots,completeMonths:completeHistoricalMonths,expectedHoursPerCell:historicalPeriodDecision.retrieval.expectedPaddedUtcHours,errors:historicalPeriodErrors},
   spatialAudit:{releaseClass:releaseProfile.releaseClass,cellScopeEnforced,independentNamedRouteEvidence:independentRouteEvidenceCount,selectedModelCellOnly:destinations.length-independentRouteEvidenceCount,regionalOrRouteClaimsApproved:false,centroidToCellDistanceKm:{min:distances[0],median:percentile(distances,.5),p95:percentile(distances,.95),max:distances.at(-1)},reviewDistanceExceeded:coordinateRows.filter((row)=>row.centroidToCellKm>config.spatialPolicy.centroidDistanceReviewKm).map((row)=>row.destinationId),destinations:coordinateRows},
-  sourceAndMethodAudit:{...config.sourceDecisions,era5LandDownloadsWithExactNormalAndObservationCount:coordinateRows.filter((row)=>row.sourceObservationCountPassed).length,windExcludedFromDecision,precipitationReviewHoldsPublished:precipitationHoldsPublished,seasonAlignmentCalibration:{accepted:calibrationAccepted,eligibleCases:calibration.inventory.eligibleCases,trainingCases:calibration.inventory.trainingCases,validationCases:calibration.inventory.validationCases,candidateCount:calibration.candidateCount,baselineValidationF1:calibration.baseline.validationF1,selectedValidationF1:calibration.selected.validationF1,decision:calibration.decision,scope:"season alignment only; not safety or probability"},methodologyChecksums:{scienceAudit:fileSha("data-config/methodology/science-audit-v1.json"),scientificReleaseProfile:fileSha("data-config/methodology/scientific-release-profile-v1.json"),climateAggregation:fileSha("data-config/methodology/climate-aggregation-v1.json"),observationValidity:fileSha("data-config/methodology/observation-validity-v1.json"),recommendationEligibility:fileSha("data-config/methodology/recommendation-eligibility-v1.json"),precipitationHolds:fileSha("data-config/methodology/independent-climate-review-holds-v1.json"),seasonCalibration:fileSha("data-config/methodology/season-alignment-calibration-v1.json"),scoringWeights:fileSha("data-config/scoring/weights.json"),scoringCurves:fileSha("data-config/scoring/curves.json"),externalSnapshot:fileSha("data-snapshots/external-audit/nasa-power-1991-2020.json")}},
-  hunzaFinding:{classification:"source-reproduced-and-directionally-corroborated-magnitude-not-independently-validated",era5LandSeptemberToOctoberDeltaC:round(publicDestinations.find((item)=>item.id==="hunza")!.months[9].metrics.temperatureHikingMeanC-publicDestinations.find((item)=>item.id==="hunza")!.months[8].metrics.temperatureHikingMeanC,1),independentAllDaySeptemberToOctoberDeltaC:round(externalById.get("hunza")!.temperatureMeanC[9]-externalById.get("hunza")!.temperatureMeanC[8],1),comparison:hunza,decision:"Retain the source values and quality warning. Do not smooth or call the 13.3 C magnitude station-validated; the series describes this ERA5-Land cell only."},
-  independentClimateDiagnostic:{status:external.status,limitations:external.interpretation,temperatureReviewFlags:externalTemperatureFlags.length,precipitationReviewFlags:externalPrecipitationFlags.length,largestPrecipitationRatios:[...externalComparisons].sort((a,b)=>b.era5ToIndependentPrecipitationRatio-a.era5ToIndependentPrecipitationRatio).slice(0,20),comparisons:externalComparisons},
+  sourceAndMethodAudit:{...config.sourceDecisions,era5LandDownloadsWithExactNormalAndObservationCount:coordinateRows.filter((row)=>row.sourceObservationCountPassed).length,windExcludedFromDecision,precipitationReviewHoldsPublished:precipitationHoldsPublished,seasonAlignmentCalibration:{accepted:calibrationAccepted,eligibleCases:calibration.inventory.eligibleCases,trainingCases:calibration.inventory.trainingCases,validationCases:calibration.inventory.validationCases,candidateCount:calibration.candidateCount,baselineValidationF1:calibration.baseline.validationF1,selectedValidationF1:calibration.selected.validationF1,decision:calibration.decision,scope:"season alignment only; not safety or probability"},methodologyChecksums:{scienceAudit:fileSha("data-config/methodology/science-audit-v1.json"),scientificReleaseProfile:fileSha("data-config/methodology/scientific-release-profile-v1.json"),historicalPeriodDecision:fileSha("data-config/methodology/historical-period-1991-2025-v1.json"),historicalPeriodReview:fileSha("data-config/methodology/historical-period-1991-2025-review-v1.json"),climateAggregation:fileSha("data-config/methodology/climate-aggregation-v1.json"),observationValidity:fileSha("data-config/methodology/observation-validity-v1.json"),recommendationEligibility:fileSha("data-config/methodology/recommendation-eligibility-v1.json"),precipitationHolds:fileSha("data-config/methodology/independent-climate-review-holds-v1.json"),seasonCalibration:fileSha("data-config/methodology/season-alignment-calibration-v1.json"),scoringWeights:fileSha("data-config/scoring/weights.json"),scoringCurves:fileSha("data-config/scoring/curves.json"),externalSnapshot:fileSha("data-snapshots/external-audit/nasa-power-1991-2020.json")}},
+  hunzaFinding:{classification:"source-reproduced-and-directionally-corroborated-magnitude-not-independently-validated",era5LandSeptemberToOctoberDeltaC:round(publicDestinations.find((item)=>item.id==="hunza")!.months[9].metrics.temperatureHikingMeanC-publicDestinations.find((item)=>item.id==="hunza")!.months[8].metrics.temperatureHikingMeanC,1),independentAllDaySeptemberToOctoberDeltaC:round(externalById.get("hunza")!.temperatureMeanC[9]-externalById.get("hunza")!.temperatureMeanC[8],1),comparison:hunza,decision:"Retain the source values and quality warning. Do not smooth or call the magnitude station-validated; the series describes this ERA5-Land cell only."},
+  independentClimateDiagnostic:{status:external.status,limitations:external.interpretation,periodComparison:{primary:{startYear:1991,endYear:2025},independentDiagnostic:external.normal,periodMatched:false,decisionUse:"conservative diagnostic only; never remove an existing hold or validate a route, destination or probability claim"},temperatureReviewFlags:externalTemperatureFlags.length,precipitationReviewFlags:externalPrecipitationFlags.length,largestPrecipitationRatios:[...externalComparisons].sort((a,b)=>b.era5ToIndependentPrecipitationRatio-a.era5ToIndependentPrecipitationRatio).slice(0,20),comparisons:externalComparisons},
   goldenCases:{...goldenReview,exactMonthSetMatches:goldenReview.cases.filter((item)=>sameMonths(item.expectedMonths,item.engineMonths)).length,interpretation:`All ${golden.cases.length} signed labels are independent of the scoring calculation. Agreement means selected best months stay inside the labelled season; it is not full season recall. Accepted deviations remain discrepancies, not validation successes.`},
   sensitivity:{scenarios:sensitivityScenarios,maximumChangedDestinationCount:Math.max(...sensitivityScenarios.map((item)=>item.changedDestinationCount)),interpretation:"Changes identify policy-sensitive answers. They do not select a better parameter value and were not used to alter the Golden labels."},
   productionBlockers,

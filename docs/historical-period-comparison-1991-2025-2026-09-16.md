@@ -1,6 +1,6 @@
 # Historical-period comparison: 1991–2025
 
-Status: **scientifically approved for mechanical migration; not yet a production release**.
+Status: **mechanically migrated and final scientific evidence gate passed; not yet a production release**.
 
 ## Superseded evidence
 
@@ -136,8 +136,10 @@ authorize an automatic threshold or weight change, and it is not itself the
 final production-release approval. The Atlas Mountains and Annapurna decisions
 are stored as period-specific approvals, so the current 1991–2020 Golden
 records remain unchanged until the corresponding public data are migrated.
-The next step is the mechanical snapshot, provenance and public-export
-migration, followed by the final Sol release audit.
+The snapshot, provenance and public-export migration is complete. The final Sol
+audit passed on 2026-09-17 with the selected-model-cell and prohibited-claim
+restrictions unchanged. See
+`docs/final-scientific-audit-1991-2025-2026-09-17.md`.
 
 The machine-readable decision is recorded in
 `data-config/methodology/historical-period-1991-2025-review-v1.json`.

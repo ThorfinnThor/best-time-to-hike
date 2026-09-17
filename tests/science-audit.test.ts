@@ -7,10 +7,27 @@ import precipitationHolds from "../data-config/methodology/independent-climate-r
 import { readFileSync } from "node:fs";
 
 test("science audit remains explicit and fail-closed for production",()=>{
+  assert.equal(auditConfig.auditDate,"2026-09-17");
   assert.equal(auditConfig.status,"completed-with-production-restrictions");
   assert.equal(auditConfig.productionReleaseApproval,false);
   assert.equal(auditConfig.sourceDecisions.scoringWeightsAndThresholds,"season-alignment-calibrated-for-descriptive-fit-not-safety-or-probability");
   assert.equal(auditConfig.sourceDecisions.gridWind,"excluded-from-score-gates-and-best-month-decisions");
+});
+
+test("final 1991-2025 audit verifies the migrated period without pretending the independent diagnostic is period-matched",()=>{
+  const report=JSON.parse(readFileSync("generated/reports/science-audit.json","utf8"));
+  assert.equal(report.auditPhase,"final-post-migration-sol-audit");
+  assert.equal(report.scientificEvidenceGatePassed,true);
+  assert.equal(report.historicalPeriodAudit.passed,true);
+  assert.equal(report.historicalPeriodAudit.completeSnapshots,315);
+  assert.equal(report.historicalPeriodAudit.completeMonths,3780);
+  assert.equal(report.historicalPeriodAudit.expectedHoursPerCell,306864);
+  assert.deepEqual(report.historicalPeriodAudit.errors,[]);
+  assert.deepEqual(report.independentClimateDiagnostic.periodComparison.primary,{startYear:1991,endYear:2025});
+  assert.deepEqual(report.independentClimateDiagnostic.periodComparison.independentDiagnostic,{startYear:1991,endYear:2020});
+  assert.equal(report.independentClimateDiagnostic.periodComparison.periodMatched,false);
+  assert.equal(report.productionReleaseApproval,false);
+  assert.deepEqual(report.productionBlockers,[]);
 });
 
 test("independent climate diagnostic covers every current destination exactly once",()=>{
