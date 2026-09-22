@@ -52,14 +52,35 @@ test("no month page is ever an entry point", () => {
   assert.equal(byKind.destinationMonth ?? 0, 0,
     "month pages are linked and crawlable but never indexed: they are one template with a month name swapped, and the destination page makes the same claim with more around it");
   assert.equal(byKind.finder ?? 0, 0, "the finder is a tool, not a document");
-  assert.equal(byKind.info ?? 0, 0, "legal and boilerplate pages are not entry points");
+  assert.equal(byKind.info ?? 0, 4, "only methodology and about may be entry points in two locales; legal and credit pages remain excluded");
 });
 
-test("the index stays a few hundred strong pages, not a few thousand thin ones", () => {
+test("the curated production plan is capped at exactly 200 currently selected pages", () => {
   const byKind = wouldIndexAtProduction();
   const total = Object.values(byKind).reduce((sum, count) => sum + count, 0);
-  assert.ok(total >= 400 && total <= 900,
-    `${total} pages would be indexed at production; the target is a few hundred. If this is a deliberate change, move the band and say why in the commit.`);
-  // Destination pages are the substance; the ranking family is the way in.
-  assert.ok((byKind.destination ?? 0) > total / 2, "destination articles should be the bulk of the index");
+  assert.equal(total, 200,
+    `${total} pages would be indexed after production under the reviewed selected-cell claim; the ceiling is 200`);
+  assert.deepEqual(byKind, {
+    home: 2,
+    destination: 58,
+    ranking: 24,
+    areaRanking: 58,
+    themeRanking: 48,
+    compare: 6,
+    info: 4,
+  });
+});
+
+test("no unreviewed theme, comparison or destination can enter the production plan", () => {
+  const byKind = wouldIndexAtProduction();
+  assert.equal(byKind.themeRanking, 48, "only warm and low-rain may contribute 24 pages per locale");
+  assert.equal(byKind.compare, 6, "only the three enriched comparisons may contribute two locales each");
+  assert.equal(byKind.destination, 58, "only 29 scientifically selected destinations may contribute two locales each");
+});
+
+test("production robots lets crawlers observe page-level noindex directives", () => {
+  const policy = robotsForDataset("production", "https://example.test/sitemap.xml");
+  const rules = Array.isArray(policy.rules) ? policy.rules : [policy.rules];
+  const wildcard = rules.find((rule) => rule.userAgent === "*");
+  assert.deepEqual(wildcard?.disallow, ["/go/"]);
 });

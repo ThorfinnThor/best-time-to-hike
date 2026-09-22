@@ -69,12 +69,16 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
   // Widen away from the `as const` literal tuple: mapping over a union of
   // differently shaped readonly tuples is not callable in TypeScript.
   const paragraphs: readonly string[] = data.paragraphs;
+  const [leadParagraph, ...detailParagraphs] = paragraphs;
   // Only the legal pages carry sections; the rest are a lead and nothing else.
   const sections: ReadonlyArray<{heading: string; paragraphs: readonly string[]}> =
     "sections" in data ? data.sections : [];
   const componentLabels = copy.components;
   return <>
-    <section className="page-intro prose-intro"><span className="eyebrow">{copy.brand}</span><h1>{data.title}</h1>{paragraphs.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}</section>
+    <section className="page-intro prose-intro"><span className="eyebrow">{copy.brand}</span><h1>{data.title}</h1>{leadParagraph ? <p>{leadParagraph}</p> : null}</section>
+    {detailParagraphs.length ? <div className="content-section info-details prose-intro">
+      {detailParagraphs.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}
+    </div> : null}
     {sections.length ? <section className="content-section legal-body">
       {sections.map((section)=><section key={section.heading}>
         <h2>{section.heading}</h2>

@@ -10,7 +10,9 @@ export function datasetMayBeIndexed(status: DatasetStatus): boolean {
 
 export function robotsForDataset(status: DatasetStatus, sitemapUrl: string): MetadataRoute.Robots {
   if (!datasetMayBeIndexed(status)) return {rules: {userAgent: "*", disallow: "/"}};
-  const disallow = ["/go/", "/en/finder", "/de/finder"];
+  // Noindex tools must remain crawlable so crawlers can actually observe their
+  // robots meta tag. Only outbound redirect endpoints are excluded here.
+  const disallow = ["/go/"];
   return {
     rules: [
       {userAgent: "*", allow: "/", disallow},

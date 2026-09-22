@@ -24,6 +24,11 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
   const profile = areaProfile(area);
   const label = taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
   const busiest = Math.max(...profile.monthCounts);
+  const peakSeasonHeading = profile.peakMonths.length === 12
+    ? copy.area.seasonAllYear
+    : profile.peakMonths.length >= 6
+      ? copy.area.seasonBroad(profile.peakMonths.length)
+    : copy.area.seasonHeading(profile.peakMonths.map((month) => monthName(month, locale)).join(" / "));
   const peakFor = (slug: string) => {
     const destination = area.destinations.find((item) => item.slug === slug)!;
     return Math.max(0, ...destination.months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore]));
@@ -39,7 +44,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
     <section className="content-section area-season">
       <div className="section-heading"><div>
         <span className="eyebrow">{copy.area.seasonEyebrow}</span>
-        <h2>{copy.area.seasonHeading(profile.peakMonths.map((month) => monthName(month, locale)).join(" / "))}</h2>
+        <h2>{peakSeasonHeading}</h2>
       </div></div>
       <ol className="area-months" aria-label={copy.area.seasonEyebrow}>
         {profile.monthCounts.map((count, index) => <li key={index}>

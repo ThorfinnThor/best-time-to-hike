@@ -3,6 +3,7 @@ import { monthName } from "@/lib/i18n/config";
 import { absoluteUrl, SITE } from "@/lib/site";
 import { profileFor } from "@/lib/seo/profile";
 import { links } from "@/lib/i18n/links";
+import { historicalPeriodDescription } from "@/lib/methodology/historical-period";
 
 /** Structured data. Every value is taken from the published dataset. */
 export function organisationLd() {
@@ -49,8 +50,8 @@ export function destinationFaqLd(destination: PublicDestination, locale: Locale)
   }
   entries.push({
     q: de ? `Worauf beziehen sich diese Werte?` : `What do these figures describe?`,
-    a: de ? `Auf eine ausgewählte ERA5-Land-Modellgitterzelle auf ${destination.representativeCell.modelElevationM} Metern, gemittelt über 1991 bis 2020. Es ist keine Vorhersage und keine Aussage über einzelne Wege.`
-          : `One selected ERA5-Land model grid cell at ${destination.representativeCell.modelElevationM} metres, averaged over 1991 to 2020. It is not a forecast and not a statement about individual trails.`});
+    a: de ? `Auf eine ausgewählte ERA5-Land-Modellgitterzelle auf ${destination.representativeCell.modelElevationM} Metern, gemittelt über ${historicalPeriodDescription.de}. Es ist keine Vorhersage und keine Aussage über einzelne Wege.`
+          : `One selected ERA5-Land model grid cell at ${destination.representativeCell.modelElevationM} metres, averaged across ${historicalPeriodDescription.en}. It is not a forecast and not a statement about individual trails.`});
 
   return {"@context": "https://schema.org", "@type": "FAQPage",
     mainEntity: entries.map((entry) => ({"@type": "Question", name: entry.q,

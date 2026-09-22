@@ -1,6 +1,7 @@
 import type { Locale, PublicDestination } from "@/lib/data/types";
 import { monthName } from "@/lib/i18n/config";
 import { profileFor, type DestinationProfile, type LimitingFactor } from "@/lib/seo/profile";
+import { historicalPeriodDescription } from "@/lib/methodology/historical-period";
 
 /**
  * Data-derived destination prose.
@@ -156,8 +157,8 @@ function conditions(destination: PublicDestination, p: DestinationProfile, local
       : `Day length swings hard here, from ${dayAt(destination, p.coldestMonth)} to ${Math.round(Math.max(...destination.months.map((m) => m.metrics.daylightHoursMean)))} hours. That shapes planning more than temperature does.`);
   } else if (p.altitudeBand === "high-alpine") {
     paragraphs.push(de
-      ? `Auf ${num(destination.representativeCell.modelElevationM, locale)} Metern gelten diese Werte für eine Höhenlage, in der sich Bedingungen schnell ändern. Sie beschreiben ein Klimamittel von 1991 bis 2020, keinen Tag.`
-      : `At ${num(destination.representativeCell.modelElevationM, locale)} metres these figures describe altitude where conditions change quickly. They are a 1991 to 2020 climate mean, not a day.`);
+      ? `Auf ${num(destination.representativeCell.modelElevationM, locale)} Metern gelten diese Werte für eine Höhenlage, in der sich Bedingungen schnell ändern. Sie beschreiben ein Klimamittel über ${historicalPeriodDescription.de}, keinen einzelnen Tag.`
+      : `At ${num(destination.representativeCell.modelElevationM, locale)} metres these figures describe altitude where conditions change quickly. They are a climate mean across ${historicalPeriodDescription.en}, not a single day.`);
   }
   return {heading, paragraphs};
 }
@@ -182,8 +183,8 @@ function withheldArticle(destination: PublicDestination, p: DestinationProfile, 
          : `No month at ${destination.name} clears every critical climate criterion. ${p.limitingFactor ? `The binding constraint is ${factor(p.limitingFactor, locale)}.` : ""} Rather than publish a weak score, we withhold the recommendation entirely.`.replace(/\s+/g, " "))]},
     {heading: de ? `Was die Daten trotzdem zeigen` : `What the data still shows`,
      paragraphs: [de
-       ? `Die Messreihe selbst ist vollständig: 262.992 Stundenwerte von 1991 bis 2020 an ${coord(cell.lat)}, ${coord(cell.lon)} auf ${num(cell.modelElevationM, locale)} Metern Modellhöhe. Die Monatsmitteltemperatur reicht von ${tempAt(destination, p.coldestMonth)} bis ${tempAt(destination, p.warmestMonth)} Grad, der nasseste Monat ist ${monthName(p.wettestMonth, locale)} mit ${wetAt(destination, p.wettestMonth)} Prozent Regentagen. Diese Seite bleibt als Provenienzseite erreichbar, damit die Zurückhaltung nachvollziehbar ist.`
-       : `The record itself is complete: 262,992 hourly values from 1991 to 2020 at ${coord(cell.lat)}, ${coord(cell.lon)}, at a model elevation of ${num(cell.modelElevationM, locale)} metres. Mean monthly temperature runs from ${tempAt(destination, p.coldestMonth)} to ${tempAt(destination, p.warmestMonth)} degrees, and the wettest month is ${monthName(p.wettestMonth, locale)} at ${wetAt(destination, p.wettestMonth)} percent rain days. This page stays available so the decision to withhold can be checked.`]},
+       ? `Die Messreihe an ${coord(cell.lat)}, ${coord(cell.lon)} auf ${num(cell.modelElevationM, locale)} Metern Modellhöhe deckt ${historicalPeriodDescription.de} ab. Die Monatsmitteltemperatur reicht von ${tempAt(destination, p.coldestMonth)} bis ${tempAt(destination, p.warmestMonth)} Grad, der nasseste Monat ist ${monthName(p.wettestMonth, locale)} mit ${wetAt(destination, p.wettestMonth)} Prozent Regentagen. Diese Seite bleibt als Provenienzseite erreichbar, damit die Zurückhaltung nachvollziehbar ist.`
+       : `The record at ${coord(cell.lat)}, ${coord(cell.lon)}, at a model elevation of ${num(cell.modelElevationM, locale)} metres covers ${historicalPeriodDescription.en}. Mean monthly temperature runs from ${tempAt(destination, p.coldestMonth)} to ${tempAt(destination, p.warmestMonth)} degrees, and the wettest month is ${monthName(p.wettestMonth, locale)} at ${wetAt(destination, p.wettestMonth)} percent rain days. This page stays available so the decision to withhold can be checked.`]},
   ];
 }
 
@@ -192,8 +193,8 @@ function scope(destination: PublicDestination, locale: Locale): Section {
   const cell = destination.representativeCell;
   return {heading: de ? `Wofür diese Zahlen gelten` : `What these figures cover`,
     paragraphs: [de
-      ? `Alle Werte stammen aus einer einzigen ausgewählten ERA5-Land-Modellgitterzelle bei ${coord(cell.lat)}, ${coord(cell.lon)} auf ${num(cell.modelElevationM, locale)} Metern, gemittelt über 1991 bis 2020. Sie beschreiben diesen Punkt, nicht jede Route der Region, und sind keine Vorhersage. Der Windwert ist grober 10-Meter-Gitterwind und keine Aussage über exponierte Wege oder Böen.`
-      : `Every figure comes from one selected ERA5-Land model grid cell at ${coord(cell.lat)}, ${coord(cell.lon)}, ${num(cell.modelElevationM, locale)} metres, averaged over 1991 to 2020. It describes that point rather than every route in the region, and it is not a forecast. Wind is coarse 10 metre grid wind, not a statement about exposed paths or gusts.`]};
+      ? `Alle Werte stammen aus einer einzigen ausgewählten ERA5-Land-Modellgitterzelle bei ${coord(cell.lat)}, ${coord(cell.lon)} auf ${num(cell.modelElevationM, locale)} Metern, gemittelt über ${historicalPeriodDescription.de}. Sie beschreiben diesen Punkt, nicht jede Route der Region, und sind keine Vorhersage. Diese räumliche Grenze ist wichtig, weil Höhe, Hanglage und Wegzustand innerhalb eines Wandergebiets deutlich abweichen können. Der Windwert ist grober 10-Meter-Gitterwind und keine Aussage über exponierte Wege oder Böen.`
+      : `Every figure comes from one selected ERA5-Land model grid cell at ${coord(cell.lat)}, ${coord(cell.lon)}, ${num(cell.modelElevationM, locale)} metres, averaged across ${historicalPeriodDescription.en}. It describes that point rather than every route in the region, and it is not a forecast. That spatial boundary matters because elevation, aspect and trail conditions can vary substantially within one hiking area. Wind is coarse 10 metre grid wind, not a statement about exposed paths or gusts.`]};
 }
 
 /** The article for a destination, ordered by what its data actually raises. */

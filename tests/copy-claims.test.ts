@@ -7,6 +7,9 @@ import overrides from "../data-config/sources/representative-cell-overrides.json
 import { DICT } from "../lib/i18n/dict";
 import { locales } from "../lib/i18n/config";
 import type { CompactSearchDestination, PublicDestination } from "../lib/data/types";
+import { longformSections } from "../lib/seo/longform";
+import { destinationFaqLd } from "../lib/seo/jsonld";
+import { historicalPeriodRange } from "../lib/methodology/historical-period";
 
 /**
  * mistakes.md #9: copy is a claim, and it ages with the data. The live build
@@ -62,6 +65,18 @@ test("the methodology copy quotes the configured weights", () => {
     const quoted = [...paragraph.matchAll(/(\d+)\s*%/g)].map((match) => Number(match[1]));
     assert.deepEqual(quoted, expected,
       `the ${locale} methodology paragraph quotes ${quoted.join("/")} but data-config/scoring/weights.json says ${expected.join("/")}`);
+  }
+});
+
+test("public SEO prose uses the active historical period", () => {
+  for (const destination of destinations) {
+    for (const locale of locales) {
+      const article = longformSections(destination, locale).flatMap((section) => section.paragraphs).join(" ");
+      const faq = JSON.stringify(destinationFaqLd(destination, locale));
+      assert.ok(article.includes(historicalPeriodRange), `${destination.slug}/${locale} article omits ${historicalPeriodRange}`);
+      assert.ok(faq.includes(historicalPeriodRange), `${destination.slug}/${locale} structured data omits ${historicalPeriodRange}`);
+      assert.doesNotMatch(`${article} ${faq}`, /1991 (?:to|bis) 2020/, `${destination.slug}/${locale} retains the retired period`);
+    }
   }
 });
 

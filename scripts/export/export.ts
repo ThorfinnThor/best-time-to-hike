@@ -99,7 +99,9 @@ const comparisons: Comparison[] = pageDefinitions.comparisons.map((definition) =
     schemaVersion: 1,
     slug: definition.slug,
     destinations: [firstSlug, secondSlug],
-    indexable: false,
+    // Content approval is necessary but cannot override the dataset release
+    // gate. Provisional builds always publish the machine flag as false.
+    indexable: datasetStatus === "production" && definition.indexable,
     months: first.months.map((month, index) => {
       const other = second.months[index];
       const available = month.recommendationEligible && other.recommendationEligible && month.overallScore !== null && other.overallScore !== null;

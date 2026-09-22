@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { join, relative, sep } from "node:path";
 import { DICT } from "../lib/i18n/dict";
 import { getDestinationIndex } from "../lib/data/load";
 import { locales, monthName, themeKeys } from "../lib/i18n/config";
@@ -21,6 +22,20 @@ import { links } from "../lib/i18n/links";
 const OUT = "out";
 const built = existsSync(`${OUT}/en/index.html`);
 const page = (path: string) => readFileSync(`${OUT}/${path}`, "utf8");
+const renderedPages = () => {
+  const paths: string[] = [];
+  const walk = (directory: string) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })) {
+      const absolute = join(directory, entry.name);
+      if (entry.isDirectory()) walk(absolute);
+      else if (entry.name === "index.html") paths.push(relative(OUT, absolute).split(sep).join("/"));
+    }
+  };
+  walk(OUT);
+  return paths.filter((path) => path !== "404/index.html").sort();
+};
+const PUBLIC_PAGES = built ? renderedPages() : [];
+const CONTENT_PAGES = PUBLIC_PAGES.filter((path) => path !== "index.html");
 /** Visible text only: the RSC payload repeats the page as a JSON string. */
 const visible = (html: string) => {
   const body = html.replace(/<script[\s\S]*?<\/script>/g, "");
@@ -70,6 +85,26 @@ test("category links open unselected month pickers in both languages", {skip: !b
   }
 });
 
+test("approved themes and comparisons render their decision-specific content", {skip: !built}, () => {
+  for (const locale of locales) {
+    const copy = DICT[locale];
+    for (const theme of ["warm", "lowRain"] as const) {
+      const path = links.themeRanking(locale, theme, 5);
+      const text = visible(page(`${path.slice(1)}/index.html`));
+      assert.ok(text.includes(copy.ranking.themeInsightEyebrow), `${path} lacks its theme explanation`);
+      assert.ok(text.includes(copy.ranking.qualifyingDestinations), `${path} lacks its qualification count`);
+      assert.ok(text.includes(copy.ranking.walkingTemperatureRange), `${path} lacks its temperature context`);
+      assert.ok(text.includes(copy.ranking.wetDayRange), `${path} lacks its rain context`);
+    }
+    const comparisonPath = links.compare(locale, "madeira-vs-tenerife");
+    const comparison = visible(page(`${comparisonPath.slice(1)}/index.html`));
+    assert.ok(comparison.includes(copy.comparison.summaryEyebrow), `${comparisonPath} lacks its decision summary`);
+    assert.ok(comparison.includes(copy.comparison.seasonLength), `${comparisonPath} lacks its season comparison`);
+    assert.ok(comparison.includes(copy.comparison.sharedSeason), `${comparisonPath} lacks its shared season`);
+    assert.ok(comparison.includes(copy.comparison.drierSharedSeason), `${comparisonPath} lacks its rain comparison`);
+  }
+});
+
 test("finder controls and results render as separate layout panels", {skip: !built}, () => {
   for (const locale of locales) {
     const finder = page(`${locale}/finder/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
@@ -112,14 +147,32 @@ test("the finder ships the render path for its empty state", {skip: !built}, () 
   assert.ok(chunks.some((chunk) => chunk.includes(DICT.en.finder.relax.everything)), "the offer labels are not shipped");
 });
 
-test("every page has exactly one h1 and no skipped heading level", {skip: !built}, () => {
-  for (const path of PAGES) {
+test("every public content page has exactly one h1 and no skipped heading level", {skip: !built}, () => {
+  assert.equal(PUBLIC_PAGES.length, 5271, "the full public export should be covered");
+  for (const path of CONTENT_PAGES) {
     const levels = [...page(path).matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
     assert.equal(levels.filter((level) => level === 1).length, 1, `${path} should have exactly one h1`);
     for (let i = 1; i < levels.length; i += 1) {
       assert.ok(levels[i] - levels[i - 1] <= 1, `${path} jumps from h${levels[i - 1]} to h${levels[i]}`);
     }
   }
+});
+
+test("every root-relative link in the public export resolves", {skip: !built}, () => {
+  const missing = new Set<string>();
+  for (const source of PUBLIC_PAGES) {
+    for (const [, rawHref] of page(source).matchAll(/href="(\/[^"]*)"/g)) {
+      const pathname = rawHref.split(/[?#]/, 1)[0];
+      if (!pathname || pathname.startsWith("//")) continue;
+      const target = pathname === "/"
+        ? `${OUT}/index.html`
+        : /\.[a-z0-9]+$/i.test(pathname)
+          ? `${OUT}${pathname}`
+          : `${OUT}${pathname.endsWith("/") ? pathname : `${pathname}/`}index.html`;
+      if (!existsSync(target)) missing.add(`${source} -> ${rawHref}`);
+    }
+  }
+  assert.deepEqual([...missing], [], `broken internal links:\n${[...missing].join("\n")}`);
 });
 
 test("no elevation is printed as a range from a value to itself", {skip: !built}, () => {

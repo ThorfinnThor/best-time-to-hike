@@ -13,8 +13,8 @@ export const dynamic = "force-static";
  * states plainly what the data does and does not support, including the twenty
  * destinations it refuses to recommend. Being quoted accurately is the point.
  *
- * The finder is excluded everywhere: it is an interactive tool whose output
- * depends on query parameters, not a document.
+ * Interactive tools carry noindex metadata but remain crawlable. Blocking them
+ * here would prevent crawlers from observing that page-level instruction.
  */
 export default function robots(): MetadataRoute.Robots {
   // The manifest is the source of truth for whether this build may be crawled,

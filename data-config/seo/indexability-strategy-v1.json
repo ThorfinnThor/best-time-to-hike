@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "status": "FULL_200_PLAN_SCIENTIFICALLY_CLEARED_PENDING_PRODUCTION",
+  "reviewedAt": "2026-09-22",
+  "reviewedBy": "Codex (Sol)",
+  "productionEffect": "all-four-stages-active-only-when-dataset-is-production",
+  "objective": {
+    "minimumHighQualityUrls": 180,
+    "maximumHighQualityUrls": 200,
+    "plannedUrls": 200,
+    "localeCount": 2,
+    "exactTargetRequired": false,
+    "rule": "Quality gates take precedence over the target count. A failed candidate remains noindex."
+  },
+  "principles": [
+    "Use an explicit allowlist; never index a route merely because its template exists.",
+    "Every index page must answer a distinct hiking-planning question with a data-derived conclusion.",
+    "Do not lower scientific confidence, recommendation, evidence, or hold gates to reach the target count.",
+    "Do not index destination-month pages, query states, tools, navigation indexes, or boilerplate legal pages.",
+    "German and English versions must both be complete and self-canonical with reciprocal hreflang links.",
+    "A page that fails any family or page quality gate stays crawlable where appropriate but noindex and outside the sitemap."
+  ],
+  "qualityGate": {
+    "required": [
+      "distinct-user-intent",
+      "unique-data-derived-conclusion",
+      "complete-localization",
+      "self-canonical-and-reciprocal-hreflang",
+      "no-unsupported-claims",
+      "useful-internal-links",
+      "family-specific-content-modules",
+      "production-dataset"
+    ]
+  },
+  "families": {
+    "core": {
+      "status": "approved-when-production",
+      "urlsPerLocale": 3,
+      "members": ["home", "methodology", "about"]
+    },
+    "globalMonthlyRankings": {
+      "status": "approved-when-production",
+      "urlsPerLocale": 12,
+      "requiredModules": ["month-specific-summary", "ranked-destinations", "ranking-method", "related-areas"]
+    },
+    "areas": {
+      "status": "approved-when-production",
+      "urlsPerLocale": 29,
+      "minimumRecommendableDestinations": 5,
+      "selected": [
+        "europe", "north-america", "asia", "alps", "oceania", "south-america", "africa", "rockies",
+        "east-asia", "balkans", "british-isles", "scandinavia", "appalachians", "carpathians",
+        "central-european-uplands", "himalaya", "apennines", "iberian-mountains", "pacific-northwest",
+        "southeast-asia-highlands", "andes", "australian-highlands", "colorado-plateau",
+        "new-zealand-alps", "brazilian-highlands", "canadian-rockies", "patagonia",
+        "new-zealand-volcanic", "sierra-madre"
+      ],
+      "requiredModules": ["area-season-shape", "peak-and-quiet-months", "elevation-range", "country-coverage", "ranked-destinations", "withheld-destinations"]
+    },
+    "themeMonthlyRankings": {
+      "status": "content-and-overlap-gates-implemented",
+      "urlsPerLocale": 24,
+      "selected": ["warm", "low-rain"],
+      "minimumResults": 12,
+      "maximumFullListJaccardAgainstGlobal": 0.7,
+      "requiredModules": ["theme-specific-threshold", "month-specific-summary", "theme-specific-tradeoffs", "ranked-destinations", "method-link"],
+      "excluded": [
+        {
+          "theme": "snow-free",
+          "reason": "Its top 12 are identical to the global monthly ranking in every month, so the current pages do not express a sufficiently distinct intent."
+        }
+      ]
+    },
+    "comparisons": {
+      "status": "content-gate-implemented",
+      "urlsPerLocale": 3,
+      "selected": ["madeira-vs-tenerife", "dolomites-vs-chamonix", "mallorca-vs-madeira"],
+      "requiredModules": ["clear-winner-by-planning-priority", "season-overlap-and-difference", "temperature-rain-snow-tradeoffs", "month-by-month-table", "links-to-both-destinations"]
+    },
+    "destinations": {
+      "status": "science-and-content-gates-implemented",
+      "urlsPerLocale": 29,
+      "selected": [
+        "dolomites", "chamonix", "triglav", "high-tatras", "banff", "rocky-mountain",
+        "glacier-national-park", "mallorca", "amalfi-coast", "lycian-way", "atlas-mountains",
+        "torres-del-paine", "salkantay", "ladakh", "kumano-kodo", "rinjani", "tongariro",
+        "routeburn", "yosemite", "grand-canyon", "mount-rainier", "denali", "jasper", "larapinta",
+        "cradle-mountain", "jotunheimen", "daisetsuzan", "lake-district", "cappadocia"
+      ],
+      "fallback": ["picos-de-europa", "cairngorms", "snowdonia", "drakensberg", "landmannalaugar"],
+      "requiredScientificGates": ["recommendation-eligible", "no-recommendation-hold", "golden-case-agrees", "selected-cell-claim-indexability-approved"],
+      "requiredModules": ["best-season-answer", "months-to-avoid-and-why", "temperature-rain-snow-daylight-at-a-glance", "walking-day-shape", "elevation-and-representative-scope", "alternatives-and-nearby-season-options"]
+    }
+  },
+  "alwaysNoindex": [
+    "destinationMonth",
+    "finder",
+    "finderQueryState",
+    "compareTool",
+    "rankingIndex",
+    "themeIndex",
+    "privacy",
+    "imprint",
+    "credits"
+  ],
+  "rollout": [
+    {"stage": 1, "name": "core-monthly-areas", "cumulativeUrls": 88},
+    {"stage": 2, "name": "warm-and-low-rain", "cumulativeUrls": 136},
+    {"stage": 3, "name": "comparisons", "cumulativeUrls": 142},
+    {"stage": 4, "name": "scientifically-cleared-destinations", "cumulativeUrls": 200}
+  ]
+}

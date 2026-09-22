@@ -104,13 +104,61 @@ export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Local
   const copy = t(locale);
   const theme = themeKeys.find((key) => themes[key] === ranking.theme || key === ranking.theme);
   const entries = ranking.entries.map((entry) => ({ ...entry, continent: getDestination(entry.slug)?.continent ?? "" }));
-  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="content-section"><RankingExplorer locale={locale} theme={theme} selectedMonth={ranking.month} entries={entries}/></section><MethodNote locale={locale}/></>;
+  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><ThemeRankingContext ranking={ranking} locale={locale}/><section className="content-section"><RankingExplorer locale={locale} theme={theme} selectedMonth={ranking.month} entries={entries}/></section><MethodNote locale={locale}/></>;
+}
+
+function ThemeRankingContext({ranking, locale}: {ranking: Ranking; locale: Locale}) {
+  if (ranking.theme !== "warm" && ranking.theme !== "low-rain") return null;
+  if (!ranking.entries.length) return null;
+  const copy = t(locale).ranking;
+  const label = monthName(ranking.month, locale);
+  const temperatures = ranking.entries.map((entry) => entry.tempC);
+  const wetDays = ranking.entries.map((entry) => Math.round(entry.wet * 100));
+  const lowTemp = Math.round(Math.min(...temperatures));
+  const highTemp = Math.round(Math.max(...temperatures));
+  const lowWet = Math.min(...wetDays);
+  const highWet = Math.max(...wetDays);
+  const warm = ranking.theme === "warm";
+  return <section className="content-section ranking-context">
+    <div className="section-heading"><div>
+      <span className="eyebrow">{copy.themeInsightEyebrow}</span>
+      <h2>{warm ? copy.themeWarmHeading(label) : copy.themeLowRainHeading(label)}</h2>
+      <p>{warm ? copy.themeWarmIntro(ranking.entries.length, label) : copy.themeLowRainIntro(ranking.entries.length, label)}</p>
+    </div></div>
+    <div className="ranking-context-grid">
+      <article><h3>{copy.qualifyingDestinations}</h3><strong>{copy.destinationsValue(ranking.entries.length)}</strong><p>{warm ? copy.warmRule : copy.lowRainRule}</p></article>
+      <article><h3>{copy.walkingTemperatureRange}</h3><strong>{copy.temperatureRangeValue(lowTemp, highTemp)}</strong><p>{copy.temperatureRangeNote}</p></article>
+      <article><h3>{copy.wetDayRange}</h3><strong>{copy.wetRangeValue(lowWet, highWet)}</strong><p>{copy.wetRangeNote}</p></article>
+    </div>
+  </section>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {
   const copy = t(locale);
   const first=getDestination(comparison.destinations[0])!; const second=getDestination(comparison.destinations[1])!;
-  return <><section className="page-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{first.name} vs {second.name}</h1><p>{copy.comparison.intro}</p></section><section className="comparison-grid"><div className="comparison-head"><strong>{first.name}</strong><span>{copy.common.month}</span><strong>{second.name}</strong></div>{comparison.months.map((item)=><div key={item.month}><span className={item.winner===first.slug?"winner":""}>{item.firstScore ?? "—"}</span><Link href={rankingPath(locale,item.month)}>{monthNameShort(item.month,locale)}</Link><span className={item.winner===second.slug?"winner":""}>{item.secondScore ?? "—"}</span></div>)}</section><div className="centered-links"><Link className="button secondary" href={destinationPath(locale,first.slug)}>{first.name}</Link><Link className="button secondary" href={destinationPath(locale,second.slug)}>{second.name}</Link></div><MethodNote locale={locale}/></>;
+  const firstOpen = first.months.filter((month) => month.recommendationEligible);
+  const secondOpen = second.months.filter((month) => month.recommendationEligible);
+  const shared = firstOpen.filter((month) => second.months[month.month - 1]?.recommendationEligible);
+  const difference = Math.abs(firstOpen.length - secondOpen.length);
+  const longer = firstOpen.length === secondOpen.length ? null : firstOpen.length > secondOpen.length ? first : second;
+  const averageWet = (destination: PublicDestination) => shared.length
+    ? Math.round(shared.reduce((sum, month) => sum + destination.months[month.month - 1].metrics.wetDayProbability, 0) / shared.length * 100)
+    : null;
+  const firstWet = averageWet(first);
+  const secondWet = averageWet(second);
+  const drier = firstWet === null || secondWet === null ? null : firstWet <= secondWet ? {destination: first, wet: firstWet} : {destination: second, wet: secondWet};
+  return <><section className="page-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{first.name} vs {second.name}</h1><p>{copy.comparison.intro}</p></section>
+    <section className="content-section comparison-summary">
+      <div className="section-heading"><div><span className="eyebrow">{copy.comparison.summaryEyebrow}</span><h2>{copy.comparison.summaryHeading}</h2></div></div>
+      <div className="comparison-summary-grid">
+        <article><h3>{copy.comparison.seasonLength}</h3><strong>{first.name}: {copy.comparison.monthsValue(firstOpen.length)}</strong><strong>{second.name}: {copy.comparison.monthsValue(secondOpen.length)}</strong><p>{longer ? copy.comparison.longerSeason(longer.name, difference) : copy.comparison.equalSeason}</p></article>
+        <article><h3>{copy.comparison.sharedSeason}</h3><strong>{copy.comparison.sharedMonthsValue(shared.map((month) => monthNameShort(month.month, locale)).join(" · "))}</strong><p>{copy.comparison.sharedSeasonNote}</p></article>
+        <article><h3>{copy.comparison.drierSharedSeason}</h3><strong>{drier?.destination.name ?? "—"}</strong><p>{drier ? copy.comparison.drierDestination(drier.destination.name, drier.wet) : copy.comparison.noDrierComparison}</p></article>
+      </div>
+    </section>
+    <section className="content-section comparison-months"><div className="section-heading"><div><span className="eyebrow">{copy.comparison.tableEyebrow}</span><h2>{copy.comparison.tableHeading}</h2><p>{copy.comparison.tableIntro}</p></div></div>
+      <div className="comparison-grid"><div className="comparison-head"><strong>{copy.comparison.scoreFor(first.name)}</strong><span>{copy.common.month}</span><strong>{copy.comparison.scoreFor(second.name)}</strong></div>{comparison.months.map((item)=><div key={item.month}><span className={item.winner===first.slug?"winner":""}>{item.firstScore ?? "—"}</span><Link href={rankingPath(locale,item.month)}>{monthNameShort(item.month,locale)}</Link><span className={item.winner===second.slug?"winner":""}>{item.secondScore ?? "—"}</span></div>)}</div>
+    </section><div className="centered-links"><Link className="button secondary" href={destinationPath(locale,first.slug)}>{first.name}</Link><Link className="button secondary" href={destinationPath(locale,second.slug)}>{second.name}</Link></div><MethodNote locale={locale}/></>;
 }
 
 export function MethodNote({locale}:{locale:Locale}) {

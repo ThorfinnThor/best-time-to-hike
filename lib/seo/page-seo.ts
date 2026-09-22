@@ -1,6 +1,6 @@
 import type { Locale, PublicDestination } from "@/lib/data/types";
-import { monthName } from "@/lib/i18n/config";
-import { getDestination, getManifest } from "@/lib/data/load";
+import { monthName, themes } from "@/lib/i18n/config";
+import { getComparisonIndex, getDestination, getManifest, getRanking } from "@/lib/data/load";
 import { profileFor } from "@/lib/seo/profile";
 import { areaById, areaProfile } from "@/lib/seo/areas";
 import { t, taxonomyLabel, withArticle } from "@/lib/i18n/dict";
@@ -8,6 +8,16 @@ import { evaluateIndexability } from "@/lib/seo/indexability";
 import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
 import { historicalPeriodDescription, historicalPeriodRange } from "@/lib/methodology/historical-period";
+import {
+  INDEXABILITY_STRATEGY,
+  areaIsCurated,
+  comparisonIsCurated,
+  destinationIsCurated,
+  destinationScienceIsCleared,
+  jaccard,
+  themeIsCurated,
+} from "@/lib/seo/indexability-strategy";
+import pageDefinitions from "@/data-config/seo/page-definitions.json";
 
 /**
  * Title, description and index decision per page.
@@ -65,7 +75,16 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
     containsUnsupportedClaims: false,
     datasetStatus: getManifest().datasetStatus,
   });
-  const reasons = [...decision.reasons];
+  // The underlying month confidence remains capped at 64/low. For the small
+  // reviewed destination set, a separate science decision allows indexing the
+  // explicitly restricted selected-cell article without claiming that its
+  // model score became more certain or representative of a whole region.
+  const reasons = decision.reasons.filter((reason) =>
+    !(reason === "low-confidence" && destinationScienceIsCleared(destination.slug)));
+  if (!destinationIsCurated(destination.slug)) reasons.push("not-in-curated-index-allowlist");
+  if (destinationIsCurated(destination.slug) && !destinationScienceIsCleared(destination.slug)) {
+    reasons.push("selected-cell-claim-indexability-not-approved");
+  }
   if (p.seasonShape === "withheld") reasons.push("withheld-destination-makes-no-recommendation");
   if (words < 120) reasons.push("thin-article");
   return {title, description, index: decision.indexable && reasons.length === 0, reasons};
@@ -137,6 +156,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       const profile = areaProfile(area);
       const label = taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
       const peak = profile.peakMonths.map((month) => monthName(month, locale)).join(" / ");
+      const reasons = getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"];
+      if (!areaIsCurated(page.area)) reasons.push("not-in-curated-index-allowlist");
       return {
         title: de ? `${label}: beste Wanderzeit und Ziele` : `Hiking ${withArticle(area.id, label)}: when to go and where`,
         description: clamp(de
@@ -145,21 +166,57 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         // An area page ranks a real set and says something specific about its
         // season, so it earns an index slot where a month slice of the same
         // set would not.
-        index: getManifest().datasetStatus === "production",
-        reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+        index: reasons.length === 0,
+        reasons};
     }
-    case "themeRanking": return {
-      title: t(locale).ranking.themeTitle(t(locale).ranking.themes[page.theme], monthName(page.month, locale)),
-      description: clamp(de
-        ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus der historischen Klimatologie ${historicalPeriodRange}.`
-        : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the historical climatology for ${historicalPeriodDescription.en}.`),
-      index: getManifest().datasetStatus === "production",
-      reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
-    case "compare": return {
-      title: page.slug.replaceAll("-", " "),
-      description: clamp(de ? "Zwei Ziele Monat für Monat nebeneinander." : "Two destinations compared month by month."),
-      index: getManifest().datasetStatus === "production",
-      reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+    case "themeRanking": {
+      const ranking = getRanking(page.month, themes[page.theme]);
+      const global = getRanking(page.month, "all");
+      const gate = INDEXABILITY_STRATEGY.families.themeMonthlyRankings;
+      const reasons = getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"];
+      if (!themeIsCurated(page.theme)) reasons.push("theme-not-in-curated-index-allowlist");
+      if (ranking.entries.length < gate.minimumResults) reasons.push("too-few-theme-results");
+      if (jaccard(ranking.entries.map((entry) => entry.slug), global.entries.map((entry) => entry.slug)) > gate.maximumFullListJaccardAgainstGlobal) {
+        reasons.push("theme-cannibalizes-global-ranking");
+      }
+      const warm = page.theme === "warm";
+      const lowRain = page.theme === "lowRain";
+      return {
+        title: t(locale).ranking.themeTitle(t(locale).ranking.themes[page.theme], monthName(page.month, locale)),
+        description: clamp(de
+          ? warm
+            ? `${ranking.entries.length} Wanderziele mit mindestens 15 °C mittlerer Wandertemperatur im ${monthName(page.month, locale)}, mit Regen und Schnee im direkten Vergleich.`
+            : lowRain
+              ? `${ranking.entries.length} Wanderziele mit höchstens 20 Prozent Regentagen im ${monthName(page.month, locale)}, mit Temperatur und Schnee im direkten Vergleich.`
+              : `${ranking.entries.length} Wanderziele mit höchstens 8 Prozent Schneetagen im ${monthName(page.month, locale)}. Diese Seite bleibt wegen Überschneidung mit der Gesamtrangliste außerhalb des Index.`
+          : warm
+            ? `${ranking.entries.length} hiking destinations averaging at least 15°C during walking hours in ${monthName(page.month, locale)}, compared for rain and snow.`
+            : lowRain
+              ? `${ranking.entries.length} hiking destinations with no more than 20% wet days in ${monthName(page.month, locale)}, compared for temperature and snow.`
+              : `${ranking.entries.length} hiking destinations with no more than 8% snow days in ${monthName(page.month, locale)}. This page stays out of the index because it overlaps the global ranking.`),
+        index: reasons.length === 0,
+        reasons,
+      };
+    }
+    case "compare": {
+      const definition = getComparisonIndex().find((item) => item.slug === page.slug);
+      if (!definition) return {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-comparison"]};
+      const contentApproved = pageDefinitions.comparisons.find((item) => item.slug === page.slug)?.indexable === true;
+      const first = getDestination(definition.destinations[0])!;
+      const second = getDestination(definition.destinations[1])!;
+      const overlap = first.months.filter((month, index) => month.recommendationEligible && second.months[index]?.recommendationEligible).length;
+      const reasons = getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"];
+      if (!comparisonIsCurated(page.slug)) reasons.push("comparison-not-in-curated-index-allowlist");
+      if (!contentApproved) reasons.push("comparison-content-gate-pending");
+      return {
+        title: de ? `${first.name} oder ${second.name}: Wanderzeiten vergleichen` : `${first.name} vs ${second.name}: hiking seasons compared`,
+        description: clamp(de
+          ? `${overlap} gemeinsam empfehlenswerte Monate. Vergleiche Saisonlänge, Temperatur und Regentage für ${first.name} und ${second.name}.`
+          : `${overlap} mutually recommendable months. Compare season length, temperature and wet days for ${first.name} and ${second.name}.`),
+        index: reasons.length === 0,
+        reasons,
+      };
+    }
     case "home": return {
       title: de ? "Finde deine beste Wanderzeit" : "Find your best hiking season",
       description: clamp(de
@@ -180,11 +237,13 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       index: false, reasons: ["interactive-tool-not-a-document"]};
     case "info": {
       const indexable = (page.key === "methodology" || page.key === "about") && getManifest().datasetStatus === "production";
+      const substantive = page.key === "methodology" || page.key === "about";
       return {
         title: de ? (page.key === "methodology" ? "So funktioniert der Wanderwert" : "Über BestTimeToHike")
                   : (page.key === "methodology" ? "How the hiking score works" : "About BestTimeToHike"),
         description: clamp(de ? "Methodik, Datenquellen und die Grenzen dieser Auswertung." : "Methodology, data sources and the limits of this analysis."),
-        index: indexable, reasons: indexable ? [] : ["boilerplate-or-non-production"]};
+        index: indexable,
+        reasons: indexable ? [] : substantive ? ["non-production-dataset"] : ["boilerplate-page-not-an-entry-point"]};
     }
   }
 }
