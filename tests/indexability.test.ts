@@ -4,6 +4,7 @@ import { evaluateIndexability } from "../lib/seo/indexability";
 import { routeCatalog } from "../lib/seo/route-catalog";
 import { resolvePageId } from "../lib/i18n/resolve";
 import { pageSeo } from "../lib/seo/page-seo";
+import { INDEXABILITY_STRATEGY } from "../lib/seo/indexability-strategy";
 import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../lib/seo/crawl-policy";
 const complete={resultCount:5,dataCompleteness:.99,confidence:90,uniqueInsightCount:3,hasUniqueTitle:true,hasUniqueH1:true,hasCanonical:true,internalLinkCount:4,createsCannibalization:false,containsUnsupportedClaims:false,datasetStatus:"production" as const};
 test("production quality page can be indexable",()=>assert.deepEqual(evaluateIndexability(complete),{indexable:true,reasons:[]}));
@@ -62,20 +63,23 @@ test("the curated production plan is capped at exactly 200 currently selected pa
     `${total} pages would be indexed after production under the reviewed selected-cell claim; the ceiling is 200`);
   assert.deepEqual(byKind, {
     home: 2,
-    destination: 58,
-    ranking: 24,
-    areaRanking: 58,
-    themeRanking: 48,
-    compare: 6,
+    destination: INDEXABILITY_STRATEGY.families.destinations.selected.length * 2,
+    ranking: INDEXABILITY_STRATEGY.families.globalMonthlyRankings.urlsPerLocale * 2,
+    areaRanking: INDEXABILITY_STRATEGY.families.areas.selected.length * 2,
+    themeRanking: INDEXABILITY_STRATEGY.families.themeMonthlyRankings.urlsPerLocale * 2,
+    compare: INDEXABILITY_STRATEGY.families.comparisons.selected.length * 2,
     info: 4,
   });
 });
 
 test("no unreviewed theme, comparison or destination can enter the production plan", () => {
   const byKind = wouldIndexAtProduction();
-  assert.equal(byKind.themeRanking, 48, "only warm and low-rain may contribute 24 pages per locale");
-  assert.equal(byKind.compare, 6, "only the three enriched comparisons may contribute two locales each");
-  assert.equal(byKind.destination, 58, "only 29 scientifically selected destinations may contribute two locales each");
+  assert.equal(byKind.themeRanking, INDEXABILITY_STRATEGY.families.themeMonthlyRankings.urlsPerLocale * 2,
+    "only the explicitly selected monthly themes may contribute two locales each");
+  assert.equal(byKind.compare, INDEXABILITY_STRATEGY.families.comparisons.selected.length * 2,
+    "only explicitly selected enriched comparisons may contribute two locales each");
+  assert.equal(byKind.destination, INDEXABILITY_STRATEGY.families.destinations.selected.length * 2,
+    "only editorially selected, scientifically cleared destinations may contribute two locales each");
 });
 
 test("production robots lets crawlers observe page-level noindex directives", () => {

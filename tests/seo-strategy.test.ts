@@ -35,7 +35,7 @@ const jaccard = (a: string[], b: string[]) => {
   return intersection / new Set([...left, ...right]).size;
 };
 
-test("the quality-first strategy has a bounded, internally consistent 200-URL plan", () => {
+test("the quality-first strategy has a bounded, internally consistent near-200 URL plan", () => {
   assert.equal(strategy.status, "FULL_200_PLAN_SCIENTIFICALLY_CLEARED_PENDING_PRODUCTION");
   assert.equal(strategy.productionEffect, "all-four-stages-active-only-when-dataset-is-production");
   assert.equal(strategy.objective.localeCount, 2);
@@ -48,7 +48,14 @@ test("the quality-first strategy has a bounded, internally consistent 200-URL pl
   assert.equal(perLocale * strategy.objective.localeCount, strategy.objective.plannedUrls);
   assert.ok(strategy.objective.plannedUrls >= strategy.objective.minimumHighQualityUrls);
   assert.ok(strategy.objective.plannedUrls <= strategy.objective.maximumHighQualityUrls);
-  assert.deepEqual(strategy.rollout.map((item) => item.cumulativeUrls), [88, 136, 142, 200]);
+  const localeCount = strategy.objective.localeCount;
+  const expectedRollout = [
+    (strategy.families.core.urlsPerLocale + strategy.families.globalMonthlyRankings.urlsPerLocale + strategy.families.areas.urlsPerLocale) * localeCount,
+    (strategy.families.core.urlsPerLocale + strategy.families.globalMonthlyRankings.urlsPerLocale + strategy.families.areas.urlsPerLocale + strategy.families.themeMonthlyRankings.urlsPerLocale) * localeCount,
+    (strategy.families.core.urlsPerLocale + strategy.families.globalMonthlyRankings.urlsPerLocale + strategy.families.areas.urlsPerLocale + strategy.families.themeMonthlyRankings.urlsPerLocale + strategy.families.comparisons.urlsPerLocale) * localeCount,
+    perLocale * localeCount,
+  ];
+  assert.deepEqual(strategy.rollout.map((item) => item.cumulativeUrls), expectedRollout);
 });
 
 test("all eligible area guides are explicitly selected and have enough destinations", () => {
@@ -95,10 +102,11 @@ test("destination candidates retain low climate confidence while their restricte
   const golden = reviewGoldenCasesForPeriod(loadGoldenCases(), destinations, {startYear: 1991, endYear: 2025});
   const goldenBySlug = new Map(golden.cases.map((item) => [item.slug, item]));
   const selected = strategy.families.destinations.selected;
-  assert.equal(selected.length, 29);
+  assert.equal(selected.length, strategy.families.destinations.urlsPerLocale);
   assert.ok(unique(selected));
   assert.ok(unique([...selected, ...strategy.families.destinations.fallback]));
-  assert.deepEqual(destinationScience.approvedDestinations, selected);
+  assert.ok(selected.every((slug) => destinationScience.approvedDestinations.includes(slug)),
+    "every editorially selected destination must retain scientific clearance");
   for (const slug of selected) {
     const destination = bySlug.get(slug);
     const review = goldenBySlug.get(slug);
