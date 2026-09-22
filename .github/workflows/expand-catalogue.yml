@@ -84,7 +84,7 @@ jobs:
           restore-keys: |
             era5-land-point-series-v2-
 
-      - name: Fetch the official 1991-2020 ERA5-Land point series
+      - name: Fetch the official 1991-2025 ERA5-Land point series
         run: pnpm data:era5 -- --provisional --download-only
 
       - name: Save canonical point series before the scientific gates
@@ -97,7 +97,25 @@ jobs:
       - name: Aggregate the point series into committed snapshots
         run: pnpm data:era5 -- --provisional
 
-      - name: Build and verify the complete static site
+      - name: Build and verify the unpublished staging site
+        if: ${{ !inputs.publish }}
+        run: |
+          pnpm data:normalize
+          pnpm data:score
+          pnpm data:export
+          pnpm catalogue:staging-validate
+          pnpm guard:architecture
+          pnpm guard:determinism
+          pnpm guard:css
+          pnpm guard:cells
+          pnpm test
+          pnpm build
+          pnpm test:rendered
+          pnpm guard:deploy-budget
+          pnpm typecheck
+
+      - name: Build and verify the approved complete static site
+        if: ${{ inputs.publish }}
         run: pnpm verify
 
       - name: Report what the scientific gates withheld
