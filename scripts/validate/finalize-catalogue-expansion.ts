@@ -1,3 +1,5 @@
+import { existsSync } from "node:fs";
+import { basename } from "node:path";
 import { readJson, round, writeJson } from "../lib/io";
 
 type ReviewEntry = {
@@ -9,8 +11,14 @@ type ReviewEntry = {
   era5ToIndependentAnnualPrecipitationRatio: number;
 };
 
-const review = readJson<any>("data-config/methodology/catalogue-expansion-batch-4-review-v1.json");
-const candidates = readJson<{candidates:Array<{id:string}>}>("data-config/sources/destination-candidates-batch-4.json");
+const reviewArgument = process.argv.slice(2).find((value) => value.startsWith("--review="));
+const reviewPath = reviewArgument?.slice("--review=".length) ?? "data-config/methodology/catalogue-expansion-batch-4-review-v1.json";
+if (!existsSync(reviewPath)) throw new Error(`CATALOGUE_APPROVAL001 missing review ${reviewPath}`);
+const review = readJson<any>(reviewPath);
+const candidateFileName = `${review.batch}.json`;
+const candidatePath = `data-config/sources/${candidateFileName}`;
+if (!existsSync(candidatePath)) throw new Error(`CATALOGUE_APPROVAL001 missing candidate file ${candidatePath}`);
+const candidates = readJson<{candidates:Array<{id:string}>}>(candidatePath);
 const external = readJson<any>("data-snapshots/external-audit/nasa-power-1991-2020.json");
 const holds = new Set(readJson<{destinationIds:string[]}>("data-config/methodology/independent-climate-review-holds-v1.json").destinationIds);
 const entries = review.destinations as ReviewEntry[];
@@ -24,9 +32,9 @@ if (review.decisionStatus !== "approved-for-provisional-catalogue-expansion"
   || review.aggregationPolicyVersion !== "observation-validity-v1") {
   fail("review does not approve this exact provisional expansion state");
 }
-if (entries.length !== 20 || new Set(reviewedIds).size !== entries.length
+if (!entries.length || new Set(reviewedIds).size !== entries.length
   || JSON.stringify(reviewedIds) !== JSON.stringify(candidateIds)) {
-  fail("review scope must equal the 20 unique batch-4 candidates");
+  fail(`review scope must equal the ${candidateIds.length} unique candidates in ${candidateFileName}`);
 }
 
 const snapshots:Array<{path:string;snapshot:any}> = [];
@@ -65,4 +73,4 @@ for (const entry of entries) {
 for (const {path, snapshot} of snapshots) {
   writeJson(path, {...snapshot, migrationStatus:"production-approved"});
 }
-console.log(`Approved ${snapshots.length} batch-4 snapshots for the provisional selected-model-cell catalogue; production release remains locked.`);
+console.log(`Approved ${snapshots.length} snapshots from ${basename(reviewPath)} for the provisional selected-model-cell catalogue; production release remains locked.`);

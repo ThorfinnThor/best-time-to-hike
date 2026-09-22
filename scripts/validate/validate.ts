@@ -35,9 +35,16 @@ const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
 const validityMigration=readJson<any>("data-config/methodology/validity-migration-decision-v1.json");
-const catalogueExpansion=readJson<any>("data-config/methodology/catalogue-expansion-batch-4-review-v1.json");
+const catalogueExpansions=readdirSync(join(ROOT,"data-config/methodology"))
+  .filter((name)=>/^catalogue-expansion-batch-\d+-review-v1\.json$/.test(name))
+  .sort()
+  .map((name)=>readJson<any>(`data-config/methodology/${name}`));
 const externalClimateAudit=readJson<any>("data-snapshots/external-audit/nasa-power-1991-2020.json");
-const expansionReviewById=new Map<string,any>(catalogueExpansion.destinations.map((entry:any)=>[entry.destinationId,entry]));
+const expansionReviewById=new Map<string,{review:any;entry:any}>();
+for(const review of catalogueExpansions)for(const entry of review.destinations){
+  assert(!expansionReviewById.has(entry.destinationId),`${entry.destinationId}: appears in more than one catalogue expansion review`);
+  expansionReviewById.set(entry.destinationId,{review,entry});
+}
 const externalClimateById=new Map<string,any>(externalClimateAudit.entries.map((entry:any)=>[entry.destinationId,entry]));
 const independentClimateHolds=readJson<{destinationIds:string[]}>("data-config/methodology/independent-climate-review-holds-v1.json");
 const precipitationReviewHolds=new Set(independentClimateHolds.destinationIds);
@@ -130,9 +137,10 @@ for (const file of detailFiles) {
   const expectedAggregationPolicy=climateSnapshot.aggregationPolicyVersion ?? "legacy-climate-aggregation-v1";
   assert(destination.aggregationPolicyVersion===expectedAggregationPolicy,`${destination.slug}: exported aggregation policy differs from its snapshot`);
   if(expectedAggregationPolicy==="observation-validity-v1") {
-    const expansionReview=expansionReviewById.get(destination.id);
-    assert(validityMigration.scope.includes(destination.id)||Boolean(expansionReview),`${destination.slug}: validity migration is outside the approved scope`);
-    if(expansionReview){
+    const expansionApproval=expansionReviewById.get(destination.id);
+    assert(validityMigration.scope.includes(destination.id)||Boolean(expansionApproval),`${destination.slug}: validity migration is outside the approved scope`);
+    if(expansionApproval){
+      const {review:catalogueExpansion,entry:expansionReview}=expansionApproval;
       const source=climateSnapshot.sourceDownloads?.[0];
       const independent=externalClimateById.get(destination.id);
       assert(catalogueExpansion.decisionStatus==="approved-for-provisional-catalogue-expansion"
