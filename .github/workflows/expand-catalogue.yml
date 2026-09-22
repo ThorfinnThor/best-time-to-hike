@@ -80,22 +80,22 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: generated/intermediate/era5-raw
-          key: era5-land-point-series-v2-${{ steps.selection.outputs.digest }}
+          key: era5-land-point-series-1991-2025-v1-${{ steps.selection.outputs.digest }}
           restore-keys: |
-            era5-land-point-series-v2-
+            era5-land-point-series-1991-2025-v1-
 
       - name: Fetch the official 1991-2025 ERA5-Land point series
-        run: pnpm data:era5 -- --provisional --download-only
+        run: pnpm data:era5 -- --provisional --historical-1991-2025 --download-only
 
       - name: Save canonical point series before the scientific gates
         if: ${{ always() }}
         uses: actions/cache/save@v4
         with:
           path: generated/intermediate/era5-raw
-          key: era5-land-point-series-v2-${{ steps.selection.outputs.digest }}-${{ github.run_id }}
+          key: era5-land-point-series-1991-2025-v1-${{ steps.selection.outputs.digest }}-${{ github.run_id }}
 
       - name: Aggregate the point series into committed snapshots
-        run: pnpm data:era5 -- --provisional
+        run: pnpm data:era5 -- --provisional --historical-1991-2025
 
       - name: Build and verify the unpublished staging site
         if: ${{ !inputs.publish }}
