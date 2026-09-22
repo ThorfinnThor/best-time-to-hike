@@ -304,6 +304,21 @@ body{font-size:16px;-webkit-font-smoothing:antialiased}
 .month-selection .ranking-months{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
 .month-selection .ranking-months a{min-height:76px;font-size:1rem}
 @media(max-width:600px){.month-selection .ranking-months{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+
+/* Month-selection pages: keep the section title and region control in one
+   decision row, then give the month grid the full content width. */
+.month-selection{display:grid;grid-template-columns:minmax(0,1fr) minmax(240px,320px);column-gap:40px;row-gap:28px;align-items:end}
+.month-selection>h2{grid-column:1;margin:0;align-self:end}
+.month-selection>.ranking-explorer{display:contents}
+.month-selection .ranking-filter{grid-column:2;grid-row:1;margin:0}
+.month-selection .ranking-filter label{width:100%;gap:8px}
+.month-selection .ranking-months{grid-column:1 / -1;grid-row:2;margin-top:0}
+@media(max-width:720px){
+  .month-selection{display:block}
+  .month-selection>h2{margin-bottom:20px}
+  .month-selection>.ranking-explorer{display:block}
+  .month-selection .ranking-months{margin-top:24px}
+}
 .finder-compact .finder-presets button{min-height:36px;padding:6px 12px;background:transparent;font-weight:500;font-size:.75rem;border-color:transparent}
 .finder-compact .finder-presets button:hover{background:var(--mist);border-color:var(--line)}
 @media(max-width:900px){
