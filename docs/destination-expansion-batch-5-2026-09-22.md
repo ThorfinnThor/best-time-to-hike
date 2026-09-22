@@ -57,7 +57,7 @@ Coordinates are resolved to the nearest ERA5-Land 0.1-degree model cell. A candi
 
 ## Model-cell preflight
 
-All 40 intake points resolve to an ERA5-Land land cell and no point is below the configured 0.45 land-fraction floor. Five coastal or lake-adjacent cells remain in the explicit 0.45–0.8 review band: `fundy`, `gros-morne`, `calanques`, `paklenica` and `shiretoko`. This is a review flag, not a waiver. The full hourly time series must return unmasked, complete observations before any of them can enter the catalogue.
+All 40 intake points resolve to an ERA5-Land land cell and no point is below the configured 0.45 land-fraction floor. Four coastal or lake-adjacent cells remain in the explicit 0.45–0.8 review band: `gros-morne`, `calanques`, `paklenica` and `shiretoko`. This is a review flag, not a waiver. The full hourly time series must return unmasked, complete observations before any of them can enter the catalogue.
 
 ## Required release sequence
 
