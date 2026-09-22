@@ -9,6 +9,7 @@ import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
 import { degreesC } from "@/lib/format";
 import { ScoreRing } from "./ScoreRing";
+import { DestinationImage } from "@/components/media/DestinationImage";
 import { filterRankingRegion, parseRankingRegion, rankingRegionHref, rankingRegions, type RankingRegion } from "@/lib/hiking/ranking-region";
 
 /** Plain links keep month selection usable without JavaScript. */
@@ -38,12 +39,19 @@ function ExplorerView({ locale, theme, selectedMonth, entries = [], region, onRe
       {selectedMonth ? <p role="status">{copy.ranking.resultCount(filtered.length)}</p> : null}
     </div>
     <RankingMonths locale={locale} theme={theme} selectedMonth={selectedMonth} region={region}/>
-    {selectedMonth ? <section className="ranking-list" aria-label={copy.ranking.heading}>
-      {filtered.map((entry, index) => <Link href={links.destinationMonth(locale, entry.slug, selectedMonth)} key={entry.slug}>
-        <span className="ranking-number">{String(index + 1).padStart(2, "0")}</span>
-        <div><h2>{entry.name}</h2><p>{entry.countryCode} · {degreesC(entry.tempC, locale)} · {Math.round(entry.wet * 100)}% {copy.common.wetDays}</p></div>
-        <ScoreRing score={entry.score} size="small" locale={locale}/>
-      </Link>)}
+    {selectedMonth ? <section className="ranking-results" aria-label={copy.ranking.heading}>
+      {filtered.map((entry, index) => <article className="ranking-result-card" key={entry.slug}>
+        <Link className="ranking-result-art" href={links.destinationMonth(locale, entry.slug, selectedMonth)} aria-label={`${entry.name} · ${monthName(selectedMonth, locale)}`}>
+          <DestinationImage slug={entry.slug} name={entry.name} region={entry.countryCode}/>
+          <span className="ranking-result-number">{String(index + 1).padStart(2, "0")}</span>
+          <span className="ranking-result-score"><ScoreRing score={entry.score} size="small" locale={locale}/></span>
+        </Link>
+        <div className="ranking-result-body">
+          <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2>{entry.name}</h2></div></div>
+          <p>{degreesC(entry.tempC, locale)} · {Math.round(entry.wet * 100)}% {copy.common.wetDays}</p>
+          <Link className="ranking-result-link" href={links.destinationMonth(locale, entry.slug, selectedMonth)}>{copy.destination.exploreDestination} <span aria-hidden="true">→</span></Link>
+        </div>
+      </article>)}
       {!filtered.length ? <p className="ranking-empty">{copy.ranking.emptyRegion}</p> : null}
     </section> : null}
   </>;
