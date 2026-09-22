@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { areaCatalogue, MINIMUM_DESTINATIONS } from "../lib/seo/areas";
 import { getAllDestinations, getComparisonIndex, getRanking } from "../lib/data/load";
@@ -119,6 +120,11 @@ test("destination candidates retain low climate confidence while their restricte
 });
 
 test("the destination science clearance is reproduced from the final audit", () => {
+  // The report is intentionally generated and ignored. Rebuild it here so a
+  // clean checkout proves the decision from versioned evidence instead of
+  // accidentally trusting a developer's stale local report.
+  execFileSync(process.execPath, ["--import", "tsx", "scripts/validate/calibrate-season-alignment.ts"], {stdio: "pipe"});
+  execFileSync(process.execPath, ["--import", "tsx", "scripts/validate/science-audit.ts"], {stdio: "pipe"});
   type Spatial = {destinationId: string; centroidToCellKm: number; sourceObservationCountPassed: boolean; internalCoordinateChainPassed: boolean; independentRouteEvidence: boolean; claimScope: string; errors: string[]};
   type Diagnostic = {destinationId: string; flags: string[]};
   const audit = JSON.parse(readFileSync("generated/reports/science-audit.json", "utf8")) as {
