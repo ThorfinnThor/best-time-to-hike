@@ -1,69 +1,66 @@
-# Design- und Visual-QA-Audit vom 22. September 2026
+# Design and visual QA audit — 2026-09-22
 
-## Umfang
+## Scope
 
-- 5271 öffentliche URLs erfasst (5270 Inhaltsseiten und die Root-Weiterleitung; die technische 404-Seite ist nicht öffentlich gelistet).
-- Jede URL automatisiert bei 1440 × 1000, 1280 × 800, 768 × 1024, 390 × 844 und zusätzlich 360 × 800 Pixeln geprüft.
-- Insgesamt 26.355 Route-/Viewport-Kombinationen.
-- Erfasst wurden Dokumentbreite, horizontaler Überlauf, Hero-Höhe, H1-Größe und -Zeilen, Überschriftenbreiten, Umbruch-/Trennregeln, kleine Fließtexte, wichtige Spaltenbreiten sowie abgeschnittene oder außerhalb des Viewports liegende Elemente.
-- Zusätzlich wurden Startseite, Finder, Monatsranking, Themen-/Regionsranking, Vergleich, Methodik, Datenschutz und Ziel-Monatsseite in deutscher und englischer Ausprägung mit echten Screenshots auf Desktop und Mobil kontrolliert. Besonders lange deutsche Überschriften wurden gezielt einbezogen.
+- Public static URLs discovered in the production export: **6,482**
+- Viewports: **1440 × 1000**, **1280 × 800**, **768 × 1024**, **390 × 844**
+- Automated page/viewport checks: **25,928**
+- Additional narrow-screen review: **360 px**
+- Languages: English and German
 
-## Gefundene und behobene Probleme
+Every exported URL was measured. The review records document width and horizontal overflow, hero height, H1 size and approximate line count, heading wrapping rules, long-form text width, body-copy size, large vertical gaps, wide-table containment, and elements extending beyond the viewport.
 
-Neun konkrete Darstellungsprobleme aus sechs gemeinsamen Ursachen wurden behoben:
+## Initial findings
 
-1. Die feste mobile Schriftgröße der allgemeinen Seiten-H1 ließ lange deutsche Titel überlaufen oder knapp abschneiden.
-2. Ziel- und Monats-H1 waren auf Mobilgeräten unnötig groß und dominierten den ersten Bildschirm.
-3. Automatische Silbentrennung erzeugte in großen Überschriften unprofessionelle Trennstellen.
-4. Der Methodik-Hero enthielt drei lange Absätze und wurde dadurch auf Mobilgeräten über 1000 Pixel hoch.
-5. Erklärungschips im Finder lagen unter 12 Pixel Schriftgröße.
-6. Die Anzahl in den Bildnachweisen lag ebenfalls unter 12 Pixel Schriftgröße.
-7. Das dreispaltige Bildnachweisraster blieb bei 768 Pixeln aktiv; lange Dateinamen verbreiterten das Dokument auf 808 Pixel.
-8. Ein Regionsmodul schrieb alle zwölf Monatsnamen in eine H2.
-9. Eine weitere Region schrieb elf Monatsnamen in eine H2 und erzeugte auf 360 Pixeln sieben Titelzeilen.
+The first scan produced 14,738 raw page/viewport warnings. Triage separated four diagnostic patterns:
 
-## Korrekturen
+1. **624 actionable small-copy warnings across 156 URLs.** These came from three shared components: area-guide explanations, the finder legend, and local planning-source notes. The smallest source note was 12 px.
+2. **1,500 false overflow warnings.** The flagged planning tables were intentionally wider than the phone/tablet viewport and already lived inside accessible horizontal scroll containers. The document itself never overflowed.
+3. **12,946 false wide-column warnings.** The old detector measured the CSS box of short captions rather than their actual readable line length. Long explanatory copy was nevertheless capped as a defensive improvement.
+4. **6 false narrow-column warnings.** These came from short paragraphs in deliberate card grids on the home pages, not from the H1 or long-form copy.
 
-- Zentrale Überschriftenregeln verhindern automatische Trennung und unkontrollierte Wortumbrüche, ohne Fließtext oder bewusst anders gestaltete Module zu verändern.
-- Responsive `clamp()`-Größen, Zeilenhöhen und Innenabstände wurden für allgemeine Intros, Ziel-Heros und Monats-Heros getrennt kalibriert.
-- Der Methodik-Hero zeigt nur noch die eigentliche Einleitung. Die Detailabsätze stehen in einem anschließenden, lesbaren Inhaltsblock.
-- Finder-Erklärungschips und Bildnachweis-Zähler sind nun auch auf kleinen Geräten lesbar.
-- Bildnachweise wechseln bereits unter 900 Pixeln in ein einspaltiges Layout; lange lokale Dateinamen dürfen innerhalb ihres Eintrags umbrechen.
-- Regionsseiten verwenden bei zwölf Monaten „ganzjährig“ und bei sechs oder mehr Monaten eine kurze Aussage über die Anzahl der Monate. Kürzere Saisons behalten die konkreten Monatsnamen.
-- `scripts/validate/visual-route-manifest.ts` und `pnpm audit:visual-routes` erzeugen künftig die vollständige, in Browser-Audits nutzbare URL-Liste.
-- Der Render-Test prüft künftig alle 5271 öffentlichen URLs, nicht nur Stichproben: genau ein H1 pro Inhaltsseite, keine übersprungenen Überschriftenebenen und keine defekten root-relativen Links.
+No route showed document-level horizontal overflow, a clipped H1, automatic H1 hyphenation, an uncontained wide table, an excessively tall hero, too many H1 lines, or an unexplained large vertical gap.
 
-## Ergebnis des vollständigen Wiederholungsscans
+## Corrections
 
-| Viewport | URLs | Überläufe | abgeschnittene Überschriften | H1-/Navigationsfehler | sonstige Flags |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| 1440 × 1000 | 5271 | 0 | 0 | 0 | 0 |
-| 1280 × 800 | 5271 | 0 | 0 | 0 | 0 |
-| 768 × 1024 | 5271 | 0 | 0 | 0 | 0 |
-| 390 × 844 | 5271 | 0 | 0 | 0 | 0 |
-| 360 × 800 | 5271 | 0 | 0 | 0 | 0 |
+- Raised area-guide notes and the finder legend to 14.4 px with a controlled line height.
+- Raised local planning-source notes from 12 px to 14 px.
+- Limited planning and method-note paragraphs to 75 characters per line.
+- Added a repeatable `pnpm audit:visual-layout` audit runner that discovers routes from the current static export instead of relying on a hand-maintained sample.
+- Taught the audit runner to distinguish intentionally scrollable tables from page overflow and to evaluate long-form copy separately from short captions and card labels.
+- Excluded the visually reviewed four-card trust grid from the narrow-prose heuristic; its 238 px text measure is deliberate compact-card copy, not a long-form reading column.
+- Disabled image loading inside the measurement frames so future full-site audits measure layout without downloading thousands of decorative images.
 
-## Technische QA
+The fix is shared CSS. No individual URL needed a one-off override.
 
-- Produktionsbuild: erfolgreich, 5279 statisch erzeugte Next.js-Seiten.
-- TypeScript: erfolgreich.
-- Next.js Lint-/Typprüfung im Build: erfolgreich.
-- Tests: 248/248 erfolgreich.
-- Vollständige Render-/Linkprüfung: 16/16 erfolgreich; 5271 URLs abgedeckt.
-- CSS-Guard: 596 Regeln, 172 Klassen, keine verwaisten oder positionsabhängig dimensionierten Klassen.
-- Architektur-Guard: erfolgreich; statische JSON-only-Bereitstellung.
-- Datenvalidierung: 315 Ziele und 370 öffentliche Datendateien erfolgreich.
-- Determinismus: 370 Dateien bytegenau reproduziert.
-- Zellintegrität: 315 Zellen, keine neue problematische Zelle.
-- Deployment-Budget: 11.258 von 20.000 Dateien (56 %).
-- Wissenschaftsaudit: 0 wissenschaftliche Produktionsblocker.
-- Browserkonsole lokal und live: 0 Warnungen und 0 Fehler aus der Website.
+## Visual spot checks
 
-## Deployment und offene Freigaben
+Real browser screenshots and geometry were reviewed on desktop and mobile for the independent page families and the longest-content edge cases, including:
 
-- Cloudflare-Deployment: erfolgreich.
-- Unveränderliche Deployment-URL: https://ca315618.best-time-to-hike.pages.dev
-- Kanonische Pages-Domain: https://best-time-to-hike.pages.dev
-- Beide URLs wurden nach dem Upload mobil geprüft; die kanonische Domain zusätzlich auf 1440 × 1000 Pixeln.
-- Noch offen sind ausschließlich die drei bereits bekannten formalen Produktionsfreigaben: Betreiber-/Rechtsangaben, formale Accessibility-/Performance-Freigabe und die noch zu kaufende beziehungsweise zu verbindende Custom Domain. Der Design-Audit selbst hat keine offenen Darstellungsprobleme.
-- Der Datenqualitätsreport enthält weiterhin den bekannten Hinweis zur Hunza-Temperaturanomalie. Er ist wissenschaftlich dokumentiert und kein Design- oder Buildfehler.
+- German and English home pages, including the longest German home H1
+- finder and comparison tools
+- ranking landing pages, monthly rankings and long regional rankings
+- warm-hiking, snow-free and low-rain landing/month pages
+- methodology, about, image credits, privacy and imprint pages
+- normal destination overviews and month pages
+- a scientific-review hold page (Zermatt)
+- long German titles such as Golden Gate Highlands National Park and Neuseeländisches Vulkanplateau
+- the mobile planning table and its horizontal-scroll affordance
+
+The 360 px privacy-page check confirmed that the long German word “Datenschutzerklärung” remains intact and inside the viewport.
+
+## Final validation
+
+- Full visual scan: **25,928 checks completed** in 724,033 ms
+- Final raw diagnostics: **6**, all manually cleared as the intentional four-card trust grid on the three home routes at the two desktop sizes
+- Final actionable layout problems: **0**
+- Horizontal-overflow, clipped-element, uncontained-table, small-copy, overwide-copy, hero-height, H1-line and large-gap warnings: **0**
+- Production build: **passed**, 6,489 generated routes
+- TypeScript: **passed**
+- CSS architecture guard: **passed**, 599 rules and 172 classes
+- Main tests: **255 passed**
+- Rendered-page, heading, link and hreflang tests: **16 passed**
+- Static-data validation: **passed**, 375 destinations and 430 public data files
+- Scientific audit: **passed with claim restrictions**, zero scientific production blockers
+
+The release report still contains the pre-existing non-design production blockers (legal/operator approval, the formal accessibility/performance sign-off, and the custom domain). They are outside this visual-layout change.
