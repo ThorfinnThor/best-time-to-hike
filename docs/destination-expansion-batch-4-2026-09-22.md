@@ -30,7 +30,7 @@ Coordinates are intake coordinates. ERA5-Land resolves them to its nearest 0.1-d
 | `fish-river-canyon` | Hobas trailhead / canyon hike | [Namibia Tourism Board: hiking](https://visitnamibia.com.na/hiking/) |
 | `tsitsikamma` | Storms River forest and coastal trails | [SANParks: Garden Route hikes and trails](https://www.sanparks.org/parks/garden-route/what-to-do/activities/hikes-walks-trails) |
 | `queenstown-new-zealand` | Ben Lomond / Queenstown trail network | [New Zealand DOC: Ben Lomond Track](https://www.doc.govt.nz/parks-and-recreation/places-to-go/otago/places/queenstown-area/things-to-do/ben-lomond-track/) |
-| `great-ocean-walk` | Blanket Bay section of the Great Ocean Walk | [Parks Victoria: full Great Ocean Walk](https://www.parks.vic.gov.au/places-to-see/parks/great-otway-national-park/things-to-do/great-ocean-walk/the-whole-eight-days) |
+| `great-ocean-walk` | Inland forest section between Apollo Bay and Elliot Ridge | [Parks Victoria: full Great Ocean Walk](https://www.parks.vic.gov.au/places-to-see/parks/great-otway-national-park/things-to-do/great-ocean-walk/the-whole-eight-days) |
 | `machu-picchu` | Inca Trail near Wiñay Wayna / Machu Picchu | [Peruvian Ministry of Culture: Camino Inka](https://www.machupicchu.gob.pe/camino-inka/) |
 | `el-bolson` | Río Azul mountain circuit network | [El Bolsón municipal tourism: mountain map](https://www.turismoelbolson.gob.ar/mapa-digital) |
 | `chapada-dos-guimaraes` | Véu de Noiva / national-park walking area | [ICMBio: Chapada dos Guimarães National Park](https://www.gov.br/icmbio/pt-br/assuntos/unidade-de-conservacao/unidades-de-biomas/cerrado/lista-de-ucs/parna-da-chapada-dos-guimaraes) |
