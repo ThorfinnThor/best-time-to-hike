@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { readJson, round, sha256, writeJson } from "../lib/io";
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
@@ -11,6 +12,13 @@ type PowerResponse = {
 };
 
 const destinations = readJson<Destination[]>("data-config/sources/destinations.json");
+const outputPath = "data-snapshots/external-audit/nasa-power-1991-2020.json";
+const onlyArgument = process.argv.slice(2).find((value) => value.startsWith("--only="));
+const requestedIds = new Set((onlyArgument?.slice("--only=".length) ?? "").split(",").map((value) => value.trim()).filter(Boolean));
+const selectedDestinations = requestedIds.size ? destinations.filter((destination) => requestedIds.has(destination.id)) : destinations;
+const selectedIds = new Set(selectedDestinations.map((destination) => destination.id));
+const unknownIds = [...requestedIds].filter((id) => !selectedIds.has(id));
+if (unknownIds.length) throw new Error(`NASA POWER audit names unknown destinations: ${unknownIds.join(", ")}`);
 const endpoint = "https://power.larc.nasa.gov/api/temporal/monthly/point";
 const startYear = 1991;
 const endYear = 2020;
@@ -47,9 +55,12 @@ function monthlyNormal(values:Record<string,number>,month:number,fill:number){
 }
 
 async function main(){
- const entries=[] as unknown[];
- for(let index=0;index<destinations.length;index+=1){
-  const destination=destinations[index];
+ const previous = requestedIds.size && existsSync(outputPath) ? readJson<any>(outputPath) : null;
+ const byId = new Map<string,unknown>((previous?.entries ?? [])
+  .filter((entry:any) => !requestedIds.has(entry.destinationId))
+  .map((entry:any) => [entry.destinationId,entry]));
+ for(let index=0;index<selectedDestinations.length;index+=1){
+  const destination=selectedDestinations[index];
   const sampling=readJson<any>(`data-snapshots/sampling/${destination.id}.json`);
   const point=sampling.bands[destination.elevationBands[0].id].points[0];
   const selectedCellCoordinates={lat:point.lat,lon:point.lon};
@@ -65,7 +76,7 @@ async function main(){
     }
     return round(total/30,3);
   });
-  entries.push({
+  byId.set(destination.id,{
     destinationId:destination.id,
     destinationCoordinates:destination.coordinates,
     requestedCoordinates:selectedCellCoordinates,
@@ -75,11 +86,13 @@ async function main(){
     annualPrecipitationMeanMm:round(precipitationMonthlyMeanMm.reduce((sum,value)=>sum+value,0),1),
     sourceResponseSha256:sha256(response),
   });
-  if((index+1)%25===0||index+1===destinations.length)console.log(`NASA POWER audit: ${index+1}/${destinations.length}`);
+  if((index+1)%25===0||index+1===selectedDestinations.length)console.log(`NASA POWER audit: ${index+1}/${selectedDestinations.length}`);
   await sleep(100);
  }
+ const entries=destinations.map((destination)=>byId.get(destination.id)).filter(Boolean);
+ if(entries.length!==destinations.length||byId.size!==destinations.length)throw new Error(`NASA POWER audit covers ${entries.length}/${destinations.length} current destinations`);
 
- writeJson("data-snapshots/external-audit/nasa-power-1991-2020.json",{
+ writeJson(outputPath,{
   schemaVersion:1,
   status:"independent-model-diagnostic-not-ground-truth",
   source:"NASA POWER monthly API / MERRA-2",
