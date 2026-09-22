@@ -54,7 +54,7 @@ test("the quality-first strategy has a bounded, internally consistent 200-URL pl
 test("all eligible area guides are explicitly selected and have enough destinations", () => {
   const areas = areaCatalogue();
   assert.ok(unique(strategy.families.areas.selected));
-  assert.deepEqual(strategy.families.areas.selected, areas.map((area) => area.id));
+  assert.deepEqual([...strategy.families.areas.selected].sort(), areas.map((area) => area.id).sort());
   assert.equal(strategy.families.areas.minimumRecommendableDestinations, MINIMUM_DESTINATIONS);
   assert.equal(strategy.families.areas.urlsPerLocale, areas.length);
   assert.ok(areas.every((area) => area.destinations.length >= MINIMUM_DESTINATIONS));

@@ -106,7 +106,7 @@ for(const destination of destinations){
   errors.push(...rowErrors.map((error)=>`${destination.id}: ${error}`));
 }
 
-if(destinations.length!==315)errors.push(`catalogue-size: expected 315, got ${destinations.length}`);
+if(destinations.length<(config.minimumDestinationCount??315))errors.push(`catalogue-size: expected at least ${config.minimumDestinationCount??315}, got ${destinations.length}`);
 if(external.entries.length!==destinations.length||externalById.size!==destinations.length)errors.push("external-audit-snapshot-does-not-cover-catalogue");
 
 const distances=coordinateRows.map((row)=>row.centroidToCellKm as number).sort((a,b)=>a-b);

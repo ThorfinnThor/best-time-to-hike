@@ -35,6 +35,10 @@ const architecture=readJson<any>("config/architecture-invariants.json");
 const releaseApprovals=readJson<any>("data-config/methodology/release-approvals.json");
 const recommendation=readJson<any>("data-config/methodology/recommendation-eligibility-v1.json");
 const validityMigration=readJson<any>("data-config/methodology/validity-migration-decision-v1.json");
+const catalogueExpansion=readJson<any>("data-config/methodology/catalogue-expansion-batch-4-review-v1.json");
+const externalClimateAudit=readJson<any>("data-snapshots/external-audit/nasa-power-1991-2020.json");
+const expansionReviewById=new Map<string,any>(catalogueExpansion.destinations.map((entry:any)=>[entry.destinationId,entry]));
+const externalClimateById=new Map<string,any>(externalClimateAudit.entries.map((entry:any)=>[entry.destinationId,entry]));
 const independentClimateHolds=readJson<{destinationIds:string[]}>("data-config/methodology/independent-climate-review-holds-v1.json");
 const precipitationReviewHolds=new Set(independentClimateHolds.destinationIds);
 const operator=readJson<any>("config/operator.json");
@@ -126,7 +130,19 @@ for (const file of detailFiles) {
   const expectedAggregationPolicy=climateSnapshot.aggregationPolicyVersion ?? "legacy-climate-aggregation-v1";
   assert(destination.aggregationPolicyVersion===expectedAggregationPolicy,`${destination.slug}: exported aggregation policy differs from its snapshot`);
   if(expectedAggregationPolicy==="observation-validity-v1") {
-    assert(validityMigration.scope.includes(destination.id),`${destination.slug}: validity migration is outside the approved scope`);
+    const expansionReview=expansionReviewById.get(destination.id);
+    assert(validityMigration.scope.includes(destination.id)||Boolean(expansionReview),`${destination.slug}: validity migration is outside the approved scope`);
+    if(expansionReview){
+      const source=climateSnapshot.sourceDownloads?.[0];
+      const independent=externalClimateById.get(destination.id);
+      assert(catalogueExpansion.decisionStatus==="approved-for-provisional-catalogue-expansion"
+        && catalogueExpansion.productionReleaseApproval===false
+        && source?.downloadSha256===expansionReview.sourceDownloadSha256
+        && source?.canonicalObservation?.sha256===expansionReview.canonicalObservationSha256
+        && climateSnapshot.samplingSnapshotHash===expansionReview.samplingSnapshotSha256
+        && independent?.sourceResponseSha256===expansionReview.externalSourceResponseSha256,
+      `${destination.slug}: catalogue expansion evidence differs from the approved review`);
+    }
     const migratedHistoricalPeriod = climateSnapshot.historicalPeriod?.startYear === 1991 && climateSnapshot.historicalPeriod?.endYear === 2025;
     const validMigrationState = migratedHistoricalPeriod
       ? climateSnapshot.schemaVersion === 2 && climateSnapshot.migrationStatus === "production-approved"

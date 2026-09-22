@@ -6,6 +6,7 @@ import { DICT } from "../lib/i18n/dict";
 import { getDestinationIndex } from "../lib/data/load";
 import { locales, monthName, themeKeys } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
+import { routeCatalog } from "../lib/seo/route-catalog";
 
 /**
  * Assertions against the built HTML.
@@ -148,7 +149,7 @@ test("the finder ships the render path for its empty state", {skip: !built}, () 
 });
 
 test("every public content page has exactly one h1 and no skipped heading level", {skip: !built}, () => {
-  assert.equal(PUBLIC_PAGES.length, 5271, "the full public export should be covered");
+  assert.equal(PUBLIC_PAGES.length, routeCatalog().length + 1, "the full public export should be covered");
   for (const path of CONTENT_PAGES) {
     const levels = [...page(path).matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
     assert.equal(levels.filter((level) => level === 1).length, 1, `${path} should have exactly one h1`);
