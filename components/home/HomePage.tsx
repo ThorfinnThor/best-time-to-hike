@@ -34,7 +34,7 @@ export function HomePage({ locale }: { locale: Locale }) {
         <div className="hero-glow" aria-hidden="true" />
         <div className="home-hero-inner">
           <span className="hero-kicker">{content.eyebrow}</span>
-          <h1>{content.heading}</h1>
+          <h1 className="home-hero-title">{content.heading}</h1>
           <p>{content.sub}</p>
         </div>
       </section>

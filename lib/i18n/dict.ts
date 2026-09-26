@@ -60,7 +60,7 @@ export const DICT = {
     },
     home: {
       eyebrow: "Based on historical climate and elevation data",
-      heading: "Find the best time and place for your next hike",
+      heading: "Find the best time\nfor your next hike",
       sub: "Choose a month and the conditions you prefer. We compare hiking destinations and explain why each season fits.",
       exploreEyebrow: "Explore destinations",
       destinations: "Top hiking destinations",
@@ -580,7 +580,7 @@ export const DICT = {
     },
     home: {
       eyebrow: "Auf Basis historischer Klima- und Höhendaten",
-      heading: "Finde die beste Zeit und den besten Ort für deine nächste Wanderung",
+      heading: "Finde die beste Zeit\nfür deine nächste Wanderung",
       sub: "Wähle Monat und Wunschbedingungen. Wir vergleichen Wanderziele und erklären, warum eine Saison passt.",
       exploreEyebrow: "Ziele entdecken",
       destinations: "Top-Wanderziele",
