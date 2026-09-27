@@ -141,6 +141,24 @@ function whatCloses(destination: PublicDestination, p: DestinationProfile, local
   return {heading, paragraphs};
 }
 
+/**
+ * A year-round page needs to answer the next useful question: if every month
+ * clears the gate, which month offers the drier conditions? This adds a real
+ * planning distinction instead of padding the article with generic prose.
+ */
+function yearRoundChoice(destination: PublicDestination, p: DestinationProfile, locale: Locale): Section | null {
+  if (p.seasonShape !== "year-round") return null;
+  const de = locale === "de";
+  const driest = monthName(p.driestMonth, locale);
+  const wettest = monthName(p.wettestMonth, locale);
+  return {
+    heading: de ? "So unterscheiden sich die Monate" : "How the months differ",
+    paragraphs: [de
+      ? `Obwohl das ganze Jahr die Empfehlungsschwelle erfüllt, sind die Monate nicht gleich. Im ${driest} fällt an rund ${wetAt(destination, p.driestMonth)} Prozent der Tage Niederschlag, im ${wettest} an ${wetAt(destination, p.wettestMonth)} Prozent. Wer trockenere Bedingungen priorisiert, beginnt deshalb beim ${driest}; für die Temperatur bleibt der Vergleich mit ${monthName(p.warmestMonth, locale)} wichtig.`
+      : `Although the whole year clears the recommendation gate, the months are not interchangeable. Rain falls on about ${wetAt(destination, p.driestMonth)} percent of days in ${driest}, compared with ${wetAt(destination, p.wettestMonth)} percent in ${wettest}. Hikers prioritising drier conditions should start with ${driest}, then compare its temperature with ${monthName(p.warmestMonth, locale)}.`],
+  };
+}
+
 function conditions(destination: PublicDestination, p: DestinationProfile, locale: Locale): Section | null {
   if (!p.peakMonth) return null;
   const de = locale === "de";
@@ -195,6 +213,6 @@ function scope(destination: PublicDestination, locale: Locale): Section {
 export function longformSections(destination: PublicDestination, locale: Locale): Section[] {
   const p = profileFor(destination);
   if (p.seasonShape === "withheld") return [...withheldArticle(destination, p, locale), scope(destination, locale)];
-  return [opening(destination, p, locale), whatCloses(destination, p, locale), conditions(destination, p, locale), scope(destination, locale)]
+  return [opening(destination, p, locale), yearRoundChoice(destination, p, locale), whatCloses(destination, p, locale), conditions(destination, p, locale), scope(destination, locale)]
     .filter((section): section is Section => section !== null);
 }

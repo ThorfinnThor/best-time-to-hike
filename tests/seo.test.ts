@@ -9,6 +9,8 @@ import { locales } from "../lib/i18n/config";
 import type { PublicDestination } from "../lib/data/types";
 import { datasetLd, destinationFaqEntries, destinationFaqLd } from "../lib/seo/jsonld";
 import { getDestination } from "../lib/data/load";
+import { imageFor } from "../lib/media/images";
+import { destinationArticleQualityPolicy, editorialDestinationSlugs } from "../lib/seo/editorial-index";
 
 const root = "public/data/hiking/destinations";
 const files: string[] = [];
@@ -77,6 +79,29 @@ test("every withheld destination is kept out of the index", () => {
     const seo = pageSeo({kind: "destination", slug: destination.slug}, "en");
     assert.equal(seo.index, false, `${destination.slug} is withheld but would be indexed`);
     assert.ok(seo.reasons.length > 0);
+  }
+});
+
+test("every editorial destination meets the documented quality floor", () => {
+  const policy = destinationArticleQualityPolicy();
+  assert.equal(editorialDestinationSlugs().length, policy.targetPerLocale);
+  assert.equal(new Set(editorialDestinationSlugs()).size, policy.targetPerLocale);
+  for (const slug of editorialDestinationSlugs()) {
+    const destination = getDestination(slug);
+    assert.ok(destination, `${slug} is not a published destination`);
+    assert.equal(destination.recommendationEligible, true, `${slug} has no eligible month`);
+    assert.equal(destination.recommendationHoldReason, undefined, `${slug} is on recommendation hold`);
+    assert.ok(Math.min(...destination.months.map((month) => month.metrics.dataCompleteness)) >= policy.minimumDataCompleteness,
+      `${slug} misses the completeness floor`);
+    assert.ok(destination.alternatives.length >= policy.minimumInternalAlternatives, `${slug} has too few internal alternatives`);
+    if (policy.requireLicensedImage) assert.ok(imageFor(slug), `${slug} has no licensed image`);
+    for (const locale of locales) {
+      const sections = longformSections(destination, locale);
+      const words = sections.flatMap((section) => section.paragraphs).join(" ").split(/\s+/).length;
+      assert.ok(sections.length >= policy.minimumArticleSections, `${slug} (${locale}) has only ${sections.length} sections`);
+      assert.ok(words >= policy.minimumArticleWords, `${slug} (${locale}) has only ${words} words`);
+      assert.equal(pageSeo({kind: "destination", slug}, locale).index, true, `${slug} (${locale}) is not indexable`);
+    }
   }
 });
 

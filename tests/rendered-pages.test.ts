@@ -144,10 +144,11 @@ test("a provisional export exposes only editorially approved pages to indexing",
   assert.match(page("robots.txt"), /User-Agent: \*\s+Allow: \/\s+Disallow: \/go\//);
   assert.match(page("robots.txt"), /Sitemap: https:\/\/besttimetohike\.com\/sitemap\.xml/);
   assert.match(page("sitemap.xml"), /<url>/);
-  for (const path of ["en/index.html", "de/index.html", "en/best-hiking-destinations/june/index.html", "en/methodology/index.html"]) {
+  assert.equal((page("sitemap.xml").match(/<url>/g) ?? []).length, 300, "sitemap should contain the approved 300 URLs");
+  for (const path of ["en/index.html", "de/index.html", "en/best-hiking-destinations/june/index.html", "en/methodology/index.html", "en/hiking-destinations/dolomites/index.html"]) {
     assert.match(page(path), /<meta name="robots" content="index, follow"\/>/, `${path} is not indexable`);
   }
-  for (const path of ["en/finder/index.html", "en/hiking-destinations/dolomites/index.html", "en/hiking-destinations/dolomites/october/index.html"]) {
+  for (const path of ["en/finder/index.html", "en/hiking-destinations/ardennes/index.html", "en/hiking-destinations/dolomites/october/index.html"]) {
     assert.match(page(path), /<meta name="robots" content="noindex, follow"\/>/, `${path} is not noindex`);
   }
 });

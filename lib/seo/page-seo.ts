@@ -8,6 +8,7 @@ import { evaluateIndexability } from "@/lib/seo/indexability";
 import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
 import { siteMayBeIndexed } from "@/lib/seo/crawl-policy";
+import { editorialDestinationApproved } from "@/lib/seo/editorial-index";
 
 /**
  * Title, description and index decision per page.
@@ -69,10 +70,16 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
     // completeness, confidence, uniqueness and safety gates below still apply.
     datasetStatus: publicDatasetStatus(),
   });
-  const reasons = [...decision.reasons];
+  const editoriallyApproved = publicIndexingEnabled() && editorialDestinationApproved(destination.slug);
+  // The scientific confidence remains low and visible in the methodology
+  // because each article represents one selected grid cell. For a small,
+  // explicitly reviewed editorial set, that provisional status is not by
+  // itself a reason to hide an otherwise complete article from search.
+  const reasons = decision.reasons.filter((reason) => !(editoriallyApproved && reason === "low-confidence"));
+  if (!editoriallyApproved) reasons.push("destination-not-in-editorial-index-set");
   if (p.seasonShape === "withheld") reasons.push("withheld-destination-makes-no-recommendation");
   if (words < 120) reasons.push("thin-article");
-  return {title, description, index: decision.indexable && reasons.length === 0, reasons};
+  return {title, description, index: reasons.length === 0, reasons};
 }
 
 function monthSeo(destination: PublicDestination, monthNumber: number, locale: Locale): PageSeo {

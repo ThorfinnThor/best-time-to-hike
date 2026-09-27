@@ -4,13 +4,14 @@
 
 The technical SEO and answer-engine layer is implemented and public indexing is explicitly enabled for pages that pass the conservative page-level quality gate. The published dataset remains `provisional`; editorial indexing approval does not represent or fabricate scientific production approval.
 
-No code change in this audit fabricates outstanding scientific, licensing, legal, accessibility/performance, or release approvals. Low-confidence destination pages, repetitive month pages, tools, legal boilerplate and unapproved comparisons remain `noindex` and are omitted from the sitemap.
+No code change in this audit fabricates outstanding scientific, licensing, legal, accessibility/performance, or release approvals. The sitemap is capped at 300 URLs: 162 established entry pages plus 69 selected destination articles in both languages. Repetitive month pages, tools, legal boilerplate, unapproved comparisons and the other destination articles remain `noindex` and are omitted from the sitemap.
 
 ## Implemented
 
 - Locale-specific canonical URLs and reciprocal English/German `hreflang`, including `x-default`.
 - Unique titles and descriptions for destinations, rankings, areas, themes and approved comparisons.
 - Explicit `noindex` for repetitive month pages, tools, legal boilerplate, withheld recommendations, low-confidence destinations and unapproved comparisons.
+- A version-controlled shortlist of 69 destination articles per language. Every selected article must have recommendable months, at least 95 percent data completeness, a licensed image, at least three substantive sections, at least 120 words and at least two internal alternatives.
 - A sitemap containing only index-approved pages, with language alternates and `x-default`.
 - Open Graph and Twitter cards with explicit large-image metadata.
 - Google preview directives allowing long snippets and large image previews on indexable pages.

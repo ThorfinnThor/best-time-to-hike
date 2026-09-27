@@ -5,6 +5,7 @@ import { routeCatalog } from "../lib/seo/route-catalog";
 import { resolvePageId } from "../lib/i18n/resolve";
 import { pageSeo } from "../lib/seo/page-seo";
 import { ANSWER_ENGINES, datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset, siteMayBeIndexed } from "../lib/seo/crawl-policy";
+import { editorialDestinationSlugs, publicIndexTargetUrlCount } from "../lib/seo/editorial-index";
 const complete={resultCount:5,dataCompleteness:.99,confidence:90,uniqueInsightCount:3,hasUniqueTitle:true,hasUniqueH1:true,hasCanonical:true,internalLinkCount:4,createsCannibalization:false,containsUnsupportedClaims:false,datasetStatus:"production" as const};
 test("production quality page can be indexable",()=>assert.deepEqual(evaluateIndexability(complete),{indexable:true,reasons:[]}));
 test("non-production content is always noindex",()=>{
@@ -61,12 +62,13 @@ test("no month page is ever an entry point", () => {
   assert.equal(byKind.info ?? 0, 4, "only methodology and about may be editorial entry points in both languages");
 });
 
-test("the approved index stays near two hundred strong pages, not thousands of templates", () => {
+test("the approved index stays at three hundred strong pages, not thousands of templates", () => {
   const byKind = currentIndex();
   const total = Object.values(byKind).reduce((sum, count) => sum + count, 0);
-  assert.ok(total >= 150 && total <= 220,
-    `${total} pages are indexable; the approved target is roughly 200. If this is deliberate, move the band and document why.`);
-  assert.equal(byKind.destination ?? 0, 0, "low-confidence destination articles must remain noindex");
-  assert.ok((byKind.ranking ?? 0) + (byKind.themeRanking ?? 0) + (byKind.areaRanking ?? 0) > total * 0.8,
-    "the current public index should be dominated by substantive ranking and area pages");
+  assert.equal(total, publicIndexTargetUrlCount(),
+    `${total} pages are indexable; the version-controlled editorial target is ${publicIndexTargetUrlCount()}.`);
+  assert.equal(byKind.destination ?? 0, editorialDestinationSlugs().length * 2,
+    "every selected destination article should be indexable in both languages");
+  assert.ok((byKind.ranking ?? 0) + (byKind.themeRanking ?? 0) + (byKind.areaRanking ?? 0) > total * 0.5,
+    "the majority of the public index should remain substantive ranking and area pages");
 });
