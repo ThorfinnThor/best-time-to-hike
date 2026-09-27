@@ -7,9 +7,6 @@ import type { Locale } from "@/lib/data/types";
 
 const COPY = {
   en: {
-    eyebrow: "Plan the trip",
-    heading: (name: string) => `Stays and guided experiences around ${name}`,
-    intro: "Compare a practical accommodation base and current activity listings after checking that the climate fits your hike. Commercial links never affect scores or ranking order.",
     disclosure: "Affiliate disclosure: if you book through a labelled link, we may earn a commission at no extra cost to you.",
     bookingTag: "Find a base",
     bookingHeading: (area: string) => `Where to stay around ${area}`,
@@ -22,9 +19,6 @@ const COPY = {
     newTab: "opens in a new tab",
   },
   de: {
-    eyebrow: "Reise planen",
-    heading: (name: string) => `Unterkünfte und geführte Erlebnisse rund um ${name}`,
-    intro: "Vergleiche nach der Klimaprüfung einen praktischen Übernachtungsort und aktuelle Aktivitäten. Kommerzielle Links beeinflussen weder Werte noch Rangfolge.",
     disclosure: "Affiliate-Hinweis: Wenn du über einen gekennzeichneten Link buchst, können wir ohne Mehrkosten für dich eine Provision erhalten.",
     bookingTag: "Unterkunft finden",
     bookingHeading: (area: string) => `Wo du rund um ${area} übernachten kannst`,
@@ -53,15 +47,8 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
   const slug = searches[0]?.destinationSlug ?? destinationId;
   const area = stay?.areaName[locale] ?? activitySearches[0]?.areaName[locale] ?? destinationName;
   const disclosureId = `affiliate-disclosure-${destinationId}${compact ? "-month" : ""}`;
-  const titleId = `affiliate-title-${destinationId}${compact ? "-month" : ""}`;
 
-  return <section className={`content-section affiliate-module${compact ? " affiliate-module-compact" : ""}`} aria-labelledby={titleId}>
-    <header>
-      <span className="eyebrow">{copy.eyebrow}</span>
-      <h2 id={titleId}>{copy.heading(destinationName)}</h2>
-      <p>{copy.intro}</p>
-    </header>
-
+  return <section className={`content-section affiliate-module${compact ? " affiliate-module-compact" : ""}`} aria-label={locale === "de" ? "Reiseangebote" : "Travel options"}>
     {activitySearches.length > 0 ? <section className="affiliate-experiences" aria-label={copy.experiencesHeading(destinationName)}>
       <header className="affiliate-experiences-header">
         <span className="eyebrow">{copy.experiencesTag}</span>
