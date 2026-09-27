@@ -60,7 +60,6 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
       <span className="eyebrow">{copy.eyebrow}</span>
       <h2 id={titleId}>{copy.heading(destinationName)}</h2>
       <p>{copy.intro}</p>
-      <p className="affiliate-disclosure" id={disclosureId}><strong>{copy.disclosure}</strong></p>
     </header>
 
     {activitySearches.length > 0 ? <section className="affiliate-experiences" aria-label={copy.experiencesHeading(destinationName)}>
@@ -85,5 +84,7 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
         <small>{copy.check}</small>
       </div>
     </article> : null}
+
+    <p className="affiliate-disclosure" id={disclosureId}>{copy.disclosure}</p>
   </section>;
 }
