@@ -14,6 +14,8 @@ test("affiliate sources are internally valid and do not affect ranking inputs", 
   assert.doesNotThrow(() => validateAffiliateSources(affiliateConfig, affiliateDestinationSearches, affiliateActivityOffers, destinations));
   assert.equal(new Set(affiliateDestinationSearches.map((item) => item.destinationId)).size, affiliateDestinationSearches.length);
   assert.ok(affiliateDestinationSearches.length >= 25, "the reviewed stay-area pilot should remain substantial");
+  assert.equal(affiliateDestinationSearches.length, destinations.length, "every published destination needs a Booking search base");
+  assert.deepEqual(new Set(affiliateDestinationSearches.map((item) => item.destinationId)), new Set(destinations.map((destination) => destination.id)));
   assert.equal(JSON.parse(readFileSync("config/architecture-invariants.json", "utf8")).affiliateInfluencesRanking, false);
   for (const path of ["scripts/score/score.ts", "scripts/export/export.ts"]) {
     assert.doesNotMatch(readFileSync(path, "utf8"), /affiliate/i, `${path} must not import commercial data`);
