@@ -39,6 +39,24 @@ test("Booking search keeps its nested destination and site-specific campaign", (
   assert.equal(nested.searchParams.get("ss"), "Funchal Madeira Portugal");
 });
 
+test("activity searches keep the confirmed partner IDs and campaign", () => {
+  const source = affiliateDestinationSearches.find((item) => item.destinationId === "madeira")!;
+  const destination = destinations.find((item) => item.id === "madeira")!;
+  const expected = {
+    "getyourguide-activities": {host: "www.getyourguide.com", idKey: "partner_id", id: "BKWM9K1"},
+    "viator-activities": {host: "www.viator.com", idKey: "pid", id: "P00314274"},
+  } as const;
+  for (const [partnerId, values] of Object.entries(expected)) {
+    const built = buildDestinationSearchUrl(affiliateConfig, {...source, partnerId}, destination);
+    assert.ok(built);
+    const url = new URL(built);
+    assert.equal(url.hostname, values.host);
+    assert.equal(url.searchParams.get(values.idKey), values.id);
+    assert.equal(url.searchParams.get("campaign") ?? url.searchParams.get("cmp"), "BestTimeToHike");
+    assert.equal(url.searchParams.get("text") ?? url.searchParams.get("q"), "Funchal Madeira Portugal");
+  }
+});
+
 test("activity offers retain the provider tracking parameters", () => {
   const config = structuredClone(affiliateConfig) as AffiliateConfig;
   for (const partner of config.partners) {

@@ -30,24 +30,28 @@ function writeRedirect(path: string, target: string): void {
   writeFileSync(file, staticAffiliateRedirectHtml(target), "utf8");
 }
 
-for (const search of affiliateDestinationSearches.filter((item) => item.enabled)) {
-  const destination = destinationById.get(search.destinationId);
+const destinationSearchPartners = affiliateConfig.partners.filter((partner) => partner.enabled && partner.destinationSearchEnabled);
+
+for (const sourceSearch of affiliateDestinationSearches.filter((item) => item.enabled)) {
+  const destination = destinationById.get(sourceSearch.destinationId);
   if (!destination || !destination.active) continue;
-  const target = buildDestinationSearchUrl(affiliateConfig, search, destination);
-  if (!target) continue;
-  const partner = partnerById(affiliateConfig, search.partnerId)!;
-  const redirectPath = `/go/${partner.id}/${destination.slug}/`;
-  writeRedirect(redirectPath, target);
-  searches.push({
-    partnerId: partner.id,
-    partnerName: partner.name,
-    destinationId: destination.id,
-    destinationSlug: destination.slug,
-    areaName: search.areaName,
-    redirectPath,
-    lastReviewedAt: search.lastReviewedAt,
-  });
-  manifest.entries.push({kind: "destination-search", partnerId: partner.id, destinationId: destination.id, path: redirectPath, targetHost: new URL(target).hostname});
+  for (const partner of destinationSearchPartners) {
+    const search = {...sourceSearch, partnerId: partner.id};
+    const target = buildDestinationSearchUrl(affiliateConfig, search, destination);
+    if (!target) continue;
+    const redirectPath = `/go/${partner.id}/${destination.slug}/`;
+    writeRedirect(redirectPath, target);
+    searches.push({
+      partnerId: partner.id,
+      partnerName: partner.name,
+      destinationId: destination.id,
+      destinationSlug: destination.slug,
+      areaName: search.areaName,
+      redirectPath,
+      lastReviewedAt: search.lastReviewedAt,
+    });
+    manifest.entries.push({kind: "destination-search", partnerId: partner.id, destinationId: destination.id, path: redirectPath, targetHost: new URL(target).hostname});
+  }
 }
 
 for (const offer of affiliateActivityOffers.filter((item) => item.enabled)) {

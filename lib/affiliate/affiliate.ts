@@ -31,8 +31,18 @@ export function buildDestinationSearchUrl(
   if (!partner || !partner.enabled || !partner.destinationSearchEnabled || !search.enabled) return null;
   const affiliateId = affiliatePartnerId(partner);
   if (!affiliateId) throw new Error(`${partner.id} is enabled without a public affiliate ID`);
-  if (!partner.destinationUrlTemplate || !partner.urlTemplate) throw new Error(`${partner.id} is missing its destination URL templates`);
-  const destinationUrl = replace(partner.destinationUrlTemplate, {query: encodeURIComponent(search.query)});
+  if (!partner.destinationUrlTemplate) throw new Error(`${partner.id} is missing its destination URL template`);
+  const destinationUrl = replace(partner.destinationUrlTemplate, {
+    affiliateId: encodeURIComponent(affiliateId),
+    destinationSlug: encodeURIComponent(destination.slug),
+    query: encodeURIComponent(search.query),
+  });
+  if (partner.type === "activity") {
+    const url = new URL(destinationUrl);
+    assertHttpsHost(url, partner);
+    return url.toString();
+  }
+  if (!partner.urlTemplate) throw new Error(`${partner.id} is missing its tracked wrapper URL template`);
   const nested = new URL(destinationUrl);
   if (nested.protocol !== "https:" || nested.hostname !== "www.booking.com") {
     throw new Error(`${partner.id} has an invalid nested accommodation search`);

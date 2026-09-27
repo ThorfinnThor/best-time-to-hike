@@ -1,36 +1,43 @@
-import type { Locale } from "@/lib/data/types";
+import { DestinationImage } from "@/components/media/DestinationImage";
 import { affiliateRel } from "@/lib/affiliate/affiliate";
 import { publishedAffiliateActivityOffers, publishedAffiliateDestinationSearches } from "@/lib/affiliate/load-published";
+import type { Locale } from "@/lib/data/types";
 
 const COPY = {
   en: {
     eyebrow: "Plan the trip",
-    heading: (name: string) => `Stays and guided options around ${name}`,
-    intro: "These links open current partner listings. They are separate from the climate assessment and never affect scores or ranking order.",
+    heading: (name: string) => `Stays and guided experiences around ${name}`,
+    intro: "Compare a practical accommodation base and current activity listings after checking that the climate fits your hike. Commercial links never affect scores or ranking order.",
     disclosure: "Affiliate disclosure: if you book through a labelled link, we may earn a commission at no extra cost to you.",
-    stays: "Accommodation base",
-    stayHeading: (area: string) => `Search stays around ${area}`,
-    stayBody: "The search starts with an accommodation base in the destination area, not the representative climate cell. Confirm the exact trailhead and travel time before booking.",
-    stayLink: "Search stays on Booking.com",
+    featured: "Reviewed activity",
     hiking: "Guided hiking",
     regional: "Regional activity",
-    check: "Check the date, meeting point, difficulty, inclusions and cancellation terms on the provider page before booking.",
     view: (partner: string) => `View on ${partner}`,
+    planTag: "Stay and explore",
+    planHeading: (area: string) => `Turn the climate choice into a trip around ${area}`,
+    planBody: "Open live partner results for places to stay, guided walks and other local experiences. Availability, prices and exact locations are confirmed on the provider page.",
+    stayLink: "Find places to stay",
+    getYourGuideLink: "Tours and activities",
+    viatorLink: "Tours and tickets",
+    check: "Check the date, meeting point, difficulty, inclusions, trail access and cancellation terms before booking.",
     newTab: "opens in a new tab",
   },
   de: {
     eyebrow: "Reise planen",
-    heading: (name: string) => `Unterkünfte und geführte Angebote rund um ${name}`,
-    intro: "Diese Links öffnen aktuelle Angebote der Partner. Sie sind von der Klimabewertung getrennt und beeinflussen weder Werte noch Rangfolge.",
+    heading: (name: string) => `Unterkünfte und geführte Erlebnisse rund um ${name}`,
+    intro: "Vergleiche nach der Klimaprüfung einen praktischen Übernachtungsort und aktuelle Aktivitäten. Kommerzielle Links beeinflussen weder Werte noch Rangfolge.",
     disclosure: "Affiliate-Hinweis: Wenn du über einen gekennzeichneten Link buchst, können wir ohne Mehrkosten für dich eine Provision erhalten.",
-    stays: "Übernachtungsort",
-    stayHeading: (area: string) => `Unterkünfte rund um ${area} suchen`,
-    stayBody: "Die Suche startet mit einer Unterkunftsbasis im Zielgebiet, nicht mit der repräsentativen Klimazelle. Prüfe vor der Buchung den genauen Wanderstart und die Anfahrtszeit.",
-    stayLink: "Unterkünfte bei Booking.com suchen",
+    featured: "Geprüfte Aktivität",
     hiking: "Geführte Wanderung",
     regional: "Aktivität in der Region",
-    check: "Prüfe vor der Buchung Datum, Treffpunkt, Schwierigkeit, Leistungen und Stornierungsbedingungen auf der Anbieterseite.",
     view: (partner: string) => `Bei ${partner} ansehen`,
+    planTag: "Übernachten und erleben",
+    planHeading: (area: string) => `Aus der Klimawahl wird eine Reise rund um ${area}`,
+    planBody: "Öffne aktuelle Partnerergebnisse für Unterkünfte, geführte Wanderungen und weitere Erlebnisse vor Ort. Verfügbarkeit, Preise und den genauen Standort bestätigst du auf der Anbieterseite.",
+    stayLink: "Unterkünfte finden",
+    getYourGuideLink: "Touren und Aktivitäten",
+    viatorLink: "Touren und Tickets",
+    check: "Prüfe vor der Buchung Datum, Treffpunkt, Schwierigkeit, Leistungen, Wegzugang und Stornierungsbedingungen.",
     newTab: "öffnet einen neuen Tab",
   },
 } as const;
@@ -41,32 +48,58 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
   locale: Locale;
   compact?: boolean;
 }) {
-  const stay = publishedAffiliateDestinationSearches().find((item) => item.destinationId === destinationId) ?? null;
+  const searches = publishedAffiliateDestinationSearches().filter((item) => item.destinationId === destinationId);
+  const stay = searches.find((item) => item.partnerId === "booking-stay-search") ?? null;
+  const activitySearches = searches.filter((item) => item.partnerId === "getyourguide-activities" || item.partnerId === "viator-activities");
   const offers = publishedAffiliateActivityOffers().filter((item) => item.destinationId === destinationId);
-  if (!stay && offers.length === 0) return null;
+  if (!stay && activitySearches.length === 0 && offers.length === 0) return null;
+
   const copy = COPY[locale];
+  const slug = searches[0]?.destinationSlug ?? destinationId;
+  const area = stay?.areaName[locale] ?? activitySearches[0]?.areaName[locale] ?? destinationName;
   const disclosureId = `affiliate-disclosure-${destinationId}${compact ? "-month" : ""}`;
-  return <section className={`content-section affiliate-module${compact ? " affiliate-module-compact" : ""}`} aria-labelledby={`affiliate-title-${destinationId}${compact ? "-month" : ""}`}>
+  const titleId = `affiliate-title-${destinationId}${compact ? "-month" : ""}`;
+  const linkLabel = (partnerId: string) => partnerId === "getyourguide-activities" ? copy.getYourGuideLink : copy.viatorLink;
+
+  return <section className={`content-section affiliate-module${compact ? " affiliate-module-compact" : ""}`} aria-labelledby={titleId}>
     <header>
       <span className="eyebrow">{copy.eyebrow}</span>
-      <h2 id={`affiliate-title-${destinationId}${compact ? "-month" : ""}`}>{copy.heading(destinationName)}</h2>
+      <h2 id={titleId}>{copy.heading(destinationName)}</h2>
       <p>{copy.intro}</p>
       <p className="affiliate-disclosure" id={disclosureId}><strong>{copy.disclosure}</strong></p>
     </header>
-    <div className="affiliate-grid">
-      {stay ? <article className="affiliate-card affiliate-card-stay" aria-describedby={disclosureId}>
-        <span>{copy.stays} · {stay.partnerName}</span>
-        <h3>{copy.stayHeading(stay.areaName[locale])}</h3>
-        <p>{copy.stayBody}</p>
-        <a href={stay.redirectPath} target="_blank" rel={`${affiliateRel()} noopener noreferrer`} aria-label={`${copy.stayLink} (${copy.newTab})`}>{copy.stayLink} <span aria-hidden="true">↗</span></a>
-      </article> : null}
-      {offers.map((offer) => <article className="affiliate-card" aria-describedby={disclosureId} key={offer.id}>
-        <span>{offer.kind === "hiking" ? copy.hiking : copy.regional} · {offer.partnerName}</span>
-        <h3>{offer.title[locale]}</h3>
-        <p>{offer.description[locale]}</p>
-        <small>{copy.check}</small>
-        <a href={offer.redirectPath} target="_blank" rel={`${affiliateRel()} noopener noreferrer`} aria-label={`${copy.view(offer.partnerName)}: ${offer.title[locale]} (${copy.newTab})`}>{copy.view(offer.partnerName)} <span aria-hidden="true">↗</span></a>
+
+    {offers.length > 0 ? <div className="affiliate-offer-grid">
+      {offers.map((offer) => <article className="affiliate-offer-card" aria-describedby={disclosureId} key={offer.id}>
+        <DestinationImage slug={slug} name={destinationName} region={offer.partnerName} className="affiliate-offer-image" />
+        <div className="affiliate-offer-body">
+          <span>{copy.featured} · {offer.kind === "hiking" ? copy.hiking : copy.regional}</span>
+          <h3>{offer.title[locale]}</h3>
+          <p>{offer.description[locale]}</p>
+          <small>{copy.check}</small>
+          <a href={offer.redirectPath} target="_blank" rel={`${affiliateRel()} noopener noreferrer`} aria-label={`${copy.view(offer.partnerName)}: ${offer.title[locale]} (${copy.newTab})`}>
+            {copy.view(offer.partnerName)} <span aria-hidden="true">↗</span>
+          </a>
+        </div>
       </article>)}
-    </div>
+    </div> : null}
+
+    <article className="affiliate-plan-card" aria-describedby={disclosureId}>
+      <DestinationImage slug={slug} name={destinationName} region={copy.planTag} className="affiliate-plan-image" />
+      <div className="affiliate-plan-body">
+        <span>{copy.planTag}</span>
+        <h3>{copy.planHeading(area)}</h3>
+        <p>{copy.planBody}</p>
+        <div className="affiliate-actions">
+          {stay ? <a href={stay.redirectPath} target="_blank" rel={`${affiliateRel()} noopener noreferrer`} aria-label={`${copy.stayLink} · Booking.com (${copy.newTab})`}>
+            <span>Booking.com</span><strong>{copy.stayLink}</strong><i aria-hidden="true">↗</i>
+          </a> : null}
+          {activitySearches.map((search) => <a href={search.redirectPath} target="_blank" rel={`${affiliateRel()} noopener noreferrer`} aria-label={`${linkLabel(search.partnerId)} · ${search.partnerName} (${copy.newTab})`} key={search.partnerId}>
+            <span>{search.partnerName}</span><strong>{linkLabel(search.partnerId)}</strong><i aria-hidden="true">↗</i>
+          </a>)}
+        </div>
+        <small>{copy.check}</small>
+      </div>
+    </article>
   </section>;
 }
