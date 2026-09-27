@@ -459,7 +459,7 @@ export const DICT = {
           ]},
           {heading: "No analytics and limited external content", paragraphs: [
             "BestTimeToHike itself sets no analytics or advertising cookies. We perform no audience measurement and create no user profiles.",
-            "Fonts and destination photographs are served from our own domain. The GetYourGuide integration analyzer loads on every page; on destination pages it also supplies the embedded activity cards. Your browser therefore connects to widget.getyourguide.com and transmits technically necessary connection data such as your IP address, the requested page, browser information and the time of access. GetYourGuide may process this data and use browser storage under its own privacy notice.",
+            "Fonts and destination photographs are served from our own domain. The GetYourGuide integration analyzer loads on every page; on eligible destination and month pages, embedded activity cards are supplied by GetYourGuide and Viator. Your browser therefore connects to widget.getyourguide.com and www.viator.com and transmits technically necessary connection data such as your IP address, the requested page, browser information and the time of access. These providers may process this data and use browser storage under their own privacy notices.",
           ]},
           {heading: "Your shortlist, stored on your device", paragraphs: [
             "When you star a destination, that list is stored in your browser's local storage under the key 'bth.saved.v1'. This is not cookie technology, but it falls under § 25 TDDDG all the same.",
@@ -472,7 +472,7 @@ export const DICT = {
           ]},
           {heading: "Advertising and affiliate links", paragraphs: [
             "This site may contain clearly labelled affiliate links to Booking.com, GetYourGuide and Viator. If you follow one of these links and make a booking, we may receive a commission at no extra cost to you.",
-            "GetYourGuide activity cards are loaded on destination pages through the embedded widget described above. Booking.com and Viator are contacted only after you actively click a labelled link; a static internal forwarding page then sends you to the partner. Each partner may use cookies, browser storage or click identifiers under its own privacy notice.",
+            "GetYourGuide and Viator activity cards are loaded on eligible destination and month pages through the embedded widgets described above. Booking.com is contacted only after you actively click a labelled link; static internal forwarding pages are also used for the separate partner buttons. Each partner may use cookies, browser storage or click identifiers under its own privacy notice.",
             "The order of destinations and rankings is calculated solely from the published climate data and scoring rules. Commercial interests do not influence it, and that commitment is recorded as an invariant checked by the project's architecture guard.",
             "We do not create personal profiles from affiliate clicks and receive only partner reports or settlement information made available through the respective programme. The internal forwarding pages are not indexed by search engines.",
           ]},
@@ -980,7 +980,7 @@ export const DICT = {
           ]},
           {heading: "Keine Analyse und begrenzte externe Inhalte", paragraphs: [
             "BestTimeToHike selbst setzt keine Analyse- oder Werbe-Cookies. Wir führen keine Reichweitenmessung durch und erstellen keine Nutzerprofile.",
-            "Schriftarten und Zielfotografien werden von unserer eigenen Domain ausgeliefert. Der GetYourGuide-Integrations-Analyzer wird auf jeder Seite geladen; auf Zielseiten liefert er zusätzlich die eingebetteten Aktivitätskarten aus. Ihr Browser verbindet sich deshalb mit widget.getyourguide.com und übermittelt technisch notwendige Verbindungsdaten wie IP-Adresse, aufgerufene Seite, Browserinformationen und Zugriffszeit. GetYourGuide kann diese Daten und Browserspeicher nach Maßgabe der eigenen Datenschutzerklärung verarbeiten.",
+            "Schriftarten und Zielfotografien werden von unserer eigenen Domain ausgeliefert. Der GetYourGuide-Integrations-Analyzer wird auf jeder Seite geladen; auf freigegebenen Ziel- und Monatsseiten liefern GetYourGuide und Viator eingebettete Aktivitätskarten aus. Ihr Browser verbindet sich deshalb mit widget.getyourguide.com und www.viator.com und übermittelt technisch notwendige Verbindungsdaten wie IP-Adresse, aufgerufene Seite, Browserinformationen und Zugriffszeit. Diese Anbieter können die Daten und Browserspeicher nach Maßgabe ihrer eigenen Datenschutzerklärungen verarbeiten.",
           ]},
           {heading: "Lokale Speicherung Ihrer Merkliste", paragraphs: [
             "Wenn Sie ein Ziel mit dem Stern merken, wird diese Liste unter dem Schlüssel „bth.saved.v1“ im lokalen Speicher (localStorage) Ihres Browsers abgelegt. Das ist keine Cookie-Technologie, fällt aber ebenfalls unter § 25 TDDDG.",
@@ -993,7 +993,7 @@ export const DICT = {
           ]},
           {heading: "Werbung und Affiliate-Links", paragraphs: [
             "Diese Website kann klar gekennzeichnete Affiliate-Links zu Booking.com, GetYourGuide und Viator enthalten. Wenn Sie einem solchen Link folgen und anschließend buchen, können wir ohne Mehrkosten für Sie eine Provision erhalten.",
-            "GetYourGuide-Aktivitätskarten werden auf Zielseiten über das oben beschriebene eingebettete Widget geladen. Booking.com und Viator werden erst kontaktiert, wenn Sie aktiv auf einen gekennzeichneten Link klicken; anschließend leitet eine statische interne Zwischenseite zum Partner weiter. Die Partner können nach Maßgabe ihrer eigenen Datenschutzerklärungen Cookies, Browserspeicher oder Klickkennungen verwenden.",
+            "GetYourGuide- und Viator-Aktivitätskarten werden auf freigegebenen Ziel- und Monatsseiten über die oben beschriebenen eingebetteten Widgets geladen. Booking.com wird erst kontaktiert, wenn Sie aktiv auf einen gekennzeichneten Link klicken; für die separaten Partner-Schaltflächen werden ebenfalls statische interne Zwischenseiten verwendet. Die Partner können nach Maßgabe ihrer eigenen Datenschutzerklärungen Cookies, Browserspeicher oder Klickkennungen verwenden.",
             "Die Reihenfolge der Ziele und Ranglisten wird ausschließlich aus den veröffentlichten Klimadaten und Bewertungsregeln berechnet. Wirtschaftliche Interessen beeinflussen sie nicht; diese Zusage ist in der Architekturprüfung des Projekts als Invariante hinterlegt.",
             "Wir erstellen aus Affiliate-Klicks keine personenbezogenen Profile und erhalten lediglich die vom jeweiligen Partnerprogramm bereitgestellten Berichte oder Abrechnungsinformationen. Die internen Weiterleitungsseiten werden nicht von Suchmaschinen indexiert.",
           ]},

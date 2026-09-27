@@ -1,5 +1,6 @@
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { GetYourGuideAutoWidget } from "@/components/affiliate/GetYourGuideAutoWidget";
+import { ViatorDynamicWidget } from "@/components/affiliate/ViatorDynamicWidget";
 import { affiliateRel } from "@/lib/affiliate/affiliate";
 import { publishedAffiliateDestinationSearches } from "@/lib/affiliate/load-published";
 import type { Locale } from "@/lib/data/types";
@@ -62,6 +63,7 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
     </header>
 
     <GetYourGuideAutoWidget locale={locale} destinationName={destinationName} />
+    <ViatorDynamicWidget locale={locale} destinationName={destinationName} />
 
     <article className="affiliate-plan-card" aria-describedby={disclosureId}>
       <DestinationImage slug={slug} name={destinationName} region={copy.planTag} className="affiliate-plan-image" />

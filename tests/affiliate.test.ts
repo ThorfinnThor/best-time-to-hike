@@ -89,20 +89,30 @@ test("static forwarding pages cannot be indexed and visibly fall back", () => {
 
 test("affiliate UI is labelled and legal copy no longer denies its existence", () => {
   const component = readFileSync("components/affiliate/AffiliateDestinationModules.tsx", "utf8");
-  const widget = readFileSync("components/affiliate/GetYourGuideAutoWidget.tsx", "utf8");
+  const getYourGuideWidget = readFileSync("components/affiliate/GetYourGuideAutoWidget.tsx", "utf8");
+  const viatorWidget = readFileSync("components/affiliate/ViatorDynamicWidget.tsx", "utf8");
   const layout = readFileSync("app/layout.tsx", "utf8");
   const headers = readFileSync("public/_headers", "utf8");
   const privacy = readFileSync("lib/i18n/dict.ts", "utf8");
   assert.match(component, /Affiliate disclosure/);
   assert.match(component, /Affiliate-Hinweis/);
   assert.match(component, /affiliateRel\(\)/);
-  assert.match(widget, /data-gyg-widget="auto"/);
-  assert.match(widget, /data-gyg-cmp="Besttimetohike"/);
+  assert.match(getYourGuideWidget, /data-gyg-widget="auto"/);
+  assert.match(getYourGuideWidget, /data-gyg-cmp="Besttimetohike"/);
+  assert.match(viatorWidget, /data-vi-partner-id=\{PARTNER_ID\}/);
+  assert.match(viatorWidget, /P00314274/);
+  assert.match(viatorWidget, /W-ff238d78-a000-4397-b348-01c27d795c82/);
+  assert.match(viatorWidget, /data-vi-search-term=\{destinationName\}/);
+  assert.match(viatorWidget, /www\.viator\.com\/orion\/partner\/widget\.js/);
   assert.match(layout, /widget\.getyourguide\.com\/dist\/pa\.umd\.production\.min\.js/);
   assert.match(layout, /async defer/);
   assert.match(headers, /frame-src https:\/\/widget\.getyourguide\.com/);
+  assert.match(headers, /script-src[^\n]+https:\/\/www\.viator\.com/);
+  assert.match(headers, /frame-src[^\n]+https:\/\/www\.viator\.com/);
   assert.match(privacy, /GetYourGuide integration analyzer loads on every page/);
   assert.match(privacy, /GetYourGuide-Integrations-Analyzer wird auf jeder Seite geladen/);
+  assert.match(privacy, /embedded activity cards are supplied by GetYourGuide and Viator/);
+  assert.match(privacy, /GetYourGuide und Viator eingebettete Aktivitätskarten/);
   assert.doesNotMatch(privacy, /currently carries no advertising, no affiliate links/);
   assert.doesNotMatch(privacy, /enthält derzeit keine Werbung, keine Affiliate-Links/);
 });
