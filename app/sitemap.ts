@@ -5,7 +5,7 @@ import { resolvePageId, pathFor } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
 import { absoluteUrl } from "@/lib/site";
 import { getManifest } from "@/lib/data/load";
-import { datasetMayBeIndexed } from "@/lib/seo/crawl-policy";
+import { siteMayBeIndexed } from "@/lib/seo/crawl-policy";
 export const dynamic = "force-static";
 
 /**
@@ -15,10 +15,9 @@ export const dynamic = "force-static";
  * exists to avoid.
  */
 export default function sitemap():MetadataRoute.Sitemap {
-  // Nothing is offered for indexing until the dataset is production. Stated
-  // here rather than left to fall out of the per-page decision, so the policy
-  // is visible to a reader and to the architecture guard.
-  if (!datasetMayBeIndexed(getManifest().datasetStatus)) return [];
+  // Fixture builds never publish URLs. A provisional build needs an explicit
+  // editorial approval and every URL must still pass pageSeo's quality gate.
+  if (!siteMayBeIndexed(getManifest().datasetStatus)) return [];
   const entries: MetadataRoute.Sitemap = [];
   for (const route of routeCatalog()) {
     const page = resolvePageId(route.locale, route.segments);

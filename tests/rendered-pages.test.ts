@@ -138,12 +138,16 @@ test("the data notice says nothing about a beta", {skip: !built}, () => {
   }
 });
 
-test("a provisional export is blocked from indexing at every rendered layer", {skip: !built}, () => {
+test("a provisional export exposes only editorially approved pages to indexing", {skip: !built}, () => {
   const manifest = JSON.parse(readFileSync("public/data/hiking/manifest.json", "utf8"));
   if (manifest.datasetStatus === "production") return;
-  assert.match(page("robots.txt"), /User-Agent: \*\s+Disallow: \//);
-  assert.doesNotMatch(page("sitemap.xml"), /<url>/);
-  for (const path of PAGES) {
+  assert.match(page("robots.txt"), /User-Agent: \*\s+Allow: \/\s+Disallow: \/go\//);
+  assert.match(page("robots.txt"), /Sitemap: https:\/\/besttimetohike\.com\/sitemap\.xml/);
+  assert.match(page("sitemap.xml"), /<url>/);
+  for (const path of ["en/index.html", "de/index.html", "en/best-hiking-destinations/june/index.html", "en/methodology/index.html"]) {
+    assert.match(page(path), /<meta name="robots" content="index, follow"\/>/, `${path} is not indexable`);
+  }
+  for (const path of ["en/finder/index.html", "en/hiking-destinations/dolomites/index.html", "en/hiking-destinations/dolomites/october/index.html"]) {
     assert.match(page(path), /<meta name="robots" content="noindex, follow"\/>/, `${path} is not noindex`);
   }
 });

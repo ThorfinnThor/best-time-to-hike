@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { extname, join, relative } from "node:path";
 import { readJson, ROOT } from "../lib/io";
-import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../../lib/seo/crawl-policy";
+import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset, siteMayBeIndexed } from "../../lib/seo/crawl-policy";
 
 const errors: string[] = [];
 const assert = (condition: unknown, message: string) => { if (!condition) errors.push(message); };
@@ -40,10 +40,12 @@ assert(packageJson.devDependencies.tsx!==undefined&&readFileSync(join(ROOT,"pack
 assert(/pages_build_output_dir\s*["']?\s*:\s*["']\.\/out["']/.test(wranglerConfig), "Cloudflare Pages output must be ./out");
 // Execute the shared policy rather than recognizing one spelling of its source.
 assert(!datasetMayBeIndexed("fixture") && !datasetMayBeIndexed("provisional")
+  && !siteMayBeIndexed("fixture") && siteMayBeIndexed("provisional")
   && robotsDisallowEverything(robotsForDataset("fixture", "https://example.invalid/sitemap.xml"))
-  && robotsDisallowEverything(robotsForDataset("provisional", "https://example.invalid/sitemap.xml")),
-"Non-production robots policy must disallow crawling");
-assert(sitemapSource.includes("return []"), "Fixture sitemap policy must emit no URLs");
+  && !robotsDisallowEverything(robotsForDataset("provisional", "https://example.invalid/sitemap.xml")),
+"Editorial indexing must keep fixture data locked while allowing the approved provisional quality gate");
+assert(sitemapSource.includes("siteMayBeIndexed") && sitemapSource.includes("pageSeo(page, route.locale).index"),
+  "Sitemap must require both public indexing approval and page-level qualification");
 assert(invariants.runtimeDatabase === false && invariants.runtimeClimateApi === false && invariants.runtimeDemApi === false, "Runtime data-source invariants must remain disabled");
 assert(invariants.affiliateInfluencesRanking === false, "Affiliate data must never influence scores or rankings");
 

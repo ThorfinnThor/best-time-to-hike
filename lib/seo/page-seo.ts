@@ -7,6 +7,7 @@ import { t, taxonomyLabel, withArticle } from "@/lib/i18n/dict";
 import { evaluateIndexability } from "@/lib/seo/indexability";
 import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
+import { siteMayBeIndexed } from "@/lib/seo/crawl-policy";
 
 /**
  * Title, description and index decision per page.
@@ -32,6 +33,8 @@ export interface PageSeo { title: string; description: string; index: boolean; r
 export interface PageSocial { title: string; description: string; url: string; image: string }
 
 const clamp = (text: string, max = 155) => text.length <= max ? text : `${text.slice(0, max - 1).replace(/[\s,;.]+\S*$/, "")}…`;
+const publicDatasetStatus = () => siteMayBeIndexed(getManifest().datasetStatus) ? "production" as const : getManifest().datasetStatus;
+const publicIndexingEnabled = () => siteMayBeIndexed(getManifest().datasetStatus);
 
 function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo {
   const de = locale === "de";
@@ -62,7 +65,9 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
     internalLinkCount: destination.alternatives.length + 2,
     createsCannibalization: false,
     containsUnsupportedClaims: false,
-    datasetStatus: getManifest().datasetStatus,
+    // Editorial indexing approval removes only the release-status reason. The
+    // completeness, confidence, uniqueness and safety gates below still apply.
+    datasetStatus: publicDatasetStatus(),
   });
   const reasons = [...decision.reasons];
   if (p.seasonShape === "withheld") reasons.push("withheld-destination-makes-no-recommendation");
@@ -101,7 +106,7 @@ function monthSeo(destination: PublicDestination, monthNumber: number, locale: L
   if (!eligible) reasons.push("month-withheld-by-recommendation-gate");
   else if (!isBest) reasons.push("not-a-best-month-structurally-repetitive");
   if ((data?.confidenceScore ?? 0) < 65) reasons.push("low-confidence");
-  if (getManifest().datasetStatus !== "production") reasons.push("non-production-dataset");
+  if (!publicIndexingEnabled()) reasons.push("public-indexing-not-approved");
   return {title, description, index: false, reasons};
 }
 
@@ -128,8 +133,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       description: clamp(de
         ? `Ziele, die im ${monthName(page.month, locale)} unsere Klimakriterien erfüllen, sortiert nach Wanderwert.`
         : `Destinations that clear our climate criteria in ${monthName(page.month, locale)}, ordered by hiking suitability.`),
-      index: getManifest().datasetStatus === "production",
-      reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+      index: publicIndexingEnabled(),
+      reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
     case "areaRanking": {
       const area = areaById(page.area);
       if (!area) return {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-area"]};
@@ -144,24 +149,24 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         // An area page ranks a real set and says something specific about its
         // season, so it earns an index slot where a month slice of the same
         // set would not.
-        index: getManifest().datasetStatus === "production",
-        reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+        index: publicIndexingEnabled(),
+        reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
     }
     case "themeRanking": return {
       title: t(locale).ranking.themeTitle(t(locale).ranking.themes[page.theme], monthName(page.month, locale)),
       description: clamp(de
         ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus dem Klimanormal 1991 bis 2020.`
         : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2020 climate normal.`),
-      index: getManifest().datasetStatus === "production",
-      reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+      index: publicIndexingEnabled(),
+      reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
     case "compare": {
       const comparison = getComparison(page.slug);
       const first = getDestination(comparison.destinations[0]);
       const second = getDestination(comparison.destinations[1]);
       if (!first || !second) return {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-comparison-destination"]};
-      const production = getManifest().datasetStatus === "production";
+      const indexingApproved = publicIndexingEnabled();
       const reasons = [
-        ...(!production ? ["non-production-dataset"] : []),
+        ...(!indexingApproved ? ["public-indexing-not-approved"] : []),
         ...(!comparison.indexable ? ["comparison-not-approved-for-indexing"] : []),
       ];
       return {
@@ -178,8 +183,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       description: clamp(de
         ? "Wanderziele nach Monat, Temperatur, Regen und Schnee vergleichen, auf Basis des ERA5-Land-Klimanormals 1991 bis 2020."
         : "Compare hiking destinations by month, temperature, rain and snow, using the ERA5-Land 1991-2020 climate normal."),
-      index: getManifest().datasetStatus === "production",
-      reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+      index: publicIndexingEnabled(),
+      reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
     case "compareTool": return {
       title: de ? "Wanderziele vergleichen" : "Compare hiking destinations",
       description: clamp(de
@@ -192,12 +197,14 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       description: clamp(de ? "Filtere Wanderziele nach Monat, Region, Temperatur und Gelände." : "Filter hiking destinations by month, region, temperature and terrain."),
       index: false, reasons: ["interactive-tool-not-a-document"]};
     case "info": {
-      const indexable = (page.key === "methodology" || page.key === "about") && getManifest().datasetStatus === "production";
+      const isEditorialPage = page.key === "methodology" || page.key === "about";
+      const indexable = isEditorialPage && publicIndexingEnabled();
       return {
         title: de ? (page.key === "methodology" ? "So funktioniert der Wanderwert" : "Über BestTimeToHike")
                   : (page.key === "methodology" ? "How the hiking score works" : "About BestTimeToHike"),
         description: clamp(de ? "Methodik, Datenquellen und die Grenzen dieser Auswertung." : "Methodology, data sources and the limits of this analysis."),
-        index: indexable, reasons: indexable ? [] : ["boilerplate-or-non-production"]};
+        index: indexable,
+        reasons: indexable ? [] : [isEditorialPage ? "public-indexing-not-approved" : "boilerplate-page"]};
     }
   }
 }

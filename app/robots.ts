@@ -17,7 +17,7 @@ export const dynamic = "force-static";
  * depends on query parameters, not a document.
  */
 export default function robots(): MetadataRoute.Robots {
-  // The manifest is the source of truth for whether this build may be crawled,
-  // not an environment variable that can disagree with the published data.
+  // The manifest prevents fixture publication; the version-controlled SEO
+  // policy can separately approve quality-gated provisional pages.
   return robotsForDataset(getManifest().datasetStatus, absoluteUrl("/sitemap.xml"));
 }

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import type { DatasetStatus } from "@/lib/data/types";
+import seoConfig from "../../data-config/seo/project-seo-config.json";
 
 export const ANSWER_ENGINES = [
   "GPTBot", "OAI-SearchBot", "ChatGPT-User",
@@ -8,13 +9,23 @@ export const ANSWER_ENGINES = [
   "Google-Extended", "Applebot-Extended", "CCBot",
 ] as const;
 
-/** One decision shared by metadata, sitemap and the release gate. */
+/** Scientific production status. This remains separate from editorial indexing approval. */
 export function datasetMayBeIndexed(status: DatasetStatus): boolean {
   return status === "production";
 }
 
+/**
+ * Public search release. Fixture data is never publishable. A provisional
+ * dataset may expose only pages that independently pass the page-level quality
+ * gate when an explicit, version-controlled editorial approval exists.
+ */
+export function siteMayBeIndexed(status: DatasetStatus): boolean {
+  if (status === "fixture") return false;
+  return datasetMayBeIndexed(status) || seoConfig.publicIndexing.enabled === true;
+}
+
 export function robotsForDataset(status: DatasetStatus, sitemapUrl: string): MetadataRoute.Robots {
-  if (!datasetMayBeIndexed(status)) return {rules: {userAgent: "*", disallow: "/"}};
+  if (!siteMayBeIndexed(status)) return {rules: {userAgent: "*", disallow: "/"}};
   const disallow = ["/go/", "/en/finder", "/de/finder"];
   return {
     rules: [

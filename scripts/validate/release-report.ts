@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import type { PublicDestination } from "../../lib/data/types";
-import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../../lib/seo/crawl-policy";
+import { robotsDisallowEverything, robotsForDataset, siteMayBeIndexed } from "../../lib/seo/crawl-policy";
 import { routeCatalog } from "../../lib/seo/route-catalog";
 import { pageSeo } from "../../lib/seo/page-seo";
 import { resolvePageId } from "../../lib/i18n/resolve";
@@ -23,6 +23,7 @@ const configFiles = [
   "data-config/methodology/source-semantics.json",
   "data-config/scoring/curves.json",
   "data-config/scoring/weights.json",
+  "data-config/seo/project-seo-config.json",
   "tests/fixtures/known-hiking-seasons.json"
 ];
 const destinationRoot = join(ROOT, "public/data/hiking/destinations");
@@ -45,22 +46,24 @@ const samplingPoints = samplingFiles.flatMap((file) => {
   return Object.values(snapshot.bands as Record<string, any>).flatMap((band) => band.points);
 });
 const crawlerPolicy = robotsForDataset(manifest.datasetStatus, "https://example.invalid/sitemap.xml");
+const indexedRoutes = routeCatalog().filter((route) => {
+  const page = resolvePageId(route.locale, route.segments);
+  return page !== null && pageSeo(page, route.locale).index;
+});
 const crawlLockLayers = {
   robotsDisallowAll: robotsDisallowEverything(crawlerPolicy),
-  sitemapEmpty: !datasetMayBeIndexed(manifest.datasetStatus),
-  pageMetadataNoIndex: routeCatalog().every((route) => {
-    const page = resolvePageId(route.locale, route.segments);
-    return page === null || pageSeo(page, route.locale).index === false;
-  }),
+  sitemapEmpty: !siteMayBeIndexed(manifest.datasetStatus),
+  pageMetadataNoIndex: indexedRoutes.length === 0,
   rankingsNoIndex: manifest.rankingIds.every((id:string)=>readJson<any>(`public/data/hiking/rankings/${id}.json`).indexable===false),
   comparisonsNoIndex: readdirSync(join(ROOT,"public/data/hiking/comparisons")).filter((file)=>file!=="comparison-index.json").every((file)=>readJson<any>(`public/data/hiking/comparisons/${file}`).indexable===false),
 };
-const nonProductionIndexabilityLocked = manifest.datasetStatus === "production"
-  || Object.values(crawlLockLayers).every(Boolean);
+const publicIndexingPolicyConsistent = siteMayBeIndexed(manifest.datasetStatus)
+  ? !crawlLockLayers.robotsDisallowAll && !crawlLockLayers.sitemapEmpty && indexedRoutes.length > 0
+  : Object.values(crawlLockLayers).every(Boolean);
 const goldenReview = reviewGoldenCases(golden, destinations);
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
-  nonProductionIndexabilityLocked,
+  publicIndexingPolicyConsistent,
   realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
   destinationMinimumMet: manifest.destinationCount >= 50,
   goldenMinimumMet: goldenReview.passed,
@@ -70,7 +73,7 @@ const checks = {
 };
 const approvalBlockers=Object.entries(checks.releaseApprovals).filter(([,approved])=>!approved).map(([key])=>`BLOCKED_APPROVAL_${key.replace(/([a-z])([A-Z])/g,"$1_$2").toUpperCase()}`);
 const blockers = [
-  ...(!checks.nonProductionIndexabilityLocked ? ["BLOCKED_NON_PRODUCTION_INDEXABILITY"] : []),
+  ...(!checks.publicIndexingPolicyConsistent ? ["BLOCKED_PUBLIC_INDEXING_POLICY"] : []),
   ...(!checks.realSourcesApproved ? ["BLOCKED_SOURCE_SEMANTICS"] : []),
   ...(!checks.destinationMinimumMet ? ["BLOCKED_DESTINATION_MINIMUM"] : []),
   ...(!checks.goldenMinimumMet ? ["BLOCKED_GOLDEN_LABEL"] : []),
@@ -96,6 +99,11 @@ const report = {
     ...goldenReview,
   },
   crawlLockLayers,
+  publicIndexing: {
+    enabled: siteMayBeIndexed(manifest.datasetStatus),
+    indexedRouteCount: indexedRoutes.length,
+    scientificProductionApprovalUnaffected: manifest.datasetStatus !== "production",
+  },
   dataQuality: { warningCount: dataQuality.warningCount, warnings: dataQuality.warnings },
   recommendationPolicy: {
     eligibleMonths: recommendationMonths.length,

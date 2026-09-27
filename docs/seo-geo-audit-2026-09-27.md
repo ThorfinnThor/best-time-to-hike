@@ -2,9 +2,9 @@
 
 ## Outcome
 
-The technical SEO and answer-engine layer is implemented, but public indexing remains intentionally disabled while the published dataset is `provisional`. This is a release-integrity safeguard, not an SEO defect: provisional builds emit `noindex`, disallow crawling in `robots.txt`, and publish an empty sitemap.
+The technical SEO and answer-engine layer is implemented and public indexing is explicitly enabled for pages that pass the conservative page-level quality gate. The published dataset remains `provisional`; editorial indexing approval does not represent or fabricate scientific production approval.
 
-No code change in this audit fabricates the six outstanding scientific, licensing, legal, accessibility/performance, or domain approvals. Once the established release process changes the dataset to `production`, the same code automatically exposes only pages that pass the conservative page-level quality gate.
+No code change in this audit fabricates outstanding scientific, licensing, legal, accessibility/performance, or release approvals. Low-confidence destination pages, repetitive month pages, tools, legal boilerplate and unapproved comparisons remain `noindex` and are omitted from the sitemap.
 
 ## Implemented
 
@@ -25,12 +25,11 @@ No code change in this audit fabricates the six outstanding scientific, licensin
 - `llms.txt` is a convenience for systems that choose to read it; it is not a Google ranking signal.
 - Structured data never converts withheld or low-confidence claims into recommendations.
 - There is no special “GEO schema”. Answer-engine visibility depends on the same crawlability, evidence, clear language, page quality and source attribution that support conventional search.
-- Search Console and Bing Webmaster Tools verification/submission are external account actions and are only useful after production indexing is unlocked.
+- Search Console and Bing Webmaster Tools verification/submission remain external account actions.
 
 ## Activation checklist
 
-1. Complete the existing release approvals with real evidence.
-2. Run the established production release workflow; do not edit the generated manifest by hand.
-3. Verify live `robots.txt`, `sitemap.xml`, canonical tags and a sample of English/German pages.
-4. Submit `https://besttimetohike.com/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
-5. Monitor indexing, Core Web Vitals, rich-result validation and query/citation coverage; improve pages from evidence rather than increasing the number of indexable templates.
+1. Verify live `robots.txt`, `sitemap.xml`, canonical tags and a sample of English/German pages.
+2. Submit `https://besttimetohike.com/sitemap.xml` in Google Search Console and Bing Webmaster Tools.
+3. Monitor indexing, Core Web Vitals, rich-result validation and query/citation coverage; improve pages from evidence rather than increasing the number of indexable templates.
+4. Complete the scientific production approvals with real evidence independently of the editorial indexing release.
