@@ -386,6 +386,17 @@ h1,h2,h3{hyphens:manual;overflow-wrap:normal;word-break:normal}
 .page-intro h1{font-size:clamp(3rem,6vw,6rem)}
 .planning-best p,.method-note p{max-width:75ch}
 
+/* Destination editorial sections should use the page width intentionally.
+   The old 74ch measure left oversized gutters on desktop, while a lone
+   elevation band stretched as a border across an otherwise empty column. */
+.longform{max-width:1060px}
+.longform article{max-width:92ch}
+.split{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:64px}
+.split>div:first-child{padding:12px 0}
+.split .elevation-list{align-self:start;border:1px solid var(--line);border-radius:18px;background:var(--paper);padding:0 24px;overflow:hidden}
+.split .elevation-list>div{padding:20px 0}
+.split .elevation-list>div:last-child{border-bottom:0}
+
 @media(max-width:640px){
   .page-intro{padding:52px 24px 44px}
   .page-intro h1{font-size:clamp(1.95rem,8.7vw,2.65rem);line-height:1.08;letter-spacing:-.03em}
@@ -393,6 +404,8 @@ h1,h2,h3{hyphens:manual;overflow-wrap:normal;word-break:normal}
   .destination-title h1,.month-hero h1{font-size:clamp(2.55rem,11vw,3.2rem);line-height:1.04}
   .month-hero{padding:56px 24px}
 }
+
+@media(max-width:980px){.split{grid-template-columns:1fr;gap:30px}.split .elevation-list{width:100%}}
 
 /* Ranking pages: show a place before asking the reader to parse its numbers.
    The former one-line list made image-rich destinations feel unfinished and

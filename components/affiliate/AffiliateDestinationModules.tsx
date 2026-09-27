@@ -63,6 +63,16 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
       <p className="affiliate-disclosure" id={disclosureId}><strong>{copy.disclosure}</strong></p>
     </header>
 
+    {activitySearches.length > 0 ? <section className="affiliate-experiences" aria-label={copy.experiencesHeading(destinationName)}>
+      <header className="affiliate-experiences-header">
+        <span className="eyebrow">{copy.experiencesTag}</span>
+        <h3>{copy.experiencesHeading(destinationName)}</h3>
+        <p>{copy.experiencesBody}</p>
+      </header>
+      <GetYourGuideAutoWidget locale={locale} destinationName={destinationName} />
+      <ViatorDynamicWidget locale={locale} destinationName={destinationName} />
+    </section> : null}
+
     {stay ? <article className="affiliate-plan-card affiliate-booking-card" aria-describedby={disclosureId}>
       <DestinationImage slug={slug} name={destinationName} region={copy.bookingTag} className="affiliate-plan-image" />
       <div className="affiliate-plan-body">
@@ -75,15 +85,5 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
         <small>{copy.check}</small>
       </div>
     </article> : null}
-
-    {activitySearches.length > 0 ? <section className="affiliate-experiences" aria-label={copy.experiencesHeading(destinationName)}>
-      <header className="affiliate-experiences-header">
-        <span className="eyebrow">{copy.experiencesTag}</span>
-        <h3>{copy.experiencesHeading(destinationName)}</h3>
-        <p>{copy.experiencesBody}</p>
-      </header>
-      <GetYourGuideAutoWidget locale={locale} destinationName={destinationName} />
-      <ViatorDynamicWidget locale={locale} destinationName={destinationName} />
-    </section> : null}
   </section>;
 }
