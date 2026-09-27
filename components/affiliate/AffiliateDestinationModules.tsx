@@ -1,6 +1,7 @@
 import { DestinationImage } from "@/components/media/DestinationImage";
+import { GetYourGuideAutoWidget } from "@/components/affiliate/GetYourGuideAutoWidget";
 import { affiliateRel } from "@/lib/affiliate/affiliate";
-import { publishedAffiliateActivityOffers, publishedAffiliateDestinationSearches } from "@/lib/affiliate/load-published";
+import { publishedAffiliateDestinationSearches } from "@/lib/affiliate/load-published";
 import type { Locale } from "@/lib/data/types";
 
 const COPY = {
@@ -9,10 +10,6 @@ const COPY = {
     heading: (name: string) => `Stays and guided experiences around ${name}`,
     intro: "Compare a practical accommodation base and current activity listings after checking that the climate fits your hike. Commercial links never affect scores or ranking order.",
     disclosure: "Affiliate disclosure: if you book through a labelled link, we may earn a commission at no extra cost to you.",
-    featured: "Reviewed activity",
-    hiking: "Guided hiking",
-    regional: "Regional activity",
-    view: (partner: string) => `View on ${partner}`,
     planTag: "Stay and explore",
     planHeading: (area: string) => `Turn the climate choice into a trip around ${area}`,
     planBody: "Open live partner results for places to stay, guided walks and other local experiences. Availability, prices and exact locations are confirmed on the provider page.",
@@ -27,10 +24,6 @@ const COPY = {
     heading: (name: string) => `Unterkünfte und geführte Erlebnisse rund um ${name}`,
     intro: "Vergleiche nach der Klimaprüfung einen praktischen Übernachtungsort und aktuelle Aktivitäten. Kommerzielle Links beeinflussen weder Werte noch Rangfolge.",
     disclosure: "Affiliate-Hinweis: Wenn du über einen gekennzeichneten Link buchst, können wir ohne Mehrkosten für dich eine Provision erhalten.",
-    featured: "Geprüfte Aktivität",
-    hiking: "Geführte Wanderung",
-    regional: "Aktivität in der Region",
-    view: (partner: string) => `Bei ${partner} ansehen`,
     planTag: "Übernachten und erleben",
     planHeading: (area: string) => `Aus der Klimawahl wird eine Reise rund um ${area}`,
     planBody: "Öffne aktuelle Partnerergebnisse für Unterkünfte, geführte Wanderungen und weitere Erlebnisse vor Ort. Verfügbarkeit, Preise und den genauen Standort bestätigst du auf der Anbieterseite.",
@@ -51,8 +44,7 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
   const searches = publishedAffiliateDestinationSearches().filter((item) => item.destinationId === destinationId);
   const stay = searches.find((item) => item.partnerId === "booking-stay-search") ?? null;
   const activitySearches = searches.filter((item) => item.partnerId === "getyourguide-activities" || item.partnerId === "viator-activities");
-  const offers = publishedAffiliateActivityOffers().filter((item) => item.destinationId === destinationId);
-  if (!stay && activitySearches.length === 0 && offers.length === 0) return null;
+  if (!stay && activitySearches.length === 0) return null;
 
   const copy = COPY[locale];
   const slug = searches[0]?.destinationSlug ?? destinationId;
@@ -69,20 +61,7 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
       <p className="affiliate-disclosure" id={disclosureId}><strong>{copy.disclosure}</strong></p>
     </header>
 
-    {offers.length > 0 ? <div className="affiliate-offer-grid">
-      {offers.map((offer) => <article className="affiliate-offer-card" aria-describedby={disclosureId} key={offer.id}>
-        <DestinationImage slug={slug} name={destinationName} region={offer.partnerName} className="affiliate-offer-image" />
-        <div className="affiliate-offer-body">
-          <span>{copy.featured} · {offer.kind === "hiking" ? copy.hiking : copy.regional}</span>
-          <h3>{offer.title[locale]}</h3>
-          <p>{offer.description[locale]}</p>
-          <small>{copy.check}</small>
-          <a href={offer.redirectPath} target="_blank" rel={`${affiliateRel()} noopener noreferrer`} aria-label={`${copy.view(offer.partnerName)}: ${offer.title[locale]} (${copy.newTab})`}>
-            {copy.view(offer.partnerName)} <span aria-hidden="true">↗</span>
-          </a>
-        </div>
-      </article>)}
-    </div> : null}
+    <GetYourGuideAutoWidget locale={locale} destinationName={destinationName} />
 
     <article className="affiliate-plan-card" aria-describedby={disclosureId}>
       <DestinationImage slug={slug} name={destinationName} region={copy.planTag} className="affiliate-plan-image" />

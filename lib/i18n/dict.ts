@@ -457,9 +457,9 @@ export const DICT = {
             "Processing in the United States cannot be excluded. Cloudflare is certified under the EU-US Data Privacy Framework, supplemented by standard contractual clauses under Art. 46(2)(c) GDPR. We have concluded a data processing agreement with Cloudflare under Art. 28 GDPR.",
             "We operate no database and no server-side application of our own. There are no forms, no sign-in and no newsletter.",
           ]},
-          {heading: "No cookies, no analytics, no external resources", paragraphs: [
-            "This site sets no cookies. There is no audience measurement, no tracking and no profiling.",
-            "No content is loaded from third-party servers when a page opens: no external fonts, no script CDN, no map widgets, no social plugins, no embedded video. Destination photographs are served from our own domain. Your IP address is therefore not disclosed to any further third party.",
+          {heading: "No analytics and limited external content", paragraphs: [
+            "BestTimeToHike itself sets no analytics or advertising cookies. We perform no audience measurement and create no user profiles.",
+            "Fonts and destination photographs are served from our own domain. The GetYourGuide integration analyzer loads on every page; on destination pages it also supplies the embedded activity cards. Your browser therefore connects to widget.getyourguide.com and transmits technically necessary connection data such as your IP address, the requested page, browser information and the time of access. GetYourGuide may process this data and use browser storage under its own privacy notice.",
           ]},
           {heading: "Your shortlist, stored on your device", paragraphs: [
             "When you star a destination, that list is stored in your browser's local storage under the key 'bth.saved.v1'. This is not cookie technology, but it falls under § 25 TDDDG all the same.",
@@ -472,7 +472,7 @@ export const DICT = {
           ]},
           {heading: "Advertising and affiliate links", paragraphs: [
             "This site may contain clearly labelled affiliate links to Booking.com, GetYourGuide and Viator. If you follow one of these links and make a booking, we may receive a commission at no extra cost to you.",
-            "No partner content, script, widget or tracking pixel is loaded when a BestTimeToHike page opens. Only when you actively click a labelled link does a static internal forwarding page send you to the partner. The partner then receives the connection data needed to serve its page and may use cookies or click identifiers under its own privacy notice.",
+            "GetYourGuide activity cards are loaded on destination pages through the embedded widget described above. Booking.com and Viator are contacted only after you actively click a labelled link; a static internal forwarding page then sends you to the partner. Each partner may use cookies, browser storage or click identifiers under its own privacy notice.",
             "The order of destinations and rankings is calculated solely from the published climate data and scoring rules. Commercial interests do not influence it, and that commitment is recorded as an invariant checked by the project's architecture guard.",
             "We do not create personal profiles from affiliate clicks and receive only partner reports or settlement information made available through the respective programme. The internal forwarding pages are not indexed by search engines.",
           ]},
@@ -978,9 +978,9 @@ export const DICT = {
             "Eine Verarbeitung in den Vereinigten Staaten ist dabei nicht ausgeschlossen. Cloudflare ist unter dem EU-US Data Privacy Framework zertifiziert; ergänzend bestehen Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO. Wir haben mit Cloudflare einen Auftragsverarbeitungsvertrag nach Art. 28 DSGVO geschlossen.",
             "Wir selbst betreiben keine Datenbank und keine serverseitige Anwendung. Es gibt keine Formulare, keine Anmeldung und keinen Newsletter.",
           ]},
-          {heading: "Keine Cookies, keine Analyse, keine externen Ressourcen", paragraphs: [
-            "Diese Website setzt keine Cookies. Es findet keine Reichweitenmessung, kein Tracking und kein Profiling statt.",
-            "Beim Aufruf einer Seite werden keine Inhalte von fremden Servern nachgeladen: keine externen Schriftarten, kein CDN für Skripte, keine Karten-Widgets, keine Social-Media-Plugins, keine eingebetteten Videos. Auch die Zielfotografien liegen auf unserer eigenen Domain. Ihre IP-Adresse wird dadurch an keinen weiteren Dritten übermittelt.",
+          {heading: "Keine Analyse und begrenzte externe Inhalte", paragraphs: [
+            "BestTimeToHike selbst setzt keine Analyse- oder Werbe-Cookies. Wir führen keine Reichweitenmessung durch und erstellen keine Nutzerprofile.",
+            "Schriftarten und Zielfotografien werden von unserer eigenen Domain ausgeliefert. Der GetYourGuide-Integrations-Analyzer wird auf jeder Seite geladen; auf Zielseiten liefert er zusätzlich die eingebetteten Aktivitätskarten aus. Ihr Browser verbindet sich deshalb mit widget.getyourguide.com und übermittelt technisch notwendige Verbindungsdaten wie IP-Adresse, aufgerufene Seite, Browserinformationen und Zugriffszeit. GetYourGuide kann diese Daten und Browserspeicher nach Maßgabe der eigenen Datenschutzerklärung verarbeiten.",
           ]},
           {heading: "Lokale Speicherung Ihrer Merkliste", paragraphs: [
             "Wenn Sie ein Ziel mit dem Stern merken, wird diese Liste unter dem Schlüssel „bth.saved.v1“ im lokalen Speicher (localStorage) Ihres Browsers abgelegt. Das ist keine Cookie-Technologie, fällt aber ebenfalls unter § 25 TDDDG.",
@@ -993,7 +993,7 @@ export const DICT = {
           ]},
           {heading: "Werbung und Affiliate-Links", paragraphs: [
             "Diese Website kann klar gekennzeichnete Affiliate-Links zu Booking.com, GetYourGuide und Viator enthalten. Wenn Sie einem solchen Link folgen und anschließend buchen, können wir ohne Mehrkosten für Sie eine Provision erhalten.",
-            "Beim Aufruf einer BestTimeToHike-Seite werden keine Inhalte, Skripte, Widgets oder Zählpixel der Partner geladen. Erst wenn Sie aktiv auf einen gekennzeichneten Link klicken, leitet eine statische interne Zwischenseite zum Partner weiter. Der Partner erhält dann die zur Auslieferung seiner Seite notwendigen Verbindungsdaten und kann nach Maßgabe seiner eigenen Datenschutzerklärung Cookies oder Klickkennungen verwenden.",
+            "GetYourGuide-Aktivitätskarten werden auf Zielseiten über das oben beschriebene eingebettete Widget geladen. Booking.com und Viator werden erst kontaktiert, wenn Sie aktiv auf einen gekennzeichneten Link klicken; anschließend leitet eine statische interne Zwischenseite zum Partner weiter. Die Partner können nach Maßgabe ihrer eigenen Datenschutzerklärungen Cookies, Browserspeicher oder Klickkennungen verwenden.",
             "Die Reihenfolge der Ziele und Ranglisten wird ausschließlich aus den veröffentlichten Klimadaten und Bewertungsregeln berechnet. Wirtschaftliche Interessen beeinflussen sie nicht; diese Zusage ist in der Architekturprüfung des Projekts als Invariante hinterlegt.",
             "Wir erstellen aus Affiliate-Klicks keine personenbezogenen Profile und erhalten lediglich die vom jeweiligen Partnerprogramm bereitgestellten Berichte oder Abrechnungsinformationen. Die internen Weiterleitungsseiten werden nicht von Suchmaschinen indexiert.",
           ]},

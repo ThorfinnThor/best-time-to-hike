@@ -52,7 +52,7 @@ test("activity searches keep the confirmed partner IDs and campaign", () => {
     const url = new URL(built);
     assert.equal(url.hostname, values.host);
     assert.equal(url.searchParams.get(values.idKey), values.id);
-    assert.equal(url.searchParams.get("campaign") ?? url.searchParams.get("cmp"), "BestTimeToHike");
+    assert.equal(url.searchParams.get("campaign") ?? url.searchParams.get("cmp"), partnerId === "getyourguide-activities" ? "Besttimetohike" : "BestTimeToHike");
     assert.equal(url.searchParams.get("text") ?? url.searchParams.get("q"), "Funchal Madeira Portugal");
   }
 });
@@ -89,10 +89,20 @@ test("static forwarding pages cannot be indexed and visibly fall back", () => {
 
 test("affiliate UI is labelled and legal copy no longer denies its existence", () => {
   const component = readFileSync("components/affiliate/AffiliateDestinationModules.tsx", "utf8");
+  const widget = readFileSync("components/affiliate/GetYourGuideAutoWidget.tsx", "utf8");
+  const layout = readFileSync("app/layout.tsx", "utf8");
+  const headers = readFileSync("public/_headers", "utf8");
   const privacy = readFileSync("lib/i18n/dict.ts", "utf8");
   assert.match(component, /Affiliate disclosure/);
   assert.match(component, /Affiliate-Hinweis/);
   assert.match(component, /affiliateRel\(\)/);
+  assert.match(widget, /data-gyg-widget="auto"/);
+  assert.match(widget, /data-gyg-cmp="Besttimetohike"/);
+  assert.match(layout, /widget\.getyourguide\.com\/dist\/pa\.umd\.production\.min\.js/);
+  assert.match(layout, /async defer/);
+  assert.match(headers, /frame-src https:\/\/widget\.getyourguide\.com/);
+  assert.match(privacy, /GetYourGuide integration analyzer loads on every page/);
+  assert.match(privacy, /GetYourGuide-Integrations-Analyzer wird auf jeder Seite geladen/);
   assert.doesNotMatch(privacy, /currently carries no advertising, no affiliate links/);
   assert.doesNotMatch(privacy, /enthält derzeit keine Werbung, keine Affiliate-Links/);
 });
