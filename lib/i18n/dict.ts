@@ -471,9 +471,10 @@ export const DICT = {
             "We delete this data once the enquiry has been dealt with, unless statutory retention obligations apply.",
           ]},
           {heading: "Advertising and affiliate links", paragraphs: [
-            "This site currently carries no advertising, no affiliate links and no paid placements. No partner programmes are integrated and no commission is earned.",
+            "This site may contain clearly labelled affiliate links to Booking.com, GetYourGuide and Viator. If you follow one of these links and make a booking, we may receive a commission at no extra cost to you.",
+            "No partner content, script, widget or tracking pixel is loaded when a BestTimeToHike page opens. Only when you actively click a labelled link does a static internal forwarding page send you to the partner. The partner then receives the connection data needed to serve its page and may use cookies or click identifiers under its own privacy notice.",
             "The order of destinations and rankings is calculated solely from the published climate data and scoring rules. Commercial interests do not influence it, and that commitment is recorded as an invariant checked by the project's architecture guard.",
-            "Should affiliate links or advertising be introduced later: they will be labelled as such where they appear, this notice will be updated before they go live, and any technology that sets cookies or transmits personal data to third parties will require prior consent under § 25(1) TDDDG and Art. 6(1)(a) GDPR. Without that consent, such an integration would not be served.",
+            "We do not create personal profiles from affiliate clicks and receive only partner reports or settlement information made available through the respective programme. The internal forwarding pages are not indexed by search engines.",
           ]},
           {heading: "Your rights", paragraphs: [
             "You have the right of access (Art. 15 GDPR), rectification (Art. 16), erasure (Art. 17), restriction of processing (Art. 18), data portability (Art. 20) and the right to object to processing (Art. 21 GDPR).",
@@ -991,9 +992,10 @@ export const DICT = {
             "Wir löschen diese Daten, sobald die Anfrage abschließend bearbeitet ist und keine gesetzlichen Aufbewahrungspflichten entgegenstehen.",
           ]},
           {heading: "Werbung und Affiliate-Links", paragraphs: [
-            "Diese Website enthält derzeit keine Werbung, keine Affiliate-Links und keine bezahlten Platzierungen. Es werden keine Partnerprogramme eingebunden und keine Provisionen erhoben.",
+            "Diese Website kann klar gekennzeichnete Affiliate-Links zu Booking.com, GetYourGuide und Viator enthalten. Wenn Sie einem solchen Link folgen und anschließend buchen, können wir ohne Mehrkosten für Sie eine Provision erhalten.",
+            "Beim Aufruf einer BestTimeToHike-Seite werden keine Inhalte, Skripte, Widgets oder Zählpixel der Partner geladen. Erst wenn Sie aktiv auf einen gekennzeichneten Link klicken, leitet eine statische interne Zwischenseite zum Partner weiter. Der Partner erhält dann die zur Auslieferung seiner Seite notwendigen Verbindungsdaten und kann nach Maßgabe seiner eigenen Datenschutzerklärung Cookies oder Klickkennungen verwenden.",
             "Die Reihenfolge der Ziele und Ranglisten wird ausschließlich aus den veröffentlichten Klimadaten und Bewertungsregeln berechnet. Wirtschaftliche Interessen beeinflussen sie nicht; diese Zusage ist in der Architekturprüfung des Projekts als Invariante hinterlegt.",
-            "Sollten künftig Affiliate-Links oder Werbung eingebunden werden, gilt: sie werden im Umfeld der Platzierung als solche gekennzeichnet, diese Datenschutzerklärung wird vor der Einbindung aktualisiert, und für jede Technologie, die Cookies setzt oder personenbezogene Daten an Dritte überträgt, wird zuvor eine Einwilligung nach § 25 Abs. 1 TDDDG und Art. 6 Abs. 1 lit. a DSGVO eingeholt. Ohne diese Einwilligung würde eine solche Einbindung nicht ausgeliefert.",
+            "Wir erstellen aus Affiliate-Klicks keine personenbezogenen Profile und erhalten lediglich die vom jeweiligen Partnerprogramm bereitgestellten Berichte oder Abrechnungsinformationen. Die internen Weiterleitungsseiten werden nicht von Suchmaschinen indexiert.",
           ]},
           {heading: "Ihre Rechte", paragraphs: [
             "Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) sowie das Recht, der Verarbeitung zu widersprechen (Art. 21 DSGVO).",

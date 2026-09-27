@@ -45,6 +45,7 @@ assert(!datasetMayBeIndexed("fixture") && !datasetMayBeIndexed("provisional")
 "Non-production robots policy must disallow crawling");
 assert(sitemapSource.includes("return []"), "Fixture sitemap policy must emit no URLs");
 assert(invariants.runtimeDatabase === false && invariants.runtimeClimateApi === false && invariants.runtimeDemApi === false, "Runtime data-source invariants must remain disabled");
+assert(invariants.affiliateInfluencesRanking === false, "Affiliate data must never influence scores or rankings");
 
 if (errors.length) {
   console.error(errors.join("\n"));

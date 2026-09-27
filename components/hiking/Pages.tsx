@@ -9,6 +9,7 @@ import { COMPONENT_KEYS, CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type
 import { DestinationPlanning, MonthPlanning } from "./DestinationPlanning";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { RankingExplorer } from "./RankingMonths";
+import { AffiliateDestinationModules } from "@/components/affiliate/AffiliateDestinationModules";
 
 
 function RecommendationReviewNotice({locale, destination}:{locale:Locale; destination:PublicDestination}) {
@@ -85,6 +86,7 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
       : null}
     <section className="month-hero"><div><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.heading(destination.name, monthName(month,locale))}</h1><p>{c.method}</p></div></section>
     <MonthPlanning destination={destination} data={data} locale={locale}/>
+    {data.recommendationEligible ? <AffiliateDestinationModules destinationId={destination.id} destinationName={destination.name} locale={locale} compact/> : null}
     <nav className="month-nav" aria-label={m.adjacentAria}>{previous && previous!==month ? <Link href={destinationPath(locale,destination.slug,previous)}>← {monthName(previous,locale)}</Link> : <span/>}<Link href={destinationPath(locale,destination.slug)}>{destination.name}</Link>{next && next!==month ? <Link href={destinationPath(locale,destination.slug,next)}>{monthName(next,locale)} →</Link> : <span/>}</nav>
     <MethodNote locale={locale}/>
   </>;

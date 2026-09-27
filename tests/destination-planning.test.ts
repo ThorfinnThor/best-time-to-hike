@@ -40,7 +40,7 @@ test("every destination renders useful metrics and only links eligible months in
       assert.doesNotMatch(table, /<a /);
     }
     const source = hikingSources[slug];
-    assert.equal(overview.includes('target="_blank"'), Boolean(source), slug);
+    assert.equal(source ? overview.includes(source.url) : overview.includes('class="planning-source"'), Boolean(source), slug);
     for (const month of destination.months) {
       const path = links.destinationMonth(locale, slug, month.month);
       assert.equal(table.includes(`href="${path}/"`), month.recommendationEligible, path);

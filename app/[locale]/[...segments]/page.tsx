@@ -28,6 +28,7 @@ import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 import { ComparisonTool } from "@/components/compare/ComparisonTool";
 import { routeCatalog } from "@/lib/seo/route-catalog";
 import type { ComponentScores, Locale, PublicDestination } from "@/lib/data/types";
+import { AffiliateDestinationModules } from "@/components/affiliate/AffiliateDestinationModules";
 
 type Params = Promise<{locale:string;segments?:string[]}>;
 export const dynamicParams = false;
@@ -147,6 +148,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
       <JsonLd data={destinationFaqLd(destination, locale)}/>
       <DestinationPage destination={destination} locale={locale}/>
       <LongformArticle destination={destination} locale={locale}/>
+      {destination.recommendationEligible ? <AffiliateDestinationModules destinationId={destination.id} destinationName={destination.name} locale={locale}/> : null}
     </>; }
     case "destinationMonth": { const destination=getDestination(page.slug); if(!destination) notFound(); return <MonthPage destination={destination} month={page.month} locale={locale}/>; }
     case "ranking": return <RankingPage ranking={getRanking(page.month)} locale={locale}/>;
