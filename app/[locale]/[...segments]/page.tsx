@@ -17,7 +17,7 @@ import { altLanguages } from "@/lib/i18n/links";
 import { absoluteUrl, SITE } from "@/lib/site";
 import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
-import { breadcrumbLd, destinationFaqLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
+import { breadcrumbLd, datasetLd, destinationFaqLd, destinationPageLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
 import { areaById } from "@/lib/seo/areas";
 import operator from "@/config/operator.json";
 import { blockingComponents } from "@/lib/scoring/recommendations";
@@ -29,6 +29,7 @@ import { ComparisonTool } from "@/components/compare/ComparisonTool";
 import { routeCatalog } from "@/lib/seo/route-catalog";
 import type { ComponentScores, Locale, PublicDestination } from "@/lib/data/types";
 import { AffiliateDestinationModules } from "@/components/affiliate/AffiliateDestinationModules";
+import { DestinationFaq } from "@/components/seo/DestinationFaq";
 
 type Params = Promise<{locale:string;segments?:string[]}>;
 export const dynamicParams = false;
@@ -50,9 +51,13 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
     alternates: altLanguages((target)=>pathFor(page,target), locale),
     // Crawlable either way; only pages that answer a question with substance
     // enter the index. See lib/seo/page-seo.ts for why.
-    robots: {index: seo.index, follow: true},
+    robots: {
+      index: seo.index,
+      follow: true,
+      googleBot: {index: seo.index, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1},
+    },
     openGraph: {
-      type: "article",
+      type: page.kind === "destination" || page.kind === "destinationMonth" ? "article" : "website",
       siteName: SITE.name,
       locale: locale === "de" ? "de_DE" : "en_GB",
       title: seo.title,
@@ -60,7 +65,8 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
       url: canonical,
       images: [{url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: seo.title}],
     },
-    twitter: {card: "summary_large_image", title: seo.title, description: seo.description},
+    twitter: {card: "summary_large_image", title: seo.title, description: seo.description,
+      images: [{url: absoluteUrl("/opengraph-image"), alt: seo.title}]},
   };
 }
 
@@ -75,6 +81,7 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
     "sections" in data ? data.sections : [];
   const componentLabels = copy.components;
   return <>
+    {pageKey === "methodology" ? <JsonLd data={datasetLd(locale)}/> : null}
     <section className="page-intro prose-intro"><span className="eyebrow">{copy.brand}</span><h1>{data.title}</h1>{paragraphs.map((paragraph)=><p key={paragraph}>{paragraph}</p>)}</section>
     {sections.length ? <section className="content-section legal-body">
       {sections.map((section)=><section key={section.heading}>
@@ -139,6 +146,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
     case "rankingIndex": return <RankingMonthSelectionPage locale={locale}/>;
     case "themeIndex": return <RankingMonthSelectionPage locale={locale} theme={page.theme}/>;
     case "destination": { const destination=getDestination(page.slug); if(!destination) notFound();
+      const seo=pageSeo(page, locale);
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)},
                    {name: taxonomyLabel(locale, "continents", destination.continent), path: pathFor({kind:"finder"}, locale)},
                    {name: destination.name, path: pathFor(page, locale)}];
@@ -146,8 +154,10 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
       <JsonLd data={breadcrumbLd(trail)}/>
       <Breadcrumbs trail={trail} locale={locale}/>
       <JsonLd data={destinationFaqLd(destination, locale)}/>
+      <JsonLd data={destinationPageLd(destination, locale, seo.title, seo.description)}/>
       <DestinationPage destination={destination} locale={locale}/>
       <LongformArticle destination={destination} locale={locale}/>
+      <DestinationFaq destination={destination} locale={locale}/>
       {destination.recommendationEligible ? <AffiliateDestinationModules destinationId={destination.id} destinationName={destination.name} locale={locale}/> : null}
     </>; }
     case "destinationMonth": { const destination=getDestination(page.slug); if(!destination) notFound(); return <MonthPage destination={destination} month={page.month} locale={locale}/>; }

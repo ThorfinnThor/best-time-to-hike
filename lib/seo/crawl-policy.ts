@@ -1,7 +1,12 @@
 import type { MetadataRoute } from "next";
 import type { DatasetStatus } from "@/lib/data/types";
 
-export const ANSWER_ENGINES = ["GPTBot", "OAI-SearchBot", "ChatGPT-User", "ClaudeBot", "Claude-Web", "PerplexityBot", "Google-Extended", "Applebot-Extended", "CCBot"] as const;
+export const ANSWER_ENGINES = [
+  "GPTBot", "OAI-SearchBot", "ChatGPT-User",
+  "ClaudeBot", "Claude-User", "Claude-SearchBot",
+  "PerplexityBot", "Perplexity-User",
+  "Google-Extended", "Applebot-Extended", "CCBot",
+] as const;
 
 /** One decision shared by metadata, sitemap and the release gate. */
 export function datasetMayBeIndexed(status: DatasetStatus): boolean {

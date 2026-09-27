@@ -7,6 +7,8 @@ import { profileFor, profileKey } from "../lib/seo/profile";
 import { pageSeo } from "../lib/seo/page-seo";
 import { locales } from "../lib/i18n/config";
 import type { PublicDestination } from "../lib/data/types";
+import { datasetLd, destinationFaqEntries, destinationFaqLd } from "../lib/seo/jsonld";
+import { getDestination } from "../lib/data/load";
 
 const root = "public/data/hiking/destinations";
 const files: string[] = [];
@@ -83,4 +85,28 @@ test("articles vary in shape, not only in numbers", () => {
   assert.ok(shapes.size >= 40, `only ${shapes.size} distinct article shapes across ${destinations.length} destinations`);
   const headings = new Set(destinations.flatMap((destination) => longformSections(destination, "en").map((section) => section.heading)));
   assert.ok(headings.size >= 50, `only ${headings.size} distinct headings`);
+});
+
+test("FAQ structured data contains exactly the visible destination answers", () => {
+  const destination = getDestination("madeira");
+  assert.ok(destination);
+  const entries = destinationFaqEntries(destination, "en");
+  const ld = destinationFaqLd(destination, "en") as {mainEntity: Array<{name: string; acceptedAnswer: {text: string}}>};
+  assert.deepEqual(ld.mainEntity.map((item) => ({q: item.name, a: item.acceptedAnswer.text})), entries);
+});
+
+test("methodology dataset markup identifies source, period and downloads", () => {
+  const ld = datasetLd("en") as Record<string, unknown>;
+  assert.equal(ld["@type"], "Dataset");
+  assert.equal(ld.temporalCoverage, "1991/2020");
+  assert.equal(ld.isBasedOn, "https://doi.org/10.24381/ee82e357");
+  assert.ok(Array.isArray(ld.distribution));
+});
+
+test("unapproved comparisons stay out of the index and have readable metadata", () => {
+  const seo = pageSeo({kind: "compare", slug: "madeira-vs-tenerife"}, "en");
+  assert.equal(seo.index, false);
+  assert.match(seo.title, /^Madeira vs Tenerife:/);
+  assert.match(seo.description, /Madeira and Tenerife/);
+  assert.ok(seo.reasons.includes("comparison-not-approved-for-indexing"));
 });

@@ -29,7 +29,10 @@ export default function sitemap():MetadataRoute.Sitemap {
       lastModified: new Date(getManifest().generatedAt),
       changeFrequency: "monthly" as const,
       priority: page.kind === "home" ? 1 : page.kind === "destination" ? 0.8 : 0.6,
-      alternates: {languages: Object.fromEntries(locales.map((l) => [l, absoluteUrl(pathFor(page, l))]))},
+      alternates: {languages: {
+        ...Object.fromEntries(locales.map((l) => [l, absoluteUrl(pathFor(page, l))])),
+        "x-default": absoluteUrl(pathFor(page, "en")),
+      }},
     });
   }
   return entries;

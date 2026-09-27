@@ -1,6 +1,6 @@
 import type { Locale, PublicDestination } from "@/lib/data/types";
 import { monthName } from "@/lib/i18n/config";
-import { getDestination, getManifest } from "@/lib/data/load";
+import { getComparison, getDestination, getManifest } from "@/lib/data/load";
 import { profileFor } from "@/lib/seo/profile";
 import { areaById, areaProfile } from "@/lib/seo/areas";
 import { t, taxonomyLabel, withArticle } from "@/lib/i18n/dict";
@@ -154,11 +154,25 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2020 climate normal.`),
       index: getManifest().datasetStatus === "production",
       reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
-    case "compare": return {
-      title: page.slug.replaceAll("-", " "),
-      description: clamp(de ? "Zwei Ziele Monat für Monat nebeneinander." : "Two destinations compared month by month."),
-      index: getManifest().datasetStatus === "production",
-      reasons: getManifest().datasetStatus === "production" ? [] : ["non-production-dataset"]};
+    case "compare": {
+      const comparison = getComparison(page.slug);
+      const first = getDestination(comparison.destinations[0]);
+      const second = getDestination(comparison.destinations[1]);
+      if (!first || !second) return {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-comparison-destination"]};
+      const production = getManifest().datasetStatus === "production";
+      const reasons = [
+        ...(!production ? ["non-production-dataset"] : []),
+        ...(!comparison.indexable ? ["comparison-not-approved-for-indexing"] : []),
+      ];
+      return {
+        title: de ? `${first.name} vs. ${second.name}: Wanderzeiten im Vergleich` : `${first.name} vs ${second.name}: hiking seasons compared`,
+        description: clamp(de
+          ? `${first.name} und ${second.name} Monat für Monat vergleichen: Temperatur, Regen, Schnee und Wandereignung aus dem Klimanormal 1991 bis 2020.`
+          : `Compare ${first.name} and ${second.name} month by month: temperature, rain, snow and hiking suitability from the 1991-2020 climate normal.`),
+        index: reasons.length === 0,
+        reasons,
+      };
+    }
     case "home": return {
       title: de ? "Finde deine beste Wanderzeit" : "Find your best hiking season",
       description: clamp(de

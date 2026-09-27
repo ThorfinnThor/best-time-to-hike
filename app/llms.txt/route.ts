@@ -20,6 +20,13 @@ export function GET() {
     "> Historical hiking-season suitability for mountain and trail destinations, derived from the",
     "> ERA5-Land 1991-2020 climate normal. Not a forecast and not trail or safety information.",
     "",
+    "## Canonical entry points",
+    `- English home: ${absoluteUrl(links.home("en"))}`,
+    `- German home: ${absoluteUrl(links.home("de"))}`,
+    `- Methodology: ${absoluteUrl(links.methodology("en"))}`,
+    `- Machine-readable manifest: ${absoluteUrl("/data/hiking/manifest.json")}`,
+    `- XML sitemap: ${absoluteUrl("/sitemap.xml")}`,
+    "",
     "## Dataset",
     `- Status: ${manifest.datasetStatus} (algorithm ${manifest.algorithmVersion})`,
     `- Source: ERA5-Land hourly time series, ${manifest.climateNormal.startYear}-${manifest.climateNormal.endYear}, DOI 10.24381/ee82e357`,
@@ -47,5 +54,10 @@ export function GET() {
     }),
     "",
   ];
-  return new Response(lines.join("\n"), {headers: {"content-type": "text/plain; charset=utf-8"}});
+  return new Response(lines.join("\n"), {headers: {
+    "content-type": "text/plain; charset=utf-8",
+    // The file helps answer engines understand the project but is not a
+    // search-result landing page of its own.
+    "x-robots-tag": "noindex",
+  }});
 }

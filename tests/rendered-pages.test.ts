@@ -148,6 +148,20 @@ test("a provisional export is blocked from indexing at every rendered layer", {s
   }
 });
 
+test("destination FAQ answers are visible as well as structured", {skip: !built}, () => {
+  const html = page("en/hiking-destinations/madeira/index.html");
+  assert.match(html, /"@type":"FAQPage"/);
+  assert.match(visible(html), /Questions about Madeira/);
+  assert.match(visible(html), /When should you hike Madeira\?/);
+});
+
+test("methodology identifies the published dataset and its ERA5-Land source", {skip: !built}, () => {
+  const html = page("en/methodology/index.html");
+  assert.match(html, /"@type":"Dataset"/);
+  assert.match(html, /https:\/\/doi\.org\/10\.24381\/ee82e357/);
+  assert.match(html, /"temporalCoverage":"1991\/2020"/);
+});
+
 test("both imprint pages carry the mandatory Copernicus DEM notices", {skip: !built}, () => {
   for (const path of ["en/imprint/index.html", "de/impressum/index.html"]) {
     const text = visible(page(path));

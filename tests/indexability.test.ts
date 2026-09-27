@@ -4,7 +4,7 @@ import { evaluateIndexability } from "../lib/seo/indexability";
 import { routeCatalog } from "../lib/seo/route-catalog";
 import { resolvePageId } from "../lib/i18n/resolve";
 import { pageSeo } from "../lib/seo/page-seo";
-import { datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../lib/seo/crawl-policy";
+import { ANSWER_ENGINES, datasetMayBeIndexed, robotsDisallowEverything, robotsForDataset } from "../lib/seo/crawl-policy";
 const complete={resultCount:5,dataCompleteness:.99,confidence:90,uniqueInsightCount:3,hasUniqueTitle:true,hasUniqueH1:true,hasCanonical:true,internalLinkCount:4,createsCannibalization:false,containsUnsupportedClaims:false,datasetStatus:"production" as const};
 test("production quality page can be indexable",()=>assert.deepEqual(evaluateIndexability(complete),{indexable:true,reasons:[]}));
 test("non-production content is always noindex",()=>{
@@ -19,6 +19,13 @@ test("the shared crawler policy locks every non-production dataset", () => {
   }
   assert.equal(datasetMayBeIndexed("production"), true);
   assert.equal(robotsDisallowEverything(robotsForDataset("production", "https://example.test/sitemap.xml")), false);
+});
+
+test("production policy names the current search and answer-engine crawlers", () => {
+  for (const bot of ["OAI-SearchBot", "Claude-SearchBot", "Claude-User", "PerplexityBot", "Perplexity-User", "Google-Extended"]) {
+    assert.ok((ANSWER_ENGINES as readonly string[]).includes(bot), `${bot} is missing from the explicit policy`);
+  }
+  assert.ok(!((ANSWER_ENGINES as readonly string[]).includes("Claude-Web")), "the retired Claude-Web token should not survive");
 });
 
 /**
