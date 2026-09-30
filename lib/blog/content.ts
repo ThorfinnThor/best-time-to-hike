@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/data/types";
+import { BLOG_POSTS as EDITORIAL_POSTS } from "@/lib/blog/posts";
 
 /**
  * The blog deliberately uses a composable block vocabulary. A post may use
@@ -48,7 +49,7 @@ export interface BlogPost {
  * scaffold empty means the public blog is not a thin archive or an accidental
  * index surface while the content is still being researched.
  */
-export const BLOG_POSTS: readonly BlogPost[] = [];
+export const BLOG_POSTS: readonly BlogPost[] = EDITORIAL_POSTS;
 
 export function blogPostSlugs(): string[] {
   return BLOG_POSTS.map((post) => post.slug);

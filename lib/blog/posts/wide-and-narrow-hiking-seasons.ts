@@ -1,0 +1,116 @@
+import type { BlogPost } from "@/lib/blog/content";
+import { links } from "@/lib/i18n/links";
+import { evidence } from "./shared";
+
+export const wideAndNarrowHikingSeasons: BlogPost = {
+  slug: "wide-and-narrow-hiking-seasons",
+  status: "draft",
+  publishedAt: null,
+  modifiedAt: "2026-09-30",
+  heroImageSlug: "grand-teton",
+  evidence: [
+    evidence("broad-season-windows", "Recommendation-eligible months for four destinations with twelve-month modelled windows.", [
+      "public/data/hiking/destinations/cl/san-pedro-de-atacama.json",
+      "public/data/hiking/destinations/es/tenerife.json",
+      "public/data/hiking/destinations/za/table-mountain.json",
+      "public/data/hiking/destinations/pt/madeira.json",
+    ]),
+    evidence("narrow-season-windows", "Recommendation-eligible months for seven destinations with three-month modelled windows.", [
+      "public/data/hiking/destinations/us/grand-teton.json",
+      "public/data/hiking/destinations/cl/cerro-castillo.json",
+      "public/data/hiking/destinations/ca/jasper.json",
+      "public/data/hiking/destinations/fr/chamonix.json",
+      "public/data/hiking/destinations/ch/grindelwald.json",
+      "public/data/hiking/destinations/is/landmannalaugar.json",
+      "public/data/hiking/destinations/no/jotunheimen.json",
+    ]),
+  ],
+  translations: {
+    en: {
+      title: "Twelve months or three: how wide is a hiking window?",
+      description: "A paired calendar explains why some destinations stay inside the model's climate limits all year while mountain regions pass for only a short season.",
+      heroAlt: "Mountain landscape in Grand Teton, a destination with a narrow modelled hiking window",
+      category: "seasonal",
+      readingMinutes: 8,
+      blocks: [
+        { type: "paragraph", text: "A destination with twelve recommendation-eligible months appears flexible; one with three appears demanding. That contrast is useful, but only if the term hiking window is read correctly. On BestTimeToHike it means the historical metrics at one selected representative grid cell stayed inside the published critical limits for those months. It does not mean every trail was open, snow-free or equally pleasant. The comparison still reveals a strong seasonal structure. San Pedro de Atacama, Tenerife, Table Mountain and Madeira pass the gate in all twelve months. Grand Teton, Jasper and several alpine or subarctic destinations pass it in only three. The calendars below show the difference before explaining what produces it." },
+        { type: "monthStrip", caption: "Two opposite modelled seasons", months: [
+          { month: 1, label: "Broad window", note: "San Pedro, Tenerife, Table Mountain and Madeira: Jan–Dec" },
+          { month: 7, label: "Northern short window", note: "Grand Teton, Jasper, Chamonix, Grindelwald, Landmannalaugar and Jotunheimen: Jul–Sep" },
+          { month: 1, label: "Southern short window", note: "Cerro Castillo: Jan–Mar" },
+        ], evidenceKey: "broad-season-windows" },
+        { type: "heading", level: 2, text: "The broad calendar is not one continuous climate" },
+        { type: "paragraph", text: "Twelve eligible months do not make January and August interchangeable. Tenerife's selected cell, for example, remains inside the critical rules throughout the year, but temperature, rain frequency and daylight still move from month to month. Madeira does the same with its own Atlantic pattern. Table Mountain spans Southern Hemisphere summer and winter, so an eligible winter month can be cooler and wetter than an eligible summer month. San Pedro de Atacama adds altitude and a very dry baseline. What these places share is not identical weather; they share the absence of a critical monthly failure in the published model. Travellers still need to choose among twelve different climate profiles." },
+        { type: "comparisonTable", caption: "How the eligible calendars divide", columns: ["Window", "Destinations", "Eligible months", "Planning implication"], rows: [
+          { label: "Broad", values: ["San Pedro, Tenerife, Table Mountain, Madeira", "12 of 12", "Compare preferences within the year"] },
+          { label: "Northern narrow", values: ["Grand Teton, Jasper, Chamonix, Grindelwald, Landmannalaugar, Jotunheimen", "July–September", "A concentrated modelled window"] },
+          { label: "Southern narrow", values: ["Cerro Castillo", "January–March", "Season shifted by hemisphere"] },
+        ], evidenceKey: "narrow-season-windows" },
+        { type: "paragraph", text: "The narrow group is more synchronised. Grand Teton, Jasper, Chamonix, Grindelwald, Landmannalaugar and Jotunheimen are eligible from July through September in the current dataset. Cerro Castillo supplies the Southern Hemisphere mirror, with January through March. Outside those cells, cold, snow, precipitation or another critical component crosses the method's limit. This is not a statement that the landscape becomes inaccessible on the first day of October, and it is not a route-opening calendar. It is a reproducible signal that the representative climate moves beyond the rules used for general hiking recommendations." },
+        { type: "pullQuote", text: "A broad window offers more climate choices; a narrow window demands more date-specific checking." },
+        { type: "heading", level: 2, text: "Four stories hidden inside the same count" },
+        { type: "timeline", caption: "Why the number of eligible months needs context", points: [
+          { label: "Madeira", value: "12 months", detail: "Maritime moderation; months still differ in rain and temperature." },
+          { label: "Table Mountain", value: "12 months", detail: "A full calendar across a marked Southern Hemisphere seasonal cycle." },
+          { label: "Grand Teton", value: "Jul–Sep", detail: "A short northern window between colder, snow-affected months." },
+          { label: "Cerro Castillo", value: "Jan–Mar", detail: "A short southern window, shifted by roughly half a year." },
+        ], evidenceKey: "narrow-season-windows" },
+        { type: "paragraph", text: "Madeira and Table Mountain demonstrate why an eligible count should not be used as a universal ranking. Twelve months may be valuable to a traveller who can move dates, but it says nothing about preferred temperature or tolerance for frequent rain. Grand Teton and Cerro Castillo show the reverse: a short climate window does not make either destination inferior. It makes timing more consequential. A hiker already committed to August can compare northern mountain destinations; someone free to travel in February may look south. The seasonal count is therefore an availability map, not a quality league table." },
+        { type: "heading", level: 2, text: "What to check after choosing the window" },
+        { type: "paragraph", text: "For a broad-season destination, compare individual month pages and decide what trade-off you prefer. Cooler versus warmer, fewer wet days versus longer daylight, and seasonal crowd patterns outside this dataset may all matter. For a narrow-season destination, add a second layer of caution. Verify current snowpack, road and hut dates, permit systems, wildfire or storm notices, and the official status of the exact route. Climate normals describe the 1991–2020 baseline; they cannot confirm that a pass is clear this year. The best use of the calendar is to reduce twelve months to a sensible shortlist, then hand the decision to current and local information." },
+        { type: "caveat", text: "Recommendation eligibility is calculated from historical conditions at one representative model cell. It is not an opening schedule, safety approval or promise of snow-free trails. Elevation can vary substantially within every listed region. The short and broad windows here use algorithm version 1.2.0 and the published 1991–2020 dataset; current conditions must be checked independently." },
+        { type: "destinationLinks", heading: "Compare broad and narrow windows", links: [
+          { label: "Madeira", href: links.destination("en", "madeira"), detail: "Inspect twelve eligible months with different Atlantic conditions." },
+          { label: "Grand Teton", href: links.destination("en", "grand-teton"), detail: "See the July to September representative-cell window." },
+          { label: "Cerro Castillo", href: links.destination("en", "cerro-castillo"), detail: "Follow the January to March Southern Hemisphere pattern." },
+          { label: "Jotunheimen", href: links.destination("en", "jotunheimen"), detail: "Compare the short high-latitude mountain season." },
+          { label: "Methodology", href: links.methodology("en"), detail: "Read the eligibility rules and critical component limits." },
+          { label: "Best destinations by month", href: links.rankingIndex("en"), detail: "Start from a travel month and compare eligible options." },
+        ] },
+      ],
+    },
+    de: {
+      title: "Zwölf Monate oder drei: Wie groß ist das Wanderfenster?",
+      description: "Zwei gegensätzliche Kalender erklären, warum manche Ziele ganzjährig innerhalb der Klimagrenzen bleiben und Bergregionen nur kurz bestehen.",
+      heroAlt: "Berglandschaft im Grand Teton, einem Ziel mit kurzem modelliertem Wanderfenster",
+      category: "seasonal",
+      readingMinutes: 9,
+      blocks: [
+        { type: "paragraph", text: "Ein Ziel mit zwölf empfehlungsfähigen Monaten wirkt flexibel; eines mit drei Monaten anspruchsvoll. Dieser Kontrast ist hilfreich, wenn der Begriff Wanderfenster korrekt gelesen wird. Bei BestTimeToHike bedeutet er, dass die historischen Kennzahlen an einer ausgewählten repräsentativen Gitterzelle in diesen Monaten innerhalb der veröffentlichten kritischen Grenzen blieben. Er bedeutet nicht, dass jeder Weg geöffnet, schneefrei oder gleich angenehm war. Trotzdem zeigt der Vergleich eine klare saisonale Struktur. San Pedro de Atacama, Teneriffa, der Tafelberg und Madeira bestehen das Tor in allen zwölf Monaten. Grand Teton, Jasper und mehrere alpine oder subarktische Ziele bestehen es nur in drei Monaten." },
+        { type: "monthStrip", caption: "Zwei gegensätzliche modellierte Saisons", months: [
+          { month: 1, label: "Breites Fenster", note: "San Pedro, Teneriffa, Tafelberg und Madeira: Jan–Dez" },
+          { month: 7, label: "Kurzes Nordfenster", note: "Grand Teton, Jasper, Chamonix, Grindelwald, Landmannalaugar und Jotunheimen: Jul–Sep" },
+          { month: 1, label: "Kurzes Südfenster", note: "Cerro Castillo: Jan–Mär" },
+        ], evidenceKey: "broad-season-windows" },
+        { type: "heading", level: 2, text: "Ein breiter Kalender ist kein durchgehendes Einheitsklima" },
+        { type: "paragraph", text: "Zwölf geeignete Monate machen Januar und August nicht austauschbar. Die ausgewählte Zelle auf Teneriffa bleibt zum Beispiel das ganze Jahr innerhalb der kritischen Regeln, aber Temperatur, Regenhäufigkeit und Tageslicht verändern sich weiterhin. Madeira zeigt mit seinem atlantischen Muster etwas Ähnliches. Der Tafelberg umfasst Sommer und Winter der Südhalbkugel, deshalb kann ein geeigneter Wintermonat kühler und nasser sein als ein geeigneter Sommermonat. San Pedro de Atacama bringt Höhenlage und ein sehr trockenes Grundklima hinzu. Gemeinsam ist diesen Orten nicht identisches Wetter, sondern das Ausbleiben eines kritischen Monatsfehlers im veröffentlichten Modell." },
+        { type: "comparisonTable", caption: "So teilen sich die geeigneten Kalender", columns: ["Fenster", "Ziele", "Geeignete Monate", "Bedeutung für die Planung"], rows: [
+          { label: "Breit", values: ["San Pedro, Teneriffa, Tafelberg, Madeira", "12 von 12", "Vorlieben innerhalb des Jahres vergleichen"] },
+          { label: "Schmal im Norden", values: ["Grand Teton, Jasper, Chamonix, Grindelwald, Landmannalaugar, Jotunheimen", "Juli–September", "Konzentriertes modelliertes Fenster"] },
+          { label: "Schmal im Süden", values: ["Cerro Castillo", "Januar–März", "Durch die Hemisphäre verschoben"] },
+        ], evidenceKey: "narrow-season-windows" },
+        { type: "paragraph", text: "Die schmale Gruppe ist stärker synchronisiert. Grand Teton, Jasper, Chamonix, Grindelwald, Landmannalaugar und Jotunheimen sind im aktuellen Datensatz von Juli bis September empfehlungsfähig. Cerro Castillo bildet das Spiegelbild der Südhalbkugel mit Januar bis März. Außerhalb dieser Zellen überschreiten Kälte, Schnee, Niederschlag oder eine andere kritische Komponente die Methodengrenze. Das heißt nicht, dass eine Landschaft am ersten Oktobertag unzugänglich wird, und es ist kein Öffnungskalender. Es ist ein reproduzierbares Signal, dass sich das repräsentative Klima außerhalb der Regeln für allgemeine Wanderempfehlungen bewegt." },
+        { type: "pullQuote", text: "Ein breites Fenster bietet mehr Klimawahl; ein schmales Fenster verlangt mehr tagesaktuelle Kontrolle." },
+        { type: "heading", level: 2, text: "Vier Geschichten hinter derselben Monatszahl" },
+        { type: "timeline", caption: "Warum die Zahl geeigneter Monate Kontext braucht", points: [
+          { label: "Madeira", value: "12 Monate", detail: "Maritimer Ausgleich; Regen und Temperatur unterscheiden sich trotzdem." },
+          { label: "Tafelberg", value: "12 Monate", detail: "Ein voller Kalender über einen ausgeprägten südlichen Jahresgang." },
+          { label: "Grand Teton", value: "Jul–Sep", detail: "Kurzes Nordfenster zwischen kälteren, schneereichen Monaten." },
+          { label: "Cerro Castillo", value: "Jan–Mär", detail: "Kurzes Südfenster, ungefähr ein halbes Jahr versetzt." },
+        ], evidenceKey: "narrow-season-windows" },
+        { type: "paragraph", text: "Madeira und der Tafelberg zeigen, warum die Zahl geeigneter Monate keine universelle Rangliste ergibt. Zwölf Monate sind für flexible Reisende wertvoll, sagen aber nichts über die bevorzugte Temperatur oder die Toleranz gegenüber häufigem Regen. Grand Teton und Cerro Castillo zeigen das Gegenteil: Ein kurzes Klimafenster macht ein Ziel nicht schlechter. Es macht den Termin wichtiger. Wer bereits auf August festgelegt ist, kann nördliche Bergziele vergleichen; wer im Februar reisen kann, blickt eher nach Süden. Die Monatszahl ist damit eine Verfügbarkeitskarte und keine Qualitätsliga." },
+        { type: "heading", level: 2, text: "Was nach der Wahl des Fensters geprüft werden muss" },
+        { type: "paragraph", text: "Bei einem Ziel mit breiter Saison lohnt der Vergleich einzelner Monatsseiten: kühler oder wärmer, weniger nasse Tage oder längeres Tageslicht. Auch Besucheraufkommen, das dieser Datensatz nicht erfasst, kann wichtig sein. Bei einem schmalen Fenster kommt eine zweite Vorsichtsebene hinzu. Aktuelle Schneelage, Straßen- und Hüttenzeiten, Genehmigungen, Waldbrand- oder Sturmhinweise und der offizielle Status der genauen Route müssen geprüft werden. Klimanormalwerte beschreiben die Basis von 1991 bis 2020; sie bestätigen nicht, dass ein Pass in diesem Jahr frei ist. Der Kalender soll zwölf Monate auf eine vernünftige Auswahl reduzieren, danach entscheiden aktuelle lokale Informationen." },
+        { type: "caveat", text: "Die Empfehlungsfähigkeit wird aus historischen Bedingungen an einer repräsentativen Modellzelle berechnet. Sie ist weder Öffnungsplan noch Sicherheitsfreigabe oder Garantie schneefreier Wege. Die Höhenlage kann innerhalb jeder genannten Region stark variieren. Die kurzen und breiten Fenster basieren auf Algorithmusversion 1.2.0 und dem veröffentlichten Datensatz 1991–2020; aktuelle Bedingungen müssen unabhängig geprüft werden." },
+        { type: "destinationLinks", heading: "Breite und schmale Fenster vergleichen", links: [
+          { label: "Madeira", href: links.destination("de", "madeira"), detail: "Zwölf geeignete Monate mit unterschiedlichen Atlantikbedingungen." },
+          { label: "Grand Teton", href: links.destination("de", "grand-teton"), detail: "Das repräsentative Fenster von Juli bis September ansehen." },
+          { label: "Cerro Castillo", href: links.destination("de", "cerro-castillo"), detail: "Dem Muster von Januar bis März auf der Südhalbkugel folgen." },
+          { label: "Jotunheimen", href: links.destination("de", "jotunheimen"), detail: "Die kurze Hochbreiten-Bergsaison vergleichen." },
+          { label: "Methodik", href: links.methodology("de"), detail: "Empfehlungsregeln und kritische Komponentengrenzen lesen." },
+          { label: "Beste Ziele nach Monat", href: links.rankingIndex("de"), detail: "Mit dem Reisemonat beginnen und geeignete Optionen vergleichen." },
+        ] },
+      ],
+    },
+  },
+};
