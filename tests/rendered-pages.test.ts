@@ -71,6 +71,16 @@ test("category links open unselected month pickers in both languages", {skip: !b
   }
 });
 
+test("the bilingual blog index renders an image-led card for every published article", {skip: !built}, () => {
+  for (const locale of locales) {
+    const html = page(`${locale}/blog/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+    assert.equal((html.match(/class="blog-card-media"/g) ?? []).length, 6, `${locale} blog cards should all have media`);
+    assert.equal((html.match(/class="blog-card-badge"/g) ?? []).length, 6, `${locale} blog cards should all have category labels`);
+    assert.equal((html.match(/class="blog-card-meta"/g) ?? []).length, 6, `${locale} blog cards should all have publication metadata`);
+    assert.equal((html.match(/<img /g) ?? []).length, 6, `${locale} blog cards should all render a licensed image`);
+  }
+});
+
 test("finder controls and results render as separate layout panels", {skip: !built}, () => {
   for (const locale of locales) {
     const finder = page(`${locale}/finder/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");

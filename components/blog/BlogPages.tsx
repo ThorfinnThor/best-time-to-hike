@@ -20,6 +20,15 @@ function Block({block}: {block: BlogBlock; locale: Locale}) {
   }
 }
 
+function publishedDate(post: BlogPost, locale: Locale): string {
+  if (!post.publishedAt) return "";
+  return new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(new Date(`${post.publishedAt}T00:00:00Z`));
+}
+
 function Article({post, locale}: {post: BlogPost; locale: Locale}) {
   const translation = post.translations[locale];
   const image = post.heroImageSlug ? imageFor(post.heroImageSlug) : null;
@@ -42,7 +51,21 @@ export function BlogIndex({locale}: {locale: Locale}) {
     <section className="page-intro blog-intro"><span className="eyebrow">{copy.eyebrow}</span><h1>{copy.heading}</h1><p>{copy.intro}</p></section>
     <section className="content-section blog-archive" aria-labelledby="blog-archive-heading">
       <div className="section-heading"><div><span className="eyebrow">{copy.indexLabel}</span><h2 id="blog-archive-heading">{posts.length ? copy.heading : copy.emptyHeading}</h2><p>{posts.length ? copy.intro : copy.emptyBody}</p></div></div>
-      {posts.length ? <div className="blog-card-grid">{posts.map((post) => { const translation = post.translations[locale]; return <Link className="blog-card" href={links.blogPost(locale, post.slug)} key={post.slug}><span className="eyebrow">{copy.categories[translation.category]}</span><h3>{translation.title}</h3><p>{translation.description}</p><small>{copy.readingTime(translation.readingMinutes)}</small></Link>; })}</div> : <div className="blog-empty"><strong>{copy.emptyHeading}</strong><p>{copy.emptyBody}</p></div>}
+      {posts.length ? <div className="blog-card-grid">{posts.map((post) => {
+        const translation = post.translations[locale];
+        const image = post.heroImageSlug ? imageFor(post.heroImageSlug) : null;
+        return <Link className="blog-card" href={links.blogPost(locale, post.slug)} key={post.slug}>
+          <div className="blog-card-media">
+            {image ? <Image src={image.file} alt="" fill sizes="(max-width: 720px) 100vw, (max-width: 1050px) 50vw, 33vw" /> : <div className="blog-card-media-fallback" aria-hidden="true" />}
+            <span className="blog-card-badge">{copy.categories[translation.category]}</span>
+          </div>
+          <div className="blog-card-body">
+            <div className="blog-card-meta"><time dateTime={post.publishedAt ?? post.modifiedAt}>{publishedDate(post, locale)}</time><span aria-hidden="true">·</span><span>{copy.readingTime(translation.readingMinutes)}</span></div>
+            <h3>{translation.title}</h3>
+            <p>{translation.description}</p>
+          </div>
+        </Link>;
+      })}</div> : <div className="blog-empty"><strong>{copy.emptyHeading}</strong><p>{copy.emptyBody}</p></div>}
     </section>
   </>;
 }
