@@ -39,7 +39,7 @@ function Article({post, locale}: {post: BlogPost; locale: Locale}) {
       <p>{translation.description}</p>
       <small>{t(locale).blog.readingTime(translation.readingMinutes)}</small>
     </header>
-    {image ? <figure className="blog-hero-image"><Image src={image.file} alt={translation.heroAlt} width={1600} height={900} priority sizes="(max-width: 720px) 100vw, 1200px"/><figcaption>{image.attribution}</figcaption></figure> : null}
+    {image ? <figure className="blog-hero-image"><Image src={image.file} alt={translation.heroAlt} width={2400} height={1600} priority sizes="(max-width: 720px) 100vw, 1200px"/><figcaption>{image.attribution}</figcaption></figure> : null}
     <div className="blog-blocks">{translation.blocks.map((block, index) => <Block block={block} locale={locale} key={`${block.type}-${index}`}/>)}</div>
   </article>;
 }

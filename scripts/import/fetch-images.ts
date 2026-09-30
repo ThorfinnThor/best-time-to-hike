@@ -26,9 +26,12 @@ const API = "https://commons.wikimedia.org/w/api.php";
 const UA = "BestTimeToHike/0.1 (https://besttimetohike.com; data pipeline)";
 const OUT_DIR = "public/images/destinations";
 const MANIFEST = "data-config/sources/destination-images.json";
-const WIDTH = 1200;
-const HEIGHT = 800;
-const MIN_SOURCE_WIDTH = 1000;
+// Destination cards can use a 1200px crop, but article heroes are rendered
+// wider on large screens. Keep a 2x source so those heroes stay sharp instead
+// of enlarging the old 1200px exports.
+const WIDTH = 2400;
+const HEIGHT = 1600;
+const MIN_SOURCE_WIDTH = 1800;
 const EARLIEST_YEAR = 1995;
 
 interface ImageRecord {
@@ -210,7 +213,7 @@ async function fetchFor(destination: DestinationConfig, taken: Set<string>): Pro
       const buffer = Buffer.from(await binary.arrayBuffer());
       const file = `${destination.slug}.webp`;
       mkdirSync(OUT_DIR, {recursive: true});
-      await sharp(buffer).resize(WIDTH, HEIGHT, {fit: "cover", position: "attention"}).webp({quality: 78}).toFile(join(OUT_DIR, file));
+      await sharp(buffer).resize(WIDTH, HEIGHT, {fit: "cover", position: "attention"}).webp({quality: 88}).toFile(join(OUT_DIR, file));
       const licence = candidate.licence!;
       return {
         slug: destination.slug,
