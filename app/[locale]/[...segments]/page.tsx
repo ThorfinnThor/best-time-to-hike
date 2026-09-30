@@ -7,17 +7,19 @@ import { licenceUrl, sourceLicenceUrl } from "@/lib/media/licence";
 import { Finder } from "@/components/finder/Finder";
 import { HomePage } from "@/components/home/HomePage";
 import { ComparisonPage, DestinationPage, MethodNote, MonthPage, RankingPage } from "@/components/hiking/Pages";
+import { BlogIndex, BlogPostPage } from "@/components/blog/BlogPages";
 import { LongformArticle } from "@/components/seo/LongformArticle";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getAllDestinations, getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
+import { getBlogPost } from "@/lib/blog/content";
 import { locales, monthName, themes } from "@/lib/i18n/config";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { altLanguages } from "@/lib/i18n/links";
 import { absoluteUrl, SITE } from "@/lib/site";
 import { pathFor, resolvePageId, type PageId } from "@/lib/i18n/resolve";
 import { pageSeo } from "@/lib/seo/page-seo";
-import { breadcrumbLd, datasetLd, destinationFaqLd, destinationPageLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
+import { blogCollectionLd, blogPostingLd, breadcrumbLd, datasetLd, destinationFaqLd, destinationPageLd, organisationLd, rankingLd, webSiteLd } from "@/lib/seo/jsonld";
 import { areaById } from "@/lib/seo/areas";
 import operator from "@/config/operator.json";
 import { blockingComponents } from "@/lib/scoring/recommendations";
@@ -57,7 +59,7 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
       googleBot: {index: seo.index, follow: true, "max-snippet": -1, "max-image-preview": "large", "max-video-preview": -1},
     },
     openGraph: {
-      type: page.kind === "destination" || page.kind === "destinationMonth" ? "article" : "website",
+      type: page.kind === "destination" || page.kind === "destinationMonth" || page.kind === "blogPost" ? "article" : "website",
       siteName: SITE.name,
       locale: locale === "de" ? "de_DE" : "en_GB",
       title: seo.title,
@@ -168,6 +170,16 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
       return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={rankingLd(label, area.destinations.slice(0, 20).map((destination) => ({name: destination.name, path: pathFor({kind:"destination", slug: destination.slug}, locale)})))}/>
         <Breadcrumbs trail={trail} locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
+    case "blogIndex": {
+      const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: t(locale).blog.indexLabel, path: pathFor(page, locale)}];
+      return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={blogCollectionLd(locale)}/><Breadcrumbs trail={trail} locale={locale}/><BlogIndex locale={locale}/></>;
+    }
+    case "blogPost": {
+      const post=getBlogPost(page.slug); if(!post) notFound();
+      const translation=post.translations[locale];
+      const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: t(locale).blog.indexLabel, path: pathFor({kind:"blogIndex"}, locale)}, {name: translation.title, path: pathFor(page, locale)}];
+      return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={blogPostingLd(post, locale)}/><Breadcrumbs trail={trail} locale={locale}/><BlogPostPage slug={page.slug} locale={locale}/></>;
+    }
     case "compare": { if(!getComparisonIndex().some((item)=>item.slug===page.slug)) notFound(); return <ComparisonPage comparison={getComparison(page.slug)} locale={locale}/>; }
     case "compareTool": { const copy=t(locale); return <><section className="page-intro tool-intro"><span className="eyebrow">{copy.comparison.eyebrow}</span><h1>{copy.compareToolHeading}</h1><p>{copy.compare.toolIntro}</p></section><div className="finder-page"><ComparisonTool destinations={getSearchIndex()} locale={locale}/></div><MethodNote locale={locale}/></>; }
     case "info": return <InformationPage locale={locale} pageKey={page.key}/>;

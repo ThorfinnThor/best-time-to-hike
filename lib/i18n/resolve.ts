@@ -9,6 +9,7 @@ import { infoRouteKeys, locales, monthNumber, routes, themeKeys, type InfoRouteK
 import { links } from "@/lib/i18n/links";
 import { areaById } from "@/lib/seo/areas";
 import type { Locale } from "@/lib/data/types";
+import { blogPostSlugs } from "@/lib/blog/content";
 
 export type PageId =
   | { kind: "home" }
@@ -20,6 +21,8 @@ export type PageId =
   | { kind: "themeIndex"; theme: ThemeKey }
   | { kind: "areaRanking"; area: string }
   | { kind: "themeRanking"; theme: ThemeKey; month: number }
+  | { kind: "blogIndex" }
+  | { kind: "blogPost"; slug: string }
   | { kind: "compare"; slug: string }
   | { kind: "compareTool" }
   | { kind: "info"; key: InfoRouteKey };
@@ -56,6 +59,12 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
     }
   }
 
+  if (head === routes.blog[locale]) {
+    if (rest.length === 0) return { kind: "blogIndex" };
+    if (rest.length === 1 && blogPostSlugs().includes(rest[0])) return { kind: "blogPost", slug: rest[0] };
+    return null;
+  }
+
   if (head === routes.compare[locale]) {
     if (rest.length === 0) return { kind: "compareTool" };
     if (rest.length === 1) return { kind: "compare", slug: rest[0] };
@@ -80,6 +89,8 @@ export function pathFor(page: PageId, locale: Locale): string {
     case "themeIndex": return links.themeIndex(locale, page.theme);
     case "areaRanking": return links.areaRanking(locale, page.area);
     case "themeRanking": return links.themeRanking(locale, page.theme, page.month);
+    case "blogIndex": return links.blogIndex(locale);
+    case "blogPost": return links.blogPost(locale, page.slug);
     case "compare": return links.compare(locale, page.slug);
     case "compareTool": return links.compareIndex(locale);
     case "info": return links[page.key](locale);

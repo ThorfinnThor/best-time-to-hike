@@ -9,6 +9,7 @@ import { longformSections } from "@/lib/seo/longform";
 import type { PageId } from "@/lib/i18n/resolve";
 import { siteMayBeIndexed } from "@/lib/seo/crawl-policy";
 import { editorialDestinationApproved } from "@/lib/seo/editorial-index";
+import { blogIndexMayBeIndexed, blogPostMayBeIndexed, getBlogPost } from "@/lib/blog/content";
 
 /**
  * Title, description and index decision per page.
@@ -166,6 +167,29 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2020 climate normal.`),
       index: publicIndexingEnabled(),
       reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
+    case "blogIndex": {
+      const indexable = publicIndexingEnabled() && blogIndexMayBeIndexed();
+      return {
+        title: de ? "Blog: Wanderentscheidungen mit Daten" : "Blog: hiking decisions explained with data",
+        description: de
+          ? "Eigenständige Beiträge zu Wanderzeiten, historischen Klimadaten und praktischer Reiseplanung."
+          : "Original reads on hiking seasons, historical climate data and practical trip planning.",
+        index: indexable,
+        reasons: indexable ? [] : ["blog-not-yet-published"],
+      };
+    }
+    case "blogPost": {
+      const post = getBlogPost(page.slug);
+      if (!post) return {title: "BestTimeToHike", description: "", index: false, reasons: ["unknown-blog-post"]};
+      const translation = post.translations[locale];
+      const indexable = publicIndexingEnabled() && blogPostMayBeIndexed(post);
+      return {
+        title: translation.title,
+        description: translation.description,
+        index: indexable,
+        reasons: indexable ? [] : ["blog-post-not-approved"],
+      };
+    }
     case "compare": {
       const comparison = getComparison(page.slug);
       const first = getDestination(comparison.destinations[0]);

@@ -34,7 +34,8 @@ export const routes = {
   credits: {en:"image-credits",de:"bildnachweis"},
   warm: {en:"warm-hiking",de:"warm-wandern"},
   snowFree: {en:"snow-free-hiking",de:"schneefrei-wandern"},
-  lowRain: {en:"low-rain-hiking",de:"wenig-regen-wandern"}
+  lowRain: {en:"low-rain-hiking",de:"wenig-regen-wandern"},
+  blog: {en:"blog",de:"blog"}
 } as const;
 
 export type RouteKey = keyof typeof routes;

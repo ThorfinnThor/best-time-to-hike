@@ -4,6 +4,7 @@ import { absoluteUrl, SITE } from "@/lib/site";
 import { profileFor } from "@/lib/seo/profile";
 import { links } from "@/lib/i18n/links";
 import { getManifest } from "@/lib/data/load";
+import { blogPostsForLocale, type BlogPost } from "@/lib/blog/content";
 
 const pageUrl = (path: string) => absoluteUrl(path.endsWith("/") ? path : `${path}/`);
 
@@ -115,4 +116,22 @@ export function rankingLd(name: string, entries: Array<{name: string; path: stri
     numberOfItems: entries.length,
     itemListElement: entries.map((entry, index) => ({
       "@type": "ListItem", position: index + 1, name: entry.name, url: pageUrl(entry.path)}))};
+}
+
+export function blogCollectionLd(locale: Locale) {
+  const posts = blogPostsForLocale(locale);
+  return {"@context": "https://schema.org", "@type": "CollectionPage", "@id": `${pageUrl(links.blogIndex(locale))}#collection`,
+    name: locale === "de" ? "BestTimeToHike Blog" : "BestTimeToHike blog", url: pageUrl(links.blogIndex(locale)), inLanguage: locale,
+    isPartOf: {"@id": absoluteUrl("/#website")}, numberOfItems: posts.length,
+    hasPart: posts.map((post) => ({"@type": "BlogPosting", url: pageUrl(links.blogPost(locale, post.slug)), headline: post.translations[locale].title}))};
+}
+
+export function blogPostingLd(post: BlogPost, locale: Locale) {
+  const translation = post.translations[locale];
+  return {"@context": "https://schema.org", "@type": "BlogPosting", "@id": `${pageUrl(links.blogPost(locale, post.slug))}#article`,
+    headline: translation.title, description: translation.description, url: pageUrl(links.blogPost(locale, post.slug)), inLanguage: locale,
+    datePublished: post.publishedAt ?? post.modifiedAt, dateModified: post.modifiedAt,
+    image: post.heroImageSlug ? absoluteUrl(`/images/destinations/${post.heroImageSlug}.webp`) : absoluteUrl("/opengraph-image"),
+    author: {"@id": absoluteUrl("/#organization")}, publisher: {"@id": absoluteUrl("/#organization")},
+    isPartOf: {"@id": absoluteUrl("/#website")}, about: "historical hiking climate and elevation data"};
 }

@@ -9,6 +9,7 @@ export function SiteFooter({locale}:{locale:Locale}) {
     {title:copy.discover,links:[
       [links.finder(locale),copy.finder],
       [links.rankingIndex(locale),t(locale).header.nav.rankings],
+      [links.blogIndex(locale),t(locale).header.nav.blog],
       [links.destination(locale,"mallorca"),copy.allMonthsFor("Mallorca")],
     ]},
     {title:copy.comparisons,links:[

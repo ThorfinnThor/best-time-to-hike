@@ -19,6 +19,7 @@ export function SiteHeader({locale,page}:{locale:Locale;page?:PageId}) {
     {href:links.compareIndex(locale),label:copy.nav.compare},
     {href:links.themeIndex(locale,"warm"),label:copy.nav.warm},
     {href:links.themeIndex(locale,"lowRain"),label:copy.nav.lowRain},
+    {href:links.blogIndex(locale),label:copy.nav.blog},
     {href:links.methodology(locale),label:copy.nav.methodology},
   ];
 
