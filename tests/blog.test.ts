@@ -62,7 +62,9 @@ test("the first editorial batch clears the bilingual article quality floor", () 
       const count = wordCount(translation.blocks);
       assert.ok(count >= 700 && count <= 1200, `${post.slug}/${locale}: ${count} words`);
       assert.ok(translation.title.length >= 20);
+      assert.ok(translation.title.length <= 60, `${post.slug}/${locale}: title is ${translation.title.length} characters`);
       assert.ok(translation.description.length >= 80);
+      assert.ok(translation.description.length <= 155, `${post.slug}/${locale}: description is ${translation.description.length} characters`);
       assert.equal(titles.has(`${locale}:${translation.title}`), false, `duplicate title: ${locale}:${translation.title}`);
       titles.add(`${locale}:${translation.title}`);
       const evidenceRefs = translation.blocks.flatMap((block) => "evidenceKey" in block ? [block.evidenceKey] : []);

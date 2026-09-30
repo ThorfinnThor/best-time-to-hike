@@ -20,8 +20,8 @@ export const rainfallTotalVersusWetDays: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Rainfall total and wet-day frequency answer different questions",
-      description: "Salkantay, Cederberg and Jeju receive almost the same monthly rain total in selected months, yet the rain is distributed across radically different numbers of days.",
+      title: "Rainfall total vs wet days: two different questions",
+      description: "Salkantay, Cederberg and Jeju receive similar monthly rain totals in selected months, yet the rain falls across very different numbers of days.",
       heroAlt: "Rock formations and mountain terrain in Cederberg, part of the matched rainfall comparison",
       category: "data-insight",
       readingMinutes: 8,
