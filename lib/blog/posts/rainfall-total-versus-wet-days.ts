@@ -4,8 +4,8 @@ import { evidence } from "./shared";
 
 export const rainfallTotalVersusWetDays: BlogPost = {
   slug: "rainfall-total-versus-wet-days",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-09-30",
   modifiedAt: "2026-09-30",
   heroImageSlug: "cederberg",
   evidence: [

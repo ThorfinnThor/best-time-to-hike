@@ -4,7 +4,7 @@
 
 The technical SEO and answer-engine layer is implemented and public indexing is explicitly enabled for pages that pass the conservative page-level quality gate. The published dataset remains `provisional`; editorial indexing approval does not represent or fabricate scientific production approval.
 
-No code change in this audit fabricates outstanding scientific, licensing, legal, accessibility/performance, or release approvals. As of 2026-09-30, the sitemap is capped at 350 URLs: 162 established entry pages plus 94 selected destination articles in both languages. Repetitive month pages, tools, legal boilerplate, unapproved comparisons and the other destination articles remain `noindex` and are omitted from the sitemap.
+No code change in this audit fabricates outstanding scientific, licensing, legal, accessibility/performance, or release approvals. As of 2026-09-30, the sitemap is capped at 364 URLs: the existing editorial index plus 14 approved bilingual blog URLs. Repetitive month pages, tools, legal boilerplate, unapproved comparisons and the other destination articles remain `noindex` and are omitted from the sitemap.
 
 ## Implemented
 

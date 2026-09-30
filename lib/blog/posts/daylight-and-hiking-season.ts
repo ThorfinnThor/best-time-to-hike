@@ -4,8 +4,8 @@ import { evidence } from "./shared";
 
 export const daylightAndHikingSeason: BlogPost = {
   slug: "daylight-and-hiking-season",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-09-30",
   modifiedAt: "2026-09-30",
   heroImageSlug: "lofotodden",
   evidence: [

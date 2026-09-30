@@ -4,8 +4,8 @@ import { evidence } from "./shared";
 
 export const wideAndNarrowHikingSeasons: BlogPost = {
   slug: "wide-and-narrow-hiking-seasons",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-09-30",
   modifiedAt: "2026-09-30",
   heroImageSlug: "grand-teton",
   evidence: [

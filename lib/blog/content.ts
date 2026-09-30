@@ -45,9 +45,9 @@ export interface BlogPost {
 }
 
 /**
- * Sol supplies the first approved posts after the editorial audit. Keeping the
- * scaffold empty means the public blog is not a thin archive or an accidental
- * index surface while the content is still being researched.
+ * The post registry is the single publication source for the bilingual blog.
+ * Editorial status and publication date are intentionally part of each entry,
+ * so the SEO and sitemap gates cannot drift away from the content decision.
  */
 export const BLOG_POSTS: readonly BlogPost[] = EDITORIAL_POSTS;
 

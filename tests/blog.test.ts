@@ -7,14 +7,15 @@ import { links } from "../lib/i18n/links";
 import { imageFor } from "../lib/media/images";
 import { pathFor, resolvePageId } from "../lib/i18n/resolve";
 import { pageSeo } from "../lib/seo/page-seo";
+import sitemap from "../app/sitemap";
 
-test("the bilingual blog entry route is crawlable but not indexable while drafts are unapproved", () => {
-  assert.equal(blogIndexMayBeIndexed(), false);
+test("the approved bilingual blog entry route is indexable", () => {
+  assert.equal(blogIndexMayBeIndexed(), true);
   for (const locale of locales) {
     const path = links.blogIndex(locale);
     const page = resolvePageId(locale, path.split("/").slice(2).filter(Boolean));
     assert.deepEqual(page, {kind: "blogIndex"});
-    assert.equal(pageSeo(page!, locale).index, false);
+    assert.equal(pageSeo(page!, locale).index, true);
   }
 });
 
@@ -42,12 +43,12 @@ function wordCount(value: unknown): number {
   return 0;
 }
 
-test("the first editorial batch clears the bilingual article quality floor", () => {
+test("the first published batch clears the bilingual article quality floor", () => {
   assert.equal(BLOG_POSTS.length, 6);
   const titles = new Set<string>();
   for (const post of BLOG_POSTS) {
-    assert.equal(post.status, "draft");
-    assert.equal(post.publishedAt, null);
+    assert.equal(post.status, "approved");
+    assert.equal(post.publishedAt, "2026-09-30");
     assert.ok(post.heroImageSlug && imageFor(post.heroImageSlug), `${post.slug} needs a licensed hero image`);
     assert.ok(post.evidence.length >= 1, `${post.slug} needs an evidence manifest`);
     const evidenceKeys = new Set(post.evidence.map((item) => item.key));
@@ -88,14 +89,18 @@ test("the first editorial batch clears the bilingual article quality floor", () 
   }
 });
 
-test("editorial drafts stay crawlable but cannot enter the index or sitemap", () => {
+test("the approved bilingual articles enter the index and sitemap", () => {
+  const blogUrls = sitemap().filter((entry) => entry.url.includes("/blog"));
+  assert.equal(blogUrls.length, 14, "six articles plus two localized index pages should produce fourteen blog URLs");
   for (const locale of locales) {
     const index = pageSeo({kind: "blogIndex"}, locale);
-    assert.equal(index.index, false);
+    assert.equal(index.index, true);
+    assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog`)));
     for (const post of BLOG_POSTS) {
       const seo = pageSeo({kind: "blogPost", slug: post.slug}, locale);
-      assert.equal(seo.index, false);
-      assert.ok(seo.reasons.includes("blog-post-not-approved"));
+      assert.equal(seo.index, true);
+      assert.deepEqual(seo.reasons, []);
+      assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}`)));
     }
   }
 });

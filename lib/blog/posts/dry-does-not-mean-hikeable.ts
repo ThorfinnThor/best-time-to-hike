@@ -4,8 +4,8 @@ import { evidence } from "./shared";
 
 export const dryDoesNotMeanHikeable: BlogPost = {
   slug: "dry-does-not-mean-hikeable",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-09-30",
   modifiedAt: "2026-09-30",
   heroImageSlug: "wadi-rum",
   evidence: [
