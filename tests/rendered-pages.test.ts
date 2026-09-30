@@ -5,6 +5,7 @@ import { DICT } from "../lib/i18n/dict";
 import { getDestinationIndex } from "../lib/data/load";
 import { locales, monthName, themeKeys } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
+import { publicIndexTargetUrlCount } from "../lib/seo/editorial-index";
 
 /**
  * Assertions against the built HTML.
@@ -144,7 +145,8 @@ test("a provisional export exposes only editorially approved pages to indexing",
   assert.match(page("robots.txt"), /User-Agent: \*\s+Allow: \/\s+Disallow: \/go\//);
   assert.match(page("robots.txt"), /Sitemap: https:\/\/besttimetohike\.com\/sitemap\.xml/);
   assert.match(page("sitemap.xml"), /<url>/);
-  assert.equal((page("sitemap.xml").match(/<url>/g) ?? []).length, 300, "sitemap should contain the approved 300 URLs");
+  assert.equal((page("sitemap.xml").match(/<url>/g) ?? []).length, publicIndexTargetUrlCount(),
+    `sitemap should contain the approved ${publicIndexTargetUrlCount()} URLs`);
   for (const path of ["en/index.html", "de/index.html", "en/best-hiking-destinations/june/index.html", "en/methodology/index.html", "en/hiking-destinations/dolomites/index.html"]) {
     assert.match(page(path), /<meta name="robots" content="index, follow"\/>/, `${path} is not indexable`);
   }

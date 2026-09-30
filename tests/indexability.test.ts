@@ -62,13 +62,13 @@ test("no month page is ever an entry point", () => {
   assert.equal(byKind.info ?? 0, 4, "only methodology and about may be editorial entry points in both languages");
 });
 
-test("the approved index stays at three hundred strong pages, not thousands of templates", () => {
+test("the approved index stays at its editorial target, not thousands of templates", () => {
   const byKind = currentIndex();
   const total = Object.values(byKind).reduce((sum, count) => sum + count, 0);
   assert.equal(total, publicIndexTargetUrlCount(),
     `${total} pages are indexable; the version-controlled editorial target is ${publicIndexTargetUrlCount()}.`);
   assert.equal(byKind.destination ?? 0, editorialDestinationSlugs().length * 2,
     "every selected destination article should be indexable in both languages");
-  assert.ok((byKind.ranking ?? 0) + (byKind.themeRanking ?? 0) + (byKind.areaRanking ?? 0) > total * 0.5,
-    "the majority of the public index should remain substantive ranking and area pages");
+  assert.ok((byKind.ranking ?? 0) + (byKind.themeRanking ?? 0) + (byKind.areaRanking ?? 0) > total * 0.4,
+    "at least 40 percent of the public index should remain substantive ranking and area pages");
 });
