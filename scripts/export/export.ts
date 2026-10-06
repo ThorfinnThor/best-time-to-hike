@@ -3,22 +3,37 @@ import { join, relative } from "node:path";
 import type { CompactMonth, CompactSearchDestination, Comparison, ComponentScores, DatasetStatus, DestinationConfig, PublicDestination, Ranking } from "../../lib/data/types";
 import pageDefinitions from "../../data-config/seo/page-definitions.json";
 import scoringWeights from "../../data-config/scoring/weights.json";
+import climateAggregation from "../../data-config/methodology/climate-aggregation-v1.json";
 import { bestMonthsFor, COMPONENT_KEYS } from "../../lib/scoring/recommendations";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
 
-type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: PublicDestination["months"]; recommendationEligible:boolean; recommendationHoldReason?:"persistent-snow"; representativeCell:{lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string}; datasetStatus:DatasetStatus; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; retrievedAt:string};
+type InternalBand = PublicDestination["months"][number]["bands"][number] & {
+  confidenceScore?:number|null;
+  confidenceLevel?:string|null;
+  scoringInputsAvailable?:boolean;
+  missingScoringInputs?:string[];
+  observationCoverage?:unknown;
+  interannualYearlyScores?:unknown;
+};
+type InternalMonth = Omit<PublicDestination["months"][number], "bands"> & {confidenceScore?:number|null; confidenceLevel?:string|null; bands: InternalBand[]};
+type Scored = {destination: DestinationConfig; dem: {source?:string;sourceProduct?:string;area:{minM:number;medianM:number;maxM:number}}; months: InternalMonth[]; recommendationEligible:boolean; recommendationHoldReason?:"persistent-snow"|"precipitation-validation"; representativeCell:{lat:number;lon:number;modelElevationM:number;overrideLabel?:string;overrideReason?:string}; datasetStatus:DatasetStatus; aggregationPolicyVersion:string; historicalPeriod:{startYear:number;endYear:number;classification:string}; climateSource:string; climateSourceDataset?:string; climateSourceDoi?:string; retrievedAt:string};
 const scored = readJson<Scored[]>("generated/intermediate/scored.json");
 const statuses = new Set(scored.map((item) => item.datasetStatus));
 if (statuses.size !== 1) throw new Error(`EXPORT001 mixed dataset statuses: ${[...statuses].join(", ")}`);
 const datasetStatus = [...statuses][0];
+const period = scored[0]?.historicalPeriod ?? {startYear: climateAggregation.normal.startYear, endYear: climateAggregation.normal.endYear, classification: "project-defined-historical-climate-average"};
 const updatedAt = scored.map((item) => item.retrievedAt).sort().at(-1) ?? "2026-08-31T00:00:00.000Z";
-const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months, recommendationEligible, recommendationHoldReason, representativeCell, climateSource, climateSourceDataset, climateSourceDoi}) => {
+const publicDestinations: PublicDestination[] = scored.map(({destination, dem, months, recommendationEligible, recommendationHoldReason, representativeCell, aggregationPolicyVersion, historicalPeriod, climateSource, climateSourceDataset, climateSourceDoi}) => {
   const eligibleMonths = months.filter((item) => item.recommendationEligible && item.overallScore !== null);
   const bestMonths = bestMonthsFor(months);
   const alternatives = scored.filter((item)=>item.destination.slug!==destination.slug && item.recommendationEligible).sort((a,b)=>b.months.filter((m)=>m.recommendationEligible && m.overallScore !== null).reduce((s,m)=>s+m.overallScore!,0)-a.months.filter((m)=>m.recommendationEligible && m.overallScore !== null).reduce((s,m)=>s+m.overallScore!,0)).slice(0,3).map((item)=>item.destination.slug);
   const fixture = datasetStatus === "fixture";
   const sourceLabel = fixture ? "synthetic fixture shaped like ERA5-Land" : `${climateSourceDataset ?? climateSource}${climateSourceDoi ? ` (DOI ${climateSourceDoi})` : ""}`;
-  return {schemaVersion:1,algorithmVersion:scoringWeights.algorithmVersion,datasetStatus,id:destination.id,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,countryName:destination.countryName,continent:destination.continent,region:destination.region,timezone:destination.timezone,tags:destination.tags,coordinates:destination.coordinates,elevationBands:destination.elevationBands,elevation:{minM:dem.area.minM,medianM:dem.area.medianM,maxM:dem.area.maxM},months,recommendationEligible,recommendationHoldReason,representativeCell,bestMonths,alternatives,provenance:{temperature:sourceLabel,precipitation:sourceLabel,snow:sourceLabel,wind:`${sourceLabel}; coarse 10 m grid-cell wind, not exposed-trail or gust validation`,elevation:fixture?"synthetic fixture shaped like Copernicus DEM GLO-30":"selected representative ERA5-Land model-grid cell",daylight:"deterministic astronomical calculation from coordinates and local date",scope:"one selected representative model-grid cell; not a whole-region or route-specific average",...(representativeCell.overrideLabel ? {representativeCellOverrideLabel:representativeCell.overrideLabel,representativeCellOverrideReason:representativeCell.overrideReason ?? ""} : {})},updatedAt};
+  const publicMonths = months.map(({confidenceScore: _confidenceScore, confidenceLevel: _confidenceLevel, bands, ...month}) => ({
+    ...month,
+    bands: bands.map(({confidenceScore: _bandConfidenceScore, confidenceLevel: _bandConfidenceLevel, scoringInputsAvailable: _scoringInputsAvailable, missingScoringInputs: _missingScoringInputs, observationCoverage: _observationCoverage, interannualYearlyScores: _interannualYearlyScores, ...band}) => band)
+  }));
+  return {schemaVersion:1,algorithmVersion:scoringWeights.algorithmVersion,aggregationPolicyVersion,datasetStatus,id:destination.id,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,countryName:destination.countryName,continent:destination.continent,region:destination.region,timezone:destination.timezone,tags:destination.tags,coordinates:destination.coordinates,elevationBands:destination.elevationBands,elevation:{minM:dem.area.minM,medianM:dem.area.medianM,maxM:dem.area.maxM},months:publicMonths,recommendationEligible,recommendationHoldReason,representativeCell,historicalPeriod:{startYear:period.startYear,endYear:period.endYear,classification:period.classification},bestMonths,alternatives,provenance:{temperature:sourceLabel,precipitation:sourceLabel,snow:sourceLabel,wind:`${sourceLabel}; coarse 10 m grid-cell wind, excluded from the score and not exposed-trail or gust validation`,elevation:fixture?"synthetic fixture shaped like Copernicus DEM GLO-30":"selected representative ERA5-Land model-grid cell",daylight:"deterministic astronomical calculation from coordinates and local date",scope:"one selected representative model-grid cell; not a whole-region or route-specific average",...(representativeCell.overrideLabel ? {representativeCellOverrideLabel:representativeCell.overrideLabel,representativeCellOverrideReason:representativeCell.overrideReason ?? ""} : {})},updatedAt};
 });
 
 for (const destination of publicDestinations) {
@@ -32,8 +47,7 @@ writeJson("public/data/hiking/destinations/index.json", publicDestinations.map((
 // The finder is a client component, so this file is serialised into the RSC
 // payload of every page that renders one. Keys repeated across 1,500 month
 // entries dominate the size, so months are tuples rather than objects, and
-// three fields are dropped: wind and confidence are unused by the finder, and
-// confidence is a constant 64 under the provisional cap. Eligibility is not
+// wind and data-quality metadata are not finder inputs. Eligibility is not
 // carried either, because only eligible months are exported here at all.
 // Field order is [month, score, temperature, wetDays, snowDays, hotDays, daylight].
 const round2 = (value: number) => Math.round(value * 100) / 100;
@@ -82,9 +96,9 @@ for (let month = 1; month <= 12; month += 1) {
       const data = destination.months[month-1];
       return destination.recommendationEligible && data.recommendationEligible && data.overallScore !== null && (theme === "all" || (theme === "warm" && data.metrics.temperatureHikingMeanC >= 15) || (theme === "snow-free" && data.metrics.snowDayProbability <= .08) || (theme === "low-rain" && data.metrics.wetDayProbability <= .2));
     });
-  const sorted = filtered.sort((a,b)=>b.months[month-1].overallScore!-a.months[month-1].overallScore! || b.months[month-1].confidenceScore!-a.months[month-1].confidenceScore! || a.slug.localeCompare(b.slug));
+  const sorted = filtered.sort((a,b)=>b.months[month-1].overallScore!-a.months[month-1].overallScore! || a.slug.localeCompare(b.slug));
     const id = `${theme === "all" ? "global" : theme}-${month}`;
-  const ranking: Ranking = {schemaVersion:1,id,month,region:"global",theme,indexable:false,entries:sorted.map((destination,index)=>{const m=destination.months[month-1];return{rank:index+1,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,score:m.overallScore!,confidence:m.confidenceScore!,tempC:m.metrics.temperatureHikingMeanC,wet:m.metrics.wetDayProbability,snow:m.metrics.snowDayProbability}})};
+  const ranking: Ranking = {schemaVersion:1,id,month,region:"global",theme,indexable:false,entries:sorted.map((destination,index)=>{const m=destination.months[month-1];return{rank:index+1,slug:destination.slug,name:destination.name,countryCode:destination.countryCode,score:m.overallScore!,tempC:m.metrics.temperatureHikingMeanC,wet:m.metrics.wetDayProbability,snow:m.metrics.snowDayProbability}})};
     writeJson(`public/data/hiking/rankings/${id}.json`, ranking);
     rankingIds.push(id);
   }
@@ -118,5 +132,5 @@ function files(dir: string): string[] { return readdirSync(dir,{withFileTypes:tr
 const dataRoot = join(ROOT,"public/data/hiking");
 const existing = files(dataRoot).filter((path)=>!path.endsWith("manifest.json"));
 const fileChecksums = Object.fromEntries(existing.sort().map((path)=>[relative(dataRoot,path),sha256(readFileSync(path))]));
-writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:scoringWeights.algorithmVersion,datasetVersion:datasetStatus==="fixture"?"fixture-2026-08-31.1":"era5-land-representative-point-1991-2020-v1",datasetStatus,generatedAt:updatedAt,climateNormal:{startYear:1991,endYear:2020},sourceVersions:{climate:datasetStatus==="fixture"?"synthetic-era5-compatible-fixture":"reanalysis-era5-land-timeseries DOI 10.24381/ee82e357",elevation:datasetStatus==="fixture"?"synthetic-dem-compatible-fixture":"ERA5-Land auxiliary invariant geopotential pinned SHA-256"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
+writeJson("public/data/hiking/manifest.json",{schemaVersion:1,algorithmVersion:scoringWeights.algorithmVersion,datasetVersion:datasetStatus==="fixture"?"fixture-2026-08-31.1":`era5-land-representative-point-${period.startYear}-${period.endYear}-v1`,datasetStatus,generatedAt:updatedAt,climateNormal:{startYear:period.startYear,endYear:period.endYear},historicalPeriod:{startYear:period.startYear,endYear:period.endYear,classification:period.classification},sourceVersions:{climate:datasetStatus==="fixture"?"synthetic-era5-compatible-fixture":"reanalysis-era5-land-timeseries DOI 10.24381/ee82e357",elevation:datasetStatus==="fixture"?"synthetic-dem-compatible-fixture":"ERA5-Land auxiliary invariant geopotential pinned SHA-256"},destinationCount:publicDestinations.length,rankingIds,fileChecksums,totalBytes:existing.reduce((sum,path)=>sum+statSync(path).size,0)});
 console.log(`Exported ${publicDestinations.length} destinations, ${rankingIds.length} rankings and ${comparisons.length} comparisons.`);

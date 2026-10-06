@@ -123,7 +123,7 @@ test("FAQ structured data contains exactly the visible destination answers", () 
 test("methodology dataset markup identifies source, period and downloads", () => {
   const ld = datasetLd("en") as Record<string, unknown>;
   assert.equal(ld["@type"], "Dataset");
-  assert.equal(ld.temporalCoverage, "1991/2020");
+  assert.equal(ld.temporalCoverage, "1991/2025");
   assert.equal(ld.isBasedOn, "https://doi.org/10.24381/ee82e357");
   assert.ok(Array.isArray(ld.distribution));
 });

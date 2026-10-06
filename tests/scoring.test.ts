@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { adjustTemperature, confidenceScore, interpolate, overallScore, relativeHumidity, roundHalfAwayFromZero, scoreComponents, windKmh } from "../lib/scoring";
-import { guardConfidence, hasPersistentSnowHold, recommendationDecision } from "../lib/scoring/recommendations";
+import { hasPersistentSnowHold, recommendationDecision } from "../lib/scoring/recommendations";
 
 test("numeric scientific reference vectors",()=>{
   assert.equal(288.15-273.15,15);
@@ -35,6 +35,13 @@ test("unvalidated grid-cell wind cannot increase confidence",()=>{
   assert.equal(highRelief,lowRelief);
 });
 
+test("unvalidated grid-cell wind cannot change score, eligibility, or label",()=>{
+  const calm={temperature:80,precipitation:80,snow:80,heatStress:80,wind:100,daylight:80};
+  const exposed={...calm,wind:0};
+  assert.equal(overallScore(calm),overallScore(exposed));
+  assert.deepEqual(recommendationDecision(calm,overallScore(calm)),recommendationDecision(exposed,overallScore(exposed)));
+});
+
 test("missing score inputs fail instead of silently renormalizing",()=>{
   assert.throws(()=>scoreComponents({temperatureUtilitySamplesC:[],wetDayProbability:0,heavyRainDayProbability:0,snowDayProbability:0,snowDepthMeanOnSnowDaysM:0,hotDayProbability:0,severeHotDayProbability:0,windHikingMeanKmh:10,highWindHourProbability:0,daylightHoursMean:12} as any),/SCORE001/);
   assert.throws(()=>overallScore({temperature:90,precipitation:90,snow:90,heatStress:90,wind:Number.NaN,daylight:90}),/SCORE001/);
@@ -66,9 +73,7 @@ test("persistent snow hold uses the configured exact month count",()=>{
   assert.equal(hasPersistentSnowHold([...months.slice(0,11),{metrics:{snowDayProbability:.9999}}] as any),false);
 });
 
-test("provisional single-point confidence is capped at low 64",()=>{
-  const guarded=guardConfidence(100,"provisional",1,undefined);
-  assert.deepEqual(guarded,{score:64,level:"low"});
+test("public recommendation eligibility does not depend on a confidence cap",()=>{
   const eligible=recommendationDecision({temperature:80,precipitation:80,snow:80,heatStress:80,wind:80,daylight:80},80);
   assert.equal(eligible.recommendationEligible,true);
   assert.equal(eligible.overallScore,80);

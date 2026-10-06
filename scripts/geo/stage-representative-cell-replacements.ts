@@ -127,7 +127,7 @@ async function main() {
       modelElevationM: round(point.era5LandGridElevationM, 1),
       landSeaFraction: point.landSeaFraction,
       approval: false,
-      requiredNext: "Download the full 1991-2020 climate, reject persistent snow, then perform coordinate-level route QA.",
+      requiredNext: "Download the full 1991-2025 historical period, reject persistent snow, then perform coordinate-level route QA.",
     };
   });
   writeJson(`${workRoot}/preflight-report.json`, {schemaVersion: 1, status: "science-staging", approval: false, candidates: report});

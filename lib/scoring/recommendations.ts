@@ -1,11 +1,13 @@
 import representativenessConfig from "@/data-config/methodology/era5-land-representativeness-v1.json";
 import recommendationConfig from "@/data-config/methodology/recommendation-eligibility-v1.json";
-import { confidenceLevel, scoreLevel } from "@/lib/scoring/index";
-import type { ComponentScores, ConfidenceLevel, DatasetStatus, PublicMonth, ScoreLevel } from "@/lib/data/types";
+import { scoreLevel } from "@/lib/scoring/index";
+import type { ComponentScores, PublicMonth, ScoreLevel } from "@/lib/data/types";
 
 export const COMPONENT_KEYS = ["temperature", "precipitation", "snow", "heatStress", "wind", "daylight"] as const;
 export type ComponentKey = (typeof COMPONENT_KEYS)[number];
 export type CriticalComponentKey = ComponentKey;
+export const BEST_MONTH_COMPONENT_KEYS: readonly ComponentKey[] = COMPONENT_KEYS
+  .filter((key) => (recommendationConfig.bestMonthComponents as string[]).includes(key));
 
 /**
  * The components that can veto a month, read from config rather than fixed here.
@@ -16,7 +18,7 @@ export type CriticalComponentKey = ComponentKey;
  * snow, heat, wind and daylight all scoring in the nineties. The distinction
  * that matters is not how pleasant a component makes the walk but whether it
  * makes the walk a bad idea, and rain does not belong on that side of it.
- * Precipitation keeps its full 20 percent of the score, so a wet destination
+ * Precipitation keeps its full 22.22 percent of the score, so a wet destination
  * ranks low on its own merits instead of vanishing from the catalogue.
  */
 export const CRITICAL_COMPONENT_FLOOR = recommendationConfig.criticalComponentMinimumExclusive;
@@ -33,7 +35,7 @@ export interface RecommendationDecision {
    * Components at or below the same floor that no longer veto the month.
    *
    * Demoting precipitation stopped it hiding destinations, and put a different
-   * problem in its place: at 20 percent of the score, a precipitation component
+   * problem in its place: at 22.22 percent of the score, a precipitation component
    * of 1 still leaves a ceiling near 80, so a place where it rains almost every
    * day can be published as good or very good hiking. The score is arithmetically
    * right and reads as an overclaim, so the month carries the reason with it.
@@ -45,9 +47,9 @@ export interface RecommendationDecision {
  * The published label for a score, held down by a component at the floor.
  *
  * Demoting precipitation let a month with rain at 1 out of 100 reach 82 and
- * carry the "very good" label, because 20 percent weight cannot cost more than
- * 20 points. The arithmetic is right and the word is not: nothing should be
- * called very good hiking while one of the six things we measure is at the
+ * carry the "very good" label, because 22.22 percent weight cannot cost more than
+ * 22.22 points. The arithmetic is right and the word is not: nothing should be
+ * called very good hiking while one of the five scored climate-fit components is at the
  * bottom of its scale. The number stands, the label stops at "good", and the
  * month page names the component. Only the label moves, so the score, the
  * ranking order and every comparison are untouched.
@@ -71,7 +73,7 @@ export function recommendationDecision(
   const guardedScore = recommendationEligible
     ? Math.max(0, Math.min(100, overallScore))
     : Math.min(recommendationConfig.ineligibleScoreMaximum, Math.max(0, overallScore));
-  const belowFloorComponents = COMPONENT_KEYS.filter((key) => {
+  const belowFloorComponents = BEST_MONTH_COMPONENT_KEYS.filter((key) => {
     if (CRITICAL_COMPONENT_KEYS.includes(key)) return false;
     const value = components[key];
     return !Number.isFinite(value) || value <= recommendationConfig.criticalComponentMinimumExclusive;
@@ -130,7 +132,7 @@ export function blockingComponents(months: Array<{components: ComponentScores | 
 export function bestMonthsFor(months: Array<{month: number; recommendationEligible: boolean; overallScore: number | null; components: ComponentScores | null}>): number[] {
   return months
     .filter((month) => month.recommendationEligible && month.overallScore !== null && month.components !== null
-      && !COMPONENT_KEYS.some((key) => month.components![key] <= recommendationConfig.bestMonthComponentMinimumExclusive))
+      && !BEST_MONTH_COMPONENT_KEYS.some((key) => month.components![key] <= recommendationConfig.bestMonthComponentMinimumExclusive))
     .sort((a, b) => b.overallScore! - a.overallScore! || a.month - b.month)
     .slice(0, 3)
     .map((month) => month.month)
@@ -141,27 +143,3 @@ export function hasPersistentSnowHold(months: Array<Pick<PublicMonth, "metrics">
   const reviewMonthCount = representativenessConfig.glacier.persistentSnowReviewMonthCount;
   return months.filter((month) => month.metrics.snowDayProbability === 1).length === reviewMonthCount;
 }
-
-export function isUnapprovedProvisionalSinglePoint(
-  datasetStatus: DatasetStatus,
-  samplePointCount: number,
-  representativenessApproved: boolean | undefined,
-): boolean {
-  return datasetStatus === recommendationConfig.provisionalSinglePointConfidenceCap.datasetStatus
-    && samplePointCount === recommendationConfig.provisionalSinglePointConfidenceCap.samplePointCount
-    && representativenessApproved !== true;
-}
-
-export function guardConfidence(
-  confidence: number,
-  datasetStatus: DatasetStatus,
-  samplePointCount: number,
-  representativenessApproved: boolean | undefined,
-): { score: number; level: ConfidenceLevel } {
-  if (isUnapprovedProvisionalSinglePoint(datasetStatus, samplePointCount, representativenessApproved)) {
-    const maximum = recommendationConfig.provisionalSinglePointConfidenceCap.maximumScore;
-    return { score: Math.min(maximum, Math.max(0, confidence)), level: "low" };
-  }
-  return { score: Math.max(0, Math.min(100, confidence)), level: confidenceLevel(confidence) };
-}
-

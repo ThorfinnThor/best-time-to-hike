@@ -4,6 +4,14 @@ export interface GoldenCase {
   approvedBy: string | null;
   approvedAt: string | null;
   acceptedDeviation?: { reason: string; recordedBy: string; recordedAt: string; engineMonths: number[] };
+  historicalPeriodApprovals?: Array<{
+    startYear: number;
+    endYear: number;
+    approvedBy: string;
+    approvedAt: string;
+    engineMonths: number[];
+    acceptedDeviation: GoldenCase["acceptedDeviation"] | null;
+  }>;
 }
 
 const validMonths = (months: number[]) => Array.isArray(months)
@@ -16,12 +24,13 @@ const sameMonths = (a: number[], b: number[]) => a.length === b.length && a.ever
 /** Compare independent labels with the published answer, including exact exception scope. */
 export function reviewGoldenCases(
   golden: { status: string; cases: GoldenCase[] },
-  destinations: { slug: string; bestMonths: number[] }[],
+  destinations: { slug: string; bestMonths: number[]; recommendationHoldReason?: string }[],
 ) {
   const bySlug = new Map(destinations.map((destination) => [destination.slug, destination]));
   const seen = new Set<string>();
   const cases = golden.cases.map((item) => {
     const destination = bySlug.get(item.slug);
+    const excludedForScientificReview = Boolean(destination?.recommendationHoldReason);
     const best = destination?.bestMonths ?? [];
     const outside = best.filter((month) => !item.expectedMonths.includes(month));
     const verdict = !best.length ? "no answer" : !outside.length ? "agrees"
@@ -36,16 +45,19 @@ export function reviewGoldenCases(
     if (deviation) {
       if (deviation.reason.trim().length <= 60 || !signed(deviation.recordedBy, deviation.recordedAt)
         || !validMonths(deviation.engineMonths)) errors.push("invalid-deviation");
-      if (!sameMonths(best, deviation.engineMonths)) errors.push("stale-deviation");
-    } else if (verdict !== "agrees") errors.push("unaccepted-deviation");
+      if (!excludedForScientificReview && !sameMonths(best, deviation.engineMonths)) errors.push("stale-deviation");
+    } else if (!excludedForScientificReview && verdict !== "agrees") errors.push("unaccepted-deviation");
     return { slug: item.slug, verdict, expectedMonths: item.expectedMonths, engineMonths: best,
-      acceptedDeviation: Boolean(deviation), errors };
+      acceptedDeviation: Boolean(deviation), excludedForScientificReview,
+      holdReason: destination?.recommendationHoldReason ?? null, errors };
   });
   const acceptedDeviations = golden.cases.filter((item) => item.acceptedDeviation).length;
   return {
     passed: golden.status === "APPROVED" && golden.cases.length >= 30
       && acceptedDeviations <= golden.cases.length / 4 && cases.every((item) => !item.errors.length),
     signedCases: golden.cases.filter((item) => signed(item.approvedBy, item.approvedAt)).length,
+    reviewedCaseCount: cases.filter((item) => !item.excludedForScientificReview).length,
+    excludedForScientificReview: cases.filter((item) => item.excludedForScientificReview).map((item) => item.slug),
     acceptedDeviations,
     maximumAcceptedDeviations: Math.floor(golden.cases.length / 4),
     tally: {
@@ -56,4 +68,39 @@ export function reviewGoldenCases(
     },
     cases,
   };
+}
+
+/** Apply an explicitly signed engine-answer review without rewriting the independent label. */
+export function reviewGoldenCasesForPeriod(
+  golden: { status: string; cases: GoldenCase[] },
+  destinations: { slug: string; bestMonths: number[]; recommendationHoldReason?: string }[],
+  period: { startYear: number; endYear: number },
+) {
+  const approvals = new Map(golden.cases.flatMap((item) => {
+    const matches = item.historicalPeriodApprovals?.filter((approval) =>
+      approval.startYear === period.startYear && approval.endYear === period.endYear) ?? [];
+    if (matches.length > 1) throw new Error(`${item.slug}: duplicate historical-period approval`);
+    return matches.map((approval) => [item.slug, approval] as const);
+  }));
+  const effective = {
+    ...golden,
+    cases: golden.cases.map((item) => {
+      const approval = approvals.get(item.slug);
+      if (!approval) return item;
+      const { acceptedDeviation: _oldDeviation, ...withoutDeviation } = item;
+      return approval.acceptedDeviation
+        ? { ...withoutDeviation, acceptedDeviation: approval.acceptedDeviation }
+        : withoutDeviation;
+    }),
+  };
+  const review = reviewGoldenCases(effective, destinations);
+  for (const item of review.cases) {
+    const approval = approvals.get(item.slug);
+    if (!approval) continue;
+    if (!signed(approval.approvedBy, approval.approvedAt)
+      || !validMonths(approval.engineMonths)) item.errors.push("invalid-period-approval");
+    if (!sameMonths(item.engineMonths, approval.engineMonths)) item.errors.push("stale-period-approval");
+  }
+  review.passed = review.passed && review.cases.every((item) => !item.errors.length);
+  return review;
 }

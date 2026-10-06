@@ -37,27 +37,27 @@ test("the dry-climate article keeps heat-risk claims tied to destination artifac
     wadiRumJuly.metrics.temperatureHikingMeanC,
     wadiRumJuly.metrics.hotDayProbability,
     wadiRumJuly.recommendationEligible,
-  ], [0, 30, 0.9968, false]);
+  ], [0, 30.1, 0.9972, false]);
   assert.deepEqual([
     archesJuly.metrics.wetDayProbability,
     archesJuly.metrics.temperatureHikingMeanC,
     archesJuly.metrics.hotDayProbability,
     archesJuly.recommendationEligible,
-  ], [0.086, 30.7, 0.971, false]);
+  ], [0.0839, 30.8, 0.9742, false]);
   assert.deepEqual([
     mallorcaJuly.metrics.wetDayProbability,
     mallorcaJuly.metrics.temperatureHikingMeanC,
     mallorcaJuly.metrics.hotDayProbability,
     mallorcaJuly.recommendationEligible,
-  ], [0.057, 27.5, 0.7882, false]);
-  assertLocalizedClaim("dry-does-not-mean-hikeable", "99.68%", "99,68%");
-  assertLocalizedClaim("dry-does-not-mean-hikeable", "30.7 °C", "30,7 °C");
-  assertLocalizedClaim("dry-does-not-mean-hikeable", "78.82%", "78,82%");
+  ], [0.0581, 27.7, 0.7991, false]);
+  assertLocalizedClaim("dry-does-not-mean-hikeable", "99.72%", "99,72%");
+  assertLocalizedClaim("dry-does-not-mean-hikeable", "30.8 °C", "30,8 °C");
+  assertLocalizedClaim("dry-does-not-mean-hikeable", "79.91%", "79,91%");
 });
 
 test("the season-width article uses the exact eligibility windows", () => {
   const paths = {
-    "cl/san-pedro-de-atacama": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    "ar/quebrada-de-humahuaca": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     "es/tenerife": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     "za/table-mountain": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
     "pt/madeira": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
@@ -67,7 +67,7 @@ test("the season-width article uses the exact eligibility windows", () => {
     "ch/grindelwald": [7, 8, 9],
     "is/landmannalaugar": [7, 8, 9],
     "no/jotunheimen": [7, 8, 9],
-    "cl/cerro-castillo": [1, 2, 3],
+    "cl/cerro-castillo": [1, 2, 3, 12],
   } as const;
 
   for (const [path, expected] of Object.entries(paths)) {
@@ -80,19 +80,19 @@ test("the season-width article uses the exact eligibility windows", () => {
 
 test("the shoulder-season examples match the published month metrics", () => {
   const cases = [
-    ["es/tenerife", 5, 15.9, 0.0527, 13.6],
-    ["gr/samaria-crete", 5, 17.4, 0.1613, 14],
-    ["cl/elqui-valley", 3, 16.5, 0.1484, 12.2],
-    ["us/sequoia-kings-canyon", 9, 15.3, 0.1856, 12.4],
-    ["cl/san-pedro-de-atacama", 10, 19.4, 0.0043, 12.6],
+    ["es/tenerife", 5, 16, 0.0562, 13.6],
+    ["gr/samaria-crete", 5, 17.5, 0.165, 14],
+    ["au/grampians", 3, 18.6, 0.1567, 12.3],
+    ["us/sequoia-kings-canyon", 9, 15.4, 0.1933, 12.4],
+    ["za/cederberg", 10, 19.4, 0.1594, 12.9],
   ] as const;
 
   for (const [path, number, temperature, wetDays, daylight] of cases) {
     const metrics = month(destination(path), number).metrics;
     assert.deepEqual([metrics.temperatureHikingMeanC, metrics.wetDayProbability, metrics.daylightHoursMean], [temperature, wetDays, daylight]);
   }
-  assertLocalizedClaim("shoulder-season-hiking-worldwide", "5.27%", "5,27%");
-  assertLocalizedClaim("shoulder-season-hiking-worldwide", "0.43%", "0,43%");
+  assertLocalizedClaim("shoulder-season-hiking-worldwide", "5.62%", "5,62%");
+  assertLocalizedClaim("shoulder-season-hiking-worldwide", "15.94%", "15,94%");
 });
 
 test("the daylight article preserves the measured annual ranges", () => {
@@ -118,27 +118,27 @@ test("the rainfall article compares total and frequency without conflating them"
   const cederberg = month(destination("za/cederberg"), 6).metrics;
   const jeju = month(destination("kr/jeju"), 10).metrics;
 
-  assert.deepEqual([salkantay.precipitationMonthlyMeanMm, salkantay.wetDayProbability, salkantay.temperatureHikingMeanC], [84.2, 0.8644, 9.1]);
-  assert.deepEqual([cederberg.precipitationMonthlyMeanMm, cederberg.wetDayProbability], [84.2, 0.2744]);
-  assert.deepEqual([jeju.precipitationMonthlyMeanMm, jeju.wetDayProbability, jeju.temperatureHikingMeanC], [85.7, 0.2366, 16.8]);
-  assertLocalizedClaim("rainfall-total-versus-wet-days", "86.44%", "86,44%");
-  assertLocalizedClaim("rainfall-total-versus-wet-days", "23.66%", "23,66%");
+  assert.deepEqual([salkantay.precipitationMonthlyMeanMm, salkantay.wetDayProbability, salkantay.temperatureHikingMeanC], [85.1, 0.8533, 9.2]);
+  assert.deepEqual([cederberg.precipitationMonthlyMeanMm, cederberg.wetDayProbability], [86.9, 0.281]);
+  assert.deepEqual([jeju.precipitationMonthlyMeanMm, jeju.wetDayProbability, jeju.temperatureHikingMeanC], [81.3, 0.2442, 17]);
+  assertLocalizedClaim("rainfall-total-versus-wet-days", "85.33%", "85,33%");
+  assertLocalizedClaim("rainfall-total-versus-wet-days", "24.42%", "24,42%");
 });
 
 test("the mild-year itinerary keeps every selected month tied to its source", () => {
   const cases = [
-    ["cl/elqui-valley", 1, 17.6, 0.2323],
-    ["jo/wadi-rum", 2, 13.3, 0.0731],
-    ["cl/san-pedro-de-atacama", 3, 19.4, 0.1086],
-    ["es/tenerife", 4, 13.6, 0.1322],
-    ["gr/samaria-crete", 5, 17.4, 0.1613],
-    ["pt/madeira", 6, 18.7, 0.1667],
-    ["au/larapinta", 7, 15.9, 0.0409],
-    ["us/mount-rainier", 8, 16, 0.1978],
-    ["us/sequoia-kings-canyon", 9, 15.3, 0.1856],
-    ["za/table-mountain", 10, 16.9, 0.1978],
-    ["ma/anti-atlas", 11, 14.8, 0.1578],
-    ["th/doi-inthanon", 12, 19.4, 0.1419],
+    ["dz/hoggar", 1, 13, 0.0194],
+    ["jo/wadi-rum", 2, 13.2, 0.0729],
+    ["mx/copper-canyon", 3, 14.7, 0.0949],
+    ["es/tenerife", 4, 13.8, 0.1305],
+    ["gr/samaria-crete", 5, 17.5, 0.165],
+    ["pt/madeira", 6, 18.7, 0.1752],
+    ["au/larapinta", 7, 15.9, 0.0396],
+    ["us/mount-rainier", 8, 16.2, 0.1991],
+    ["us/sequoia-kings-canyon", 9, 15.4, 0.1933],
+    ["za/table-mountain", 10, 16.9, 0.1908],
+    ["ma/anti-atlas", 11, 15.1, 0.1495],
+    ["th/doi-inthanon", 12, 19.5, 0.1364],
   ] as const;
 
   for (const [path, number, temperature, wetDays] of cases) {
@@ -146,6 +146,6 @@ test("the mild-year itinerary keeps every selected month tied to its source", ()
     assert.equal(selected.recommendationEligible, true, `${path}/${number}: itinerary month is no longer eligible`);
     assert.deepEqual([selected.metrics.temperatureHikingMeanC, selected.metrics.wetDayProbability], [temperature, wetDays]);
   }
-  assertLocalizedClaim("mild-hiking-around-the-year", "Elqui Valley", "Elqui-Tal");
+  assertLocalizedClaim("mild-hiking-around-the-year", "Hoggar Mountains", "Hoggar-Gebirge");
   assertLocalizedClaim("mild-hiking-around-the-year", "Doi Inthanon", "Doi Inthanon");
 });

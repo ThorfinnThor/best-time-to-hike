@@ -77,7 +77,7 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
   };
   const previous = step(month, -1); const next = step(month, 1);
   if (destination.recommendationHoldReason === "persistent-snow") return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.reviewTitle(destination.name)}</h1><p>{m.reviewBody}</p></section><RecommendationReviewNotice locale={locale} destination={destination}/><MethodNote locale={locale}/></>;
-  if (!data || data.overallScore === null || data.confidenceScore === null || data.confidenceLevel === null || data.components === null || data.scoreLevel === null) return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.noDataTitle}</h1><p>{m.noDataBody}</p></section><MethodNote locale={locale}/></>;
+  if (!data || data.overallScore === null || data.components === null || data.scoreLevel === null) return <><section className="page-intro prose-intro"><span className="eyebrow">{destination.name} · {monthName(month,locale)}</span><h1>{m.noDataTitle}</h1><p>{m.noDataBody}</p></section><MethodNote locale={locale}/></>;
   return <>
     
     {!data.recommendationEligible ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.ineligibleMonthTitle}</strong><p>{copy.notices.ineligibleMonthBody}</p></div></aside> : null}

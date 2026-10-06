@@ -53,29 +53,24 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
         : (de ? `Beste Wanderzeit für ${destination.name}` : `Best time to hike ${destination.name}`);
 
   const description = clamp(p.seasonShape === "withheld"
-    ? (de ? `Kein Monat in ${destination.name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten von 1991 bis 2020 zeigen und warum wir die Empfehlung zurückhalten.`
-          : `No month at ${destination.name} clears our climate criteria. What the 1991-2020 ERA5-Land record shows, and why we withhold the recommendation.`)
-    : (de ? `${p.eligibleMonths.length} von zwölf Monaten ${p.eligibleMonths.length === 1 ? "ist" : "sind"} empfehlenswert${p.peakMonth ? `, am besten ${monthName(p.peakMonth, locale)}` : ""}. Temperatur, Regen, Schnee und Tageslicht aus dem Klimanormal 1991 bis 2020.`
-          : `${p.eligibleMonths.length} of twelve months ${p.eligibleMonths.length === 1 ? "is" : "are"} recommendable${p.peakMonth ? `, ${monthName(p.peakMonth, locale)} most of all`: ""}. Temperature, rain, snow and daylight from the 1991-2020 climate normal.`));
+    ? (de ? `Kein Monat in ${destination.name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten von 1991 bis 2025 zeigen und warum wir die Empfehlung zurückhalten.`
+          : `No month at ${destination.name} clears our climate criteria. What the 1991-2025 ERA5-Land record shows, and why we withhold the recommendation.`)
+    : (de ? `${p.eligibleMonths.length} von zwölf Monaten ${p.eligibleMonths.length === 1 ? "ist" : "sind"} empfehlenswert${p.peakMonth ? `, am besten ${monthName(p.peakMonth, locale)}` : ""}. Temperatur, Regen, Schnee und Tageslicht aus dem historischen Zeitraum 1991 bis 2025.`
+          : `${p.eligibleMonths.length} of twelve months ${p.eligibleMonths.length === 1 ? "is" : "are"} recommendable${p.peakMonth ? `, ${monthName(p.peakMonth, locale)} most of all`: ""}. Temperature, rain, snow and daylight from the 1991-2025 historical period.`));
 
   const decision = evaluateIndexability({
     resultCount: p.eligibleMonths.length,
     dataCompleteness: Math.min(...destination.months.map((month) => month.metrics.dataCompleteness)),
-    confidence: Math.max(...destination.months.map((month) => month.confidenceScore ?? 0)),
     uniqueInsightCount: sections.length,
     hasUniqueTitle: true, hasUniqueH1: true, hasCanonical: true,
     internalLinkCount: destination.alternatives.length + 2,
     createsCannibalization: false,
     containsUnsupportedClaims: false,
     // Editorial indexing approval removes only the release-status reason. The
-    // completeness, confidence, uniqueness and safety gates below still apply.
+    // completeness, uniqueness and safety gates below still apply.
     datasetStatus: publicDatasetStatus(),
   });
   const editoriallyApproved = publicIndexingEnabled() && editorialDestinationApproved(destination.slug);
-  // The scientific confidence remains low and visible in the methodology
-  // because each article represents one selected grid cell. For a small,
-  // explicitly reviewed editorial set, that provisional status is not by
-  // itself a reason to hide an otherwise complete article from search.
   const reasons = decision.reasons.filter((reason) => !(editoriallyApproved && reason === "low-confidence"));
   if (!editoriallyApproved) reasons.push("destination-not-in-editorial-index-set");
   if (p.seasonShape === "withheld") reasons.push("withheld-destination-makes-no-recommendation");
@@ -95,8 +90,8 @@ function monthSeo(destination: PublicDestination, monthNumber: number, locale: L
     : (de ? `${destination.name} im ${label}: nicht empfohlen` : `${destination.name} in ${label}: not recommended`);
 
   const description = clamp(eligible && data
-    ? (de ? `Rund ${Math.round(data.metrics.temperatureHikingMeanC)} Grad, Regen an ${Math.round(data.metrics.wetDayProbability * 100)} Prozent der Tage und ${Math.round(data.metrics.daylightHoursMean)} Stunden Tageslicht im Klimamittel 1991 bis 2020.`
-          : `About ${Math.round(data.metrics.temperatureHikingMeanC)} degrees, rain on ${Math.round(data.metrics.wetDayProbability * 100)} percent of days and ${Math.round(data.metrics.daylightHoursMean)} hours of daylight in the 1991-2020 mean.`)
+    ? (de ? `Rund ${Math.round(data.metrics.temperatureHikingMeanC)} Grad, Regen an ${Math.round(data.metrics.wetDayProbability * 100)} Prozent der Tage und ${Math.round(data.metrics.daylightHoursMean)} Stunden Tageslicht im historischen Zeitraum 1991 bis 2025.`
+          : `About ${Math.round(data.metrics.temperatureHikingMeanC)} degrees, rain on ${Math.round(data.metrics.wetDayProbability * 100)} percent of days and ${Math.round(data.metrics.daylightHoursMean)} hours of daylight in the 1991-2025 historical period.`)
     : (de ? `Für diesen Monat halten wir eine Wanderempfehlung zurück. Welche Klimakomponente die Schwelle unterschreitet und was die Daten stattdessen zeigen.`
           : `We withhold a hiking recommendation for this month. Which climate component falls below the threshold, and what the record shows instead.`));
 
@@ -113,7 +108,6 @@ function monthSeo(destination: PublicDestination, monthNumber: number, locale: L
   const reasons: string[] = ["month-page-not-an-entry-point"];
   if (!eligible) reasons.push("month-withheld-by-recommendation-gate");
   else if (!isBest) reasons.push("not-a-best-month-structurally-repetitive");
-  if ((data?.confidenceScore ?? 0) < 65) reasons.push("low-confidence");
   if (!publicIndexingEnabled()) reasons.push("public-indexing-not-approved");
   return {title, description, index: false, reasons};
 }
@@ -163,8 +157,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
     case "themeRanking": return {
       title: t(locale).ranking.themeTitle(t(locale).ranking.themes[page.theme], monthName(page.month, locale)),
       description: clamp(de
-        ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus dem Klimanormal 1991 bis 2020.`
-        : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2020 climate normal.`),
+        ? `Eine gefilterte Auswahl für ${monthName(page.month, locale)} aus dem historischen Zeitraum 1991 bis 2025.`
+        : `A filtered shortlist for ${monthName(page.month, locale)}, drawn from the 1991-2025 historical period.`),
       index: publicIndexingEnabled(),
       reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
     case "blogIndex": {
@@ -203,8 +197,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       return {
         title: de ? `${first.name} vs. ${second.name}: Wanderzeiten im Vergleich` : `${first.name} vs ${second.name}: hiking seasons compared`,
         description: clamp(de
-          ? `${first.name} und ${second.name} Monat für Monat vergleichen: Temperatur, Regen, Schnee und Wandereignung aus dem Klimanormal 1991 bis 2020.`
-          : `Compare ${first.name} and ${second.name} month by month: temperature, rain, snow and hiking suitability from the 1991-2020 climate normal.`),
+          ? `${first.name} und ${second.name} Monat für Monat vergleichen: Temperatur, Regen, Schnee und Wandereignung aus dem historischen Zeitraum 1991 bis 2025.`
+          : `Compare ${first.name} and ${second.name} month by month: temperature, rain, snow and hiking suitability from the 1991-2025 historical period.`),
         index: reasons.length === 0,
         reasons,
       };
@@ -212,8 +206,8 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
     case "home": return {
       title: de ? "Finde deine beste Wanderzeit" : "Find your best hiking season",
       description: clamp(de
-        ? "Wanderziele nach Monat, Temperatur, Regen und Schnee vergleichen, auf Basis des ERA5-Land-Klimanormals 1991 bis 2020."
-        : "Compare hiking destinations by month, temperature, rain and snow, using the ERA5-Land 1991-2020 climate normal."),
+        ? "Wanderziele nach Monat, Temperatur, Regen und Schnee vergleichen, auf Basis des historischen ERA5-Land-Zeitraums 1991 bis 2025."
+        : "Compare hiking destinations by month, temperature, rain and snow, using the ERA5-Land 1991-2025 historical period."),
       index: publicIndexingEnabled(),
       reasons: publicIndexingEnabled() ? [] : ["public-indexing-not-approved"]};
     case "compareTool": return {

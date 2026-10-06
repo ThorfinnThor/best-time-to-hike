@@ -21,7 +21,7 @@ The articles remain marked `draft` until the separate release step applies the a
 - Titles and search descriptions stay within the publication limits of 60 and 155 characters.
 - Each article links to the methodology, an appropriate finder or ranking surface and at least three relevant destination pages in the same locale.
 - Hero images resolve to the licensed local image registry.
-- Every evidence record points to an existing published destination artifact, identifies dataset version `era5-land-representative-point-1991-2020-v1` and carries the review date.
+- Every evidence record points to an existing published destination artifact and carries the review date. The published articles were rechecked against dataset version `era5-land-representative-point-1991-2025-v1` during the 2026-10-06 migration.
 - Exact source regressions now cover the central numeric claims: heat risk in nominally dry months, recommendation windows, shoulder-season examples, annual daylight ranges, matched rainfall totals versus wet-day frequency and the 12-stop mild-climate itinerary.
 - The copy distinguishes historical monthly climate summaries from forecasts and does not infer route safety, trail condition, storm timing or exposed-trail wind from data that cannot support those claims.
 

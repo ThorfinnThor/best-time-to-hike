@@ -95,7 +95,7 @@ test("no page prints a taxonomy or destination id as text", {skip: !built}, () =
   // east-africa-highlands reached readers from two components while all 62
   // regions had labels in both locales. Matching against the real id sets
   // rather than a hyphen heuristic keeps ordinary prose (model-grid,
-  // 1991-2020) out of it.
+  // 1991-2025) out of it.
   const ids = new Set<string>([
     ...Object.keys(DICT.en.taxonomy.regions),
     ...Object.keys(DICT.en.taxonomy.continents),
@@ -176,7 +176,7 @@ test("methodology identifies the published dataset and its ERA5-Land source", {s
   const html = page("en/methodology/index.html");
   assert.match(html, /"@type":"Dataset"/);
   assert.match(html, /https:\/\/doi\.org\/10\.24381\/ee82e357/);
-  assert.match(html, /"temporalCoverage":"1991\/2020"/);
+  assert.match(html, /"temporalCoverage":"1991\/2025"/);
 });
 
 test("both imprint pages carry the mandatory Copernicus DEM notices", {skip: !built}, () => {

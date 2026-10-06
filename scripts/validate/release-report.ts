@@ -6,7 +6,7 @@ import { routeCatalog } from "../../lib/seo/route-catalog";
 import { pageSeo } from "../../lib/seo/page-seo";
 import { resolvePageId } from "../../lib/i18n/resolve";
 import { readJson, ROOT, sha256, writeJson } from "../lib/io";
-import { reviewGoldenCases, type GoldenCase } from "../lib/golden-review";
+import { reviewGoldenCasesForPeriod, type GoldenCase } from "../lib/golden-review";
 
 const manifest = readJson<any>("public/data/hiking/manifest.json");
 const sourceSemantics = readJson<any>("data-config/methodology/source-semantics.json");
@@ -16,10 +16,18 @@ const configFiles = [
   "data-config/methodology/climate-aggregation-v1.json",
   "data-config/methodology/confidence-v1.json",
   "data-config/methodology/data-quality-v1.json",
+  "data-config/methodology/data-quality-spatial-scope-v1.json",
+  "data-config/methodology/historical-period-1991-2025-review-v1.json",
+  "data-config/methodology/historical-period-1991-2025-v1.json",
+  "data-config/methodology/independent-climate-review-holds-v1.json",
+  "data-config/methodology/observation-validity-v1.json",
   "data-config/methodology/rounding-v1.json",
   "data-config/methodology/release-approvals.json",
   "data-config/methodology/recommendation-eligibility-v1.json",
   "data-config/methodology/sampling-v1.json",
+  "data-config/methodology/science-audit-v1.json",
+  "data-config/methodology/scientific-release-profile-v1.json",
+  "data-config/methodology/season-alignment-calibration-v1.json",
   "data-config/methodology/source-semantics.json",
   "data-config/scoring/curves.json",
   "data-config/scoring/weights.json",
@@ -33,11 +41,11 @@ const destinationFiles = readdirSync(destinationRoot, { withFileTypes: true }).f
 );
 const destinations = destinationFiles.map((file) => JSON.parse(readFileSync(file, "utf8")) as PublicDestination);
 const dataQuality = readJson<{warningCount:number;warnings:unknown[]}>("generated/reports/data-quality.json");
+const scienceAudit = readJson<{status:string;errors:unknown[]}>("generated/reports/science-audit-315.json");
 const months = destinations.flatMap((destination) => destination.months);
 const bands = months.flatMap((month) => month.bands);
 const recommendationMonths = months.filter((month) => month.recommendationEligible);
-const heldDestinations = destinations.filter((destination) => destination.recommendationHoldReason === "persistent-snow");
-const confidenceCappedMonths = months.filter((month) => month.confidenceScore !== null && month.confidenceScore <= 64 && month.confidenceLevel === "low");
+const heldDestinations = destinations.filter((destination) => Boolean(destination.recommendationHoldReason));
 const scores = months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore]).sort((a, b) => a - b);
 const completeness = bands.map((band) => band.dataCompleteness).sort((a, b) => a - b);
 const samplingFiles = readdirSync(join(ROOT, "data-snapshots/sampling")).filter((file) => file.endsWith(".json"));
@@ -60,21 +68,24 @@ const crawlLockLayers = {
 const publicIndexingPolicyConsistent = siteMayBeIndexed(manifest.datasetStatus)
   ? !crawlLockLayers.robotsDisallowAll && !crawlLockLayers.sitemapEmpty && indexedRoutes.length > 0
   : Object.values(crawlLockLayers).every(Boolean);
-const goldenReview = reviewGoldenCases(golden, destinations);
+const goldenReview = reviewGoldenCasesForPeriod(golden, destinations, {startYear: 1991, endYear: 2025});
 const percentile = (values: number[], fraction: number) => values[Math.ceil(values.length * fraction) - 1];
 const checks = {
   publicIndexingPolicyConsistent,
-  realSourcesApproved: sourceSemantics.era5Land.approved === true && sourceSemantics.copernicusDem.approved === true,
+  realSourcesApproved: sourceSemantics.era5Land.approved === true,
+  scientificEvidenceGatePassed: scienceAudit.status === "scientific-evidence-gate-passed-with-claim-restrictions"
+    && scienceAudit.errors.length === 0,
   destinationMinimumMet: manifest.destinationCount >= 50,
   goldenMinimumMet: goldenReview.passed,
   publicManifestChecksummed: Object.keys(manifest.fileChecksums).length > 0,
-  climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2020,
+  climateNormalExact: manifest.climateNormal.startYear === 1991 && manifest.climateNormal.endYear === 2025,
   releaseApprovals: Object.fromEntries(Object.entries(releaseApprovals.approvals).map(([key,value]:[string,any])=>[key,value.approved===true&&Boolean(value.approvedBy)&&Number.isFinite(new Date(value.approvedAt).getTime())]))
 };
 const approvalBlockers=Object.entries(checks.releaseApprovals).filter(([,approved])=>!approved).map(([key])=>`BLOCKED_APPROVAL_${key.replace(/([a-z])([A-Z])/g,"$1_$2").toUpperCase()}`);
 const blockers = [
   ...(!checks.publicIndexingPolicyConsistent ? ["BLOCKED_PUBLIC_INDEXING_POLICY"] : []),
   ...(!checks.realSourcesApproved ? ["BLOCKED_SOURCE_SEMANTICS"] : []),
+  ...(!checks.scientificEvidenceGatePassed ? ["BLOCKED_SCIENTIFIC_EVIDENCE"] : []),
   ...(!checks.destinationMinimumMet ? ["BLOCKED_DESTINATION_MINIMUM"] : []),
   ...(!checks.goldenMinimumMet ? ["BLOCKED_GOLDEN_LABEL"] : []),
   ...approvalBlockers
@@ -109,7 +120,12 @@ const report = {
     eligibleMonths: recommendationMonths.length,
     ineligibleMonths: months.length - recommendationMonths.length,
     heldDestinations: heldDestinations.map((destination) => destination.slug).sort(),
-    confidenceCappedMonths: confidenceCappedMonths.length,
+    heldDestinationCounts: {
+      persistentSnow: heldDestinations.filter((destination) => destination.recommendationHoldReason === "persistent-snow").length,
+      precipitationValidation: heldDestinations.filter((destination) => destination.recommendationHoldReason === "precipitation-validation").length,
+    },
+    confidenceCappedMonths: 0,
+    confidencePolicy: "numeric-public-confidence-retired",
     unvalidatedGridWindCaveatMonths: months.filter((month) => month.caveats.includes("unvalidated-grid-wind")).length
   },
   distributions: {

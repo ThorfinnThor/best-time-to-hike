@@ -1,7 +1,6 @@
 export interface IndexabilityInput {
   resultCount: number;
   dataCompleteness: number;
-  confidence: number;
   uniqueInsightCount: number;
   hasUniqueTitle: boolean;
   hasUniqueH1: boolean;
@@ -17,7 +16,6 @@ export function evaluateIndexability(input: IndexabilityInput) {
   if (input.datasetStatus !== "production") reasons.push("non-production-dataset");
   if (input.resultCount < 3) reasons.push("too-few-results");
   if (input.dataCompleteness < 0.95) reasons.push("low-completeness");
-  if (input.confidence < 65) reasons.push("low-confidence");
   if (input.uniqueInsightCount < 2) reasons.push("thin-insights");
   if (!input.hasUniqueTitle || !input.hasUniqueH1) reasons.push("missing-unique-heading");
   if (!input.hasCanonical) reasons.push("missing-canonical");
