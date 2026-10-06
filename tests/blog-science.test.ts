@@ -149,3 +149,83 @@ test("the mild-year itinerary keeps every selected month tied to its source", ()
   assertLocalizedClaim("mild-hiking-around-the-year", "Hoggar Mountains", "Hoggar-Gebirge");
   assertLocalizedClaim("mild-hiking-around-the-year", "Doi Inthanon", "Doi Inthanon");
 });
+
+test("the temperature-range draft preserves the sampled hourly percentiles", () => {
+  const shasta = month(destination("us/mount-shasta"), 5);
+  const zion = month(destination("us/zion"), 10);
+
+  assert.deepEqual([
+    shasta.metrics.temperatureHikingP10C,
+    shasta.metrics.temperatureHikingMeanC,
+    shasta.metrics.temperatureHikingP90C,
+    shasta.overallScore,
+    shasta.recommendationEligible,
+  ], [6.1, 14.6, 23.2, 78, true]);
+  assert.deepEqual([
+    zion.metrics.temperatureHikingP10C,
+    zion.metrics.temperatureHikingMeanC,
+    zion.metrics.temperatureHikingP90C,
+    zion.overallScore,
+    zion.recommendationEligible,
+  ], [5, 14.4, 22.4, 89, true]);
+  assertLocalizedClaim("temperature-range-hidden-in-average", "17.1 °C", "17,1 °C");
+  assertLocalizedClaim("temperature-range-hidden-in-average", "not daily minima and maxima", "keine täglichen Minima und Maxima");
+});
+
+test("the snow draft attributes all three May holds to the critical snow signal", () => {
+  const cases = [
+    ["us/lake-tahoe", 11.6, 0.6691, 0],
+    ["us/yosemite", 11.5, 0.6157, 1],
+    ["de/berchtesgaden", 10.1, 0.7687, 0],
+  ] as const;
+
+  for (const [path, temperature, snowDays, snowScore] of cases) {
+    const selected = month(destination(path), 5);
+    assert.deepEqual([
+      selected.metrics.temperatureHikingMeanC,
+      selected.metrics.snowDayProbability,
+      selected.components?.snow,
+      selected.overallScore,
+      selected.recommendationEligible,
+    ], [temperature, snowDays, snowScore, 49, false]);
+  }
+  assertLocalizedClaim("mild-air-frequent-modelled-snow-days", "0.02 metres", "0,02 Meter");
+  assertLocalizedClaim("mild-air-frequent-modelled-snow-days", "Precipitation remains a scored comfort factor", "Niederschlag bleibt ein bewerteter Komfortfaktor");
+});
+
+test("the Blue Mountains draft keeps four different month-selection rules separate", () => {
+  const blueMountains = destination("au/blue-mountains");
+  const january = month(blueMountains, 1);
+  const july = month(blueMountains, 7);
+  const september = month(blueMountains, 9);
+  const december = month(blueMountains, 12);
+
+  assert.deepEqual([january.metrics.temperatureHikingMeanC, january.metrics.wetDayProbability, january.overallScore], [22.2, 0.5484, 71]);
+  assert.deepEqual([july.metrics.temperatureHikingMeanC, july.metrics.wetDayProbability, july.overallScore], [9.5, 0.2175, 86]);
+  assert.deepEqual([september.metrics.temperatureHikingMeanC, september.metrics.wetDayProbability, september.overallScore], [14.6, 0.28, 91]);
+  assert.deepEqual([december.metrics.daylightHoursMean, december.metrics.temperatureHikingMeanC, december.overallScore], [14.3, 21.1, 77]);
+  assert.equal(blueMountains.months.every((item) => item.recommendationEligible), true);
+  assertLocalizedClaim("warmest-driest-or-strongest-month", "Wind is excluded from the score", "Wind ist aus dem Score ausgeschlossen");
+});
+
+test("the air-contrast draft does not turn humidity into a comfort or safety index", () => {
+  const bryce = month(destination("us/bryce-canyon"), 6);
+  const roraima = month(destination("ve/roraima"), 6);
+
+  assert.deepEqual([
+    bryce.metrics.temperatureHikingMeanC,
+    bryce.metrics.relativeHumidityHikingMeanPct,
+    bryce.metrics.wetDayProbability,
+    bryce.overallScore,
+    bryce.recommendationEligible,
+  ], [20.8, 20, 0.1105, 90, true]);
+  assert.deepEqual([
+    roraima.metrics.temperatureHikingMeanC,
+    roraima.metrics.relativeHumidityHikingMeanPct,
+    roraima.metrics.wetDayProbability,
+    roraima.overallScore,
+    roraima.recommendationEligible,
+  ], [20.9, 80.4, 0.9581, 75, true]);
+  assertLocalizedClaim("same-temperature-different-air", "60.4 percentage points", "60,4 Prozentpunkte");
+  assertLocalizedClaim("same-temperature-different-air", "not a personal comfort score", "kein persönlicher Komfortscore");
+});
