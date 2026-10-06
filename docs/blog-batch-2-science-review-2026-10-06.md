@@ -4,7 +4,18 @@ Reviewer: Sol scientific/editorial review
 Source for publication: current public 315-destination export
 Historical period: 1991–2025
 Dataset version: `era5-land-representative-point-1991-2025-v1`
-Decision: four article concepts approved for drafting; publication still requires bilingual copy and source-regression tests
+Decision: four bilingual articles scientifically and editorially approved; repository publication flags remain `draft` until the separate release step
+
+## Final SOL approval
+
+The completed bilingual copy was rechecked on 2026-10-06 against the same public artifacts and methodology files cited below. All four posts now satisfy the 700–1,200-word publication range in both languages, retain distinct ordered block structures, use licensed destination imagery and carry visible selected-cell, 1991–2025 and no-forecast limitations.
+
+- `temperature-range-hidden-in-average`: 812 English words, 755 German words.
+- `mild-air-frequent-modelled-snow-days`: 750 English words, 724 German words.
+- `warmest-driest-or-strongest-month`: 715 English words, 718 German words.
+- `same-temperature-different-air`: 779 English words, 750 German words.
+
+Source-regression tests now pin the exact percentile, snow, eligibility, score, humidity, wet-day and daylight claims to the current public destination JSON. The review found no remaining scientific blocker. The posts deliberately remain `draft` and absent from the blog index and sitemap until the publication step sets an explicit date and reruns the full release checks.
 
 ## Scope decision
 
