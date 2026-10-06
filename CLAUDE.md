@@ -13,17 +13,17 @@ to communicate it honestly, never to flatter it.
 > **Golden rule:** process scientific sources in CI, publish static JSON, render statically.
 > No runtime database, weather API, DEM call, or climate call. Pages read only committed JSON.
 
-## Current state (tag `v1-provisional`)
+## Current state
 
 | | |
 | --- | --- |
-| Dataset | ERA5-Land 1991–2020 normal, one representative 0.1° model-grid cell per destination |
-| Destinations | 50 published, 46 exposed in the finder |
-| Destination-months | 600 — **244 recommendation-eligible, 356 deliberately excluded** |
-| Holds | `zermatt`, `el-chalten` (persistent snow); `torres-del-paine`, `sikkim` (no eligible month) |
-| Algorithm | `1.2.0` |
-| Status | `provisional`, `noindex`, robots disallow all, sitemap empty |
-| Approvals | **all six flags in `release-approvals.json` are `false`** |
+| Dataset | ERA5-Land 1991–2025 project-defined historical period, one selected 0.1° model-grid cell per destination |
+| Destinations | 315 published |
+| Destination-months | 3,780 — **2,228 recommendation-eligible, 1,552 deliberately excluded** |
+| Holds | 30 independent precipitation-review holds; `zermatt`, `el-chalten`, `garhwal` persistent-snow holds |
+| Algorithm | `1.3.0` |
+| Status | `provisional`; only quality-gated URLs are indexable and included in the sitemap |
+| Approvals | science/data approved; five operational release approvals remain open |
 
 `v1-provisional` is the rollback point for the web-app phase: `git reset --hard v1-provisional`.
 
@@ -125,7 +125,8 @@ temperature correction is a representativeness failure, not a confidence penalty
 **ERA5-Land source semantics.** Total precipitation in the ARCO time-series product is *already*
 de-accumulated — `INCREMENTAL_PER_TIMESTEP_M`, never de-accumulate twice. Snow cover arrives in `%`
 and is divided by 100 (`PERCENT_TO_FRACTION`). Physical snow height is `sde` in metres; `sd` is snow
-water equivalent and is **not** an accepted alias. Exactly 262,992 hourly records per point.
+water equivalent and is **not** an accepted alias. Exactly 306,864 hourly records per point for
+the published 1991–2025 period.
 Unexpected units, missing variables, non-contiguous time axes and material negative physical values
 all fail closed.
 
@@ -153,19 +154,20 @@ manual route-representativeness hold, read from `glacier.persistentSnowReviewMon
 including 23- and 25-hour DST days and historical two-hour shifts. Missing observations are never
 replaced by zero, and completeness denominators come from the normal period.
 
-## Recommendation policy (v1.2.0)
+## Recommendation policy (v1.3.0)
 
 Versioned in `data-config/methodology/recommendation-eligibility-v1.json`, implemented in
 `lib/scoring/recommendations.ts`. Every layer that shows a score must route through it.
 
 - A month is eligible only when **every unrounded** critical component is **> 20**. The critical set
-  lives in `criticalComponents` in that config: `temperature`, `snow`, `heatStress`, `wind`,
-  `daylight`.
+  lives in `criticalComponents` in that config: `temperature`, `snow`, `heatStress`, `daylight`.
 - **`precipitation` is scored but not critical**, since 1.2.0. It was critical through 1.1.0 and did
   nearly all the vetoing: 15 of the 22 destinations carrying no recommendation were refused on rain
   alone, in every month of the year, several with every other component in the nineties. The test is
   whether a component makes the walk a bad idea, not whether it makes it unpleasant. It keeps its
-  20% weight, so a wet destination ranks low rather than disappearing.
+  22.22% weight, so a wet destination ranks low rather than disappearing.
+- **Grid wind is informational only.** ERA5-Land 10 m grid wind is not validated for exposed paths
+  or gusts, so its weight is zero and it cannot veto eligibility or a best month.
 - A component below the floor that is **not** critical adds the `non-critical-component-floor`
   caveat, and the month page names it. At 20% weight a precipitation score of 1 still leaves a
   ceiling near 80, and "very good hiking" printed over a place that rains most days would be exactly
@@ -175,7 +177,8 @@ Versioned in `data-config/methodology/recommendation-eligibility-v1.json`, imple
 - **Best-month lists are never padded.** Zero, one or two best months is a valid answer.
 - A held destination keeps its detail route as a **provenance/review page carrying no hiking-score or
   best-month claim**.
-- One representative point with unapproved destination scope: confidence capped at **64 / `low`**.
+- Numeric public confidence is retired. Missing evidence is handled by withholding a recommendation;
+  confidence diagnostics remain internal QA only and never affect rankings or indexability.
 
 These are conservative release-policy controls. They are **not** production science approval.
 

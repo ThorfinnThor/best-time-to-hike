@@ -6,7 +6,7 @@
 //    fails the build if a key exists in one locale and not the other.
 //  - German prose avoids the Gedankenstrich (em/en dash), which reads as
 //    machine-written. Use a comma, a semicolon or "bis". Numeric ranges
-//    (1991-2020, 1500-2200 m) are data, not prose, and keep their dash.
+//    (1991-2025, 1500-2200 m) are data, not prose, and keep their dash.
 //  - Text that makes a *claim about the data* belongs to the honesty rules in
 //    CLAUDE.md: one representative grid cell, historical climatology, coarse
 //    grid wind. Do not soften those phrases to make copy flow better.
@@ -293,7 +293,7 @@ export const DICT = {
     },
     notices: {
       realDataTitle: "How to read these numbers",
-      realDataBody: "ERA5-Land 1991-2020 climate normal for one representative model-grid cell. Not a forecast or a substitute for current trail and safety information.",
+      realDataBody: "ERA5-Land 1991-2025 historical period for one representative model-grid cell. Not a forecast or a substitute for current trail and safety information.",
       fixtureTitle: "Demo dataset",
       fixtureBody: "This build uses clearly labeled synthetic fixtures. Do not use it for travel or safety decisions.",
       methodTitle: "Check before you go",
@@ -429,7 +429,7 @@ export const DICT = {
       recommendableMonths: "Recommendable months",
       notRecommended: "Not recommended: at least one critical climate component falls below the threshold",
       closedShort: "—",
-      closedNote: "A shaded month is one we do not recommend, not one we lack data for: the temperature and rain are still shown, and the word beneath them names the component that fell below the threshold. Only the hiking score is withheld. Scores describe one representative ERA5-Land grid cell over 1991 to 2020.",
+      closedNote: "A shaded month is one we do not recommend, not one we lack data for: the temperature and rain are still shown, and the word beneath them names the component that fell below the threshold. Only the hiking score is withheld. Scores describe one representative ERA5-Land grid cell over 1991 to 2025.",
     },
     comparison: {
       eyebrow: "Side-by-side season guide",
@@ -440,8 +440,8 @@ export const DICT = {
       methodology: {
         title: "How the hiking score works",
         paragraphs: [
-          "We combine temperature comfort (30%), precipitation (20%), snow (20%), heat stress (10%), wind (10%) and daylight (10%).",
-          "We use official ERA5-Land hourly time series for the 1991-2020 climate normal. Each destination currently represents one selected representative model-grid cell at its official model elevation.",
+          "We combine temperature comfort (33%), precipitation (22%), snow (22%), heat stress (11%), wind (0%) and daylight (11%). Grid wind remains visible as context but is excluded from the score until it is validated for trail exposure and gusts.",
+          "We use official ERA5-Land hourly time series for the 1991-2025 historical period. Each destination currently represents one selected representative model-grid cell at its official model elevation.",
           "Scores describe historical suitability at that selected cell. Grid-cell wind is coarse 10 m wind, not validated exposed-trail or gust information. They are not forecasts, whole-region trail conditions or safety advice.",
         ],
       },
@@ -510,7 +510,7 @@ export const DICT = {
           ]},
           {heading: "Important: planning a trip", paragraphs: [
             "This website is for information only. It is not hiking, route, navigation or safety advice, and it does not replace your own preparation.",
-            "Every figure comes from the ERA5-Land 1991-2020 historical climate normal and describes one selected model-grid cell 0.1 degrees across. It is expressly not a weather forecast, not a statement about a specific route, and not a statement about a whole region.",
+            "Every figure comes from the ERA5-Land 1991-2025 historical period and describes one selected model-grid cell 0.1 degrees across. It is expressly not a weather forecast, not a statement about a specific route, and not a statement about a whole region.",
             "Anyone planning a walk must inform themselves before setting out, from official sources: the current forecast, the avalanche bulletin, trail and hut conditions, closures, permits, and their own government's travel advice. Hiking and mountain activity carry risks that each person bears on their own responsibility.",
             "To the extent permitted by law, no liability is accepted for decisions made on the basis of this website or for any loss arising from them.",
           ]},
@@ -825,7 +825,7 @@ export const DICT = {
     },
     notices: {
       realDataTitle: "So sind diese Zahlen zu lesen",
-      realDataBody: "ERA5-Land-Klimanormal 1991-2020 für einen repräsentativen Modell-Gitterpunkt. Keine Vorhersage und kein Ersatz für aktuelle Weg- oder Sicherheitsinformationen.",
+      realDataBody: "Historischer ERA5-Land-Zeitraum 1991-2025 für einen repräsentativen Modell-Gitterpunkt. Keine Vorhersage und kein Ersatz für aktuelle Weg- oder Sicherheitsinformationen.",
       fixtureTitle: "Demo-Datensatz",
       fixtureBody: "Diese Version nutzt klar gekennzeichnete synthetische Fixtures. Nicht für Reise- oder Sicherheitsentscheidungen.",
       methodTitle: "Vor dem Aufbruch prüfen",
@@ -961,7 +961,7 @@ export const DICT = {
       recommendableMonths: "Empfehlenswerte Monate",
       notRecommended: "Nicht empfohlen: mindestens eine kritische Klimakomponente liegt unter der Schwelle",
       closedShort: "—",
-      closedNote: "Ein schattierter Monat wird nicht empfohlen; es fehlen keine Daten: Temperatur und Regen stehen weiterhin da, und das Wort darunter nennt die Komponente unter der Schwelle. Zurückgehalten wird nur der Wanderwert. Die Werte gelten für eine repräsentative ERA5-Land-Gitterzelle im Zeitraum 1991 bis 2020.",
+      closedNote: "Ein schattierter Monat wird nicht empfohlen; es fehlen keine Daten: Temperatur und Regen stehen weiterhin da, und das Wort darunter nennt die Komponente unter der Schwelle. Zurückgehalten wird nur der Wanderwert. Die Werte gelten für eine repräsentative ERA5-Land-Gitterzelle im historischen Zeitraum 1991 bis 2025.",
     },
     comparison: {
       eyebrow: "Saisonaler Direktvergleich",
@@ -972,8 +972,8 @@ export const DICT = {
       methodology: {
         title: "So funktioniert der Wanderwert",
         paragraphs: [
-          "Wir kombinieren Temperaturkomfort (30 %), Niederschlag (20 %), Schnee (20 %), Hitzestress (10 %), Wind (10 %) und Tageslicht (10 %).",
-          "Wir nutzen offizielle stündliche ERA5-Land-Zeitreihen für das Klimanormal 1991-2020. Jedes Ziel steht derzeit für eine ausgewählte repräsentative Modell-Gitterzelle auf seiner offiziellen Modellhöhe.",
+          "Wir kombinieren Temperaturkomfort (33 %), Niederschlag (22 %), Schnee (22 %), Hitzestress (11 %), Wind (0 %) und Tageslicht (11 %). Rasterwind bleibt als Kontext sichtbar, ist aber bis zur Validierung für exponierte Wege und Böen aus der Bewertung ausgeschlossen.",
+          "Wir nutzen offizielle stündliche ERA5-Land-Zeitreihen für den historischen Zeitraum 1991-2025. Jedes Ziel steht derzeit für eine ausgewählte repräsentative Modell-Gitterzelle auf seiner offiziellen Modellhöhe.",
           "Die Werte beschreiben die historische Eignung an dieser ausgewählten Zelle. Gitterwind ist grober 10-m-Wind und keine validierte Aussage über exponierte Wege oder Böen. Die Werte sind keine Vorhersage, kein regionaler Wegzustand und keine Sicherheitsberatung.",
         ],
       },
@@ -1042,7 +1042,7 @@ export const DICT = {
           ]},
           {heading: "Wichtiger Hinweis zur Nutzung: Reise- und Tourenplanung", paragraphs: [
             "Diese Website dient ausschließlich Informationszwecken. Sie ist keine Wander-, Touren-, Navigations- oder Sicherheitsberatung und ersetzt keine eigene Vorbereitung.",
-            "Alle Angaben beruhen auf dem historischen Klimamittel ERA5-Land für den Zeitraum 1991 bis 2020 und beschreiben jeweils eine einzelne, ausgewählte Modell-Gitterzelle von 0,1 Grad Kantenlänge. Sie sind ausdrücklich keine Wettervorhersage, keine Aussage über eine konkrete Route und keine Aussage über die gesamte Region.",
+            "Alle Angaben beruhen auf ERA5-Land für den historischen Zeitraum 1991 bis 2025 und beschreiben jeweils eine einzelne, ausgewählte Modell-Gitterzelle von 0,1 Grad Kantenlänge. Sie sind ausdrücklich keine Wettervorhersage, keine Aussage über eine konkrete Route und keine Aussage über die gesamte Region.",
             "Wer eine Tour plant, muss sich vor jedem Aufbruch selbst und aus offiziellen Quellen informieren: aktuelle Wettervorhersage, Lawinenlagebericht, Wege- und Hüttenzustand, Sperrungen, Genehmigungen sowie die Reise- und Sicherheitshinweise des Auswärtigen Amtes. Bergsport und Wandern sind mit Risiken verbunden, die jede Person eigenverantwortlich trägt.",
             "Für Entscheidungen, die auf Grundlage dieser Website getroffen werden, und für daraus entstehende Schäden wird keine Haftung übernommen, soweit gesetzlich zulässig.",
           ]},

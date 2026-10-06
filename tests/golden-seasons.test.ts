@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { getDestination } from "../lib/data/load";
-import { reviewGoldenCases } from "../scripts/lib/golden-review";
+import { reviewGoldenCasesForPeriod } from "../scripts/lib/golden-review";
 
 /**
  * The engine checked against seasons a person would name.
@@ -38,6 +38,14 @@ interface GoldenCase {
    * would have hidden it.
    */
   acceptedDeviation?: {reason: string; recordedBy: string; recordedAt: string; engineMonths: number[]};
+  historicalPeriodApprovals?: Array<{
+    startYear: number;
+    endYear: number;
+    approvedBy: string;
+    approvedAt: string;
+    engineMonths: number[];
+    acceptedDeviation: GoldenCase["acceptedDeviation"] | null;
+  }>;
 }
 
 const golden = JSON.parse(readFileSync("tests/fixtures/known-hiking-seasons.json", "utf8")) as
@@ -79,15 +87,16 @@ test("a signed label carries an approver and a date, and APPROVED means all of t
 
 test("the approved golden set clears the same evidence gate as the release report", () => {
   if (!approved) return;
-  const review = reviewGoldenCases(golden, golden.cases.flatMap((item) => {
+  const review = reviewGoldenCasesForPeriod(golden, golden.cases.flatMap((item) => {
     const destination = getDestination(item.slug);
     return destination ? [destination] : [];
-  }));
+  }), {startYear: 1991, endYear: 2025});
   assert.ok(review.passed, JSON.stringify(review.cases.filter((item) => item.errors.length)));
 });
 
 test("the engine's best months fall inside the labelled season", {skip: !approved && "labels are not approved yet; see the report below"}, () => {
   const failures = golden.cases
+    .filter((item) => !getDestination(item.slug)?.recommendationHoldReason)
     .map((item) => ({item, result: compare(item)}))
     .filter(({item, result}) => result.verdict !== "agrees" && !item.acceptedDeviation)
     .map(({item, result}) => `${item.slug}: labelled ${item.label} (${item.expectedMonths.join(",")}), engine says ${result.best.join(",") || "no month"}`);
@@ -98,8 +107,11 @@ test("an accepted deviation still describes the disagreement it was written for"
   // A deviation recorded against one answer must not go on quietly covering a
   // different one. If the engine moves, the note is re-read or it is gone.
   for (const item of golden.cases) {
-    const deviation = item.acceptedDeviation;
+    const periodApproval = item.historicalPeriodApprovals?.find((approval) => approval.startYear === 1991 && approval.endYear === 2025);
+    const deviation = periodApproval ? periodApproval.acceptedDeviation : item.acceptedDeviation;
+    if (periodApproval?.acceptedDeviation === null) continue;
     if (!deviation) continue;
+    if (getDestination(item.slug)?.recommendationHoldReason) continue;
     assert.ok(item.approvedBy, `${item.slug} records a deviation but is not signed`);
     assert.ok(deviation.reason.length > 60, `${item.slug}: a deviation needs a reason someone can disagree with`);
     assert.deepEqual(compare(item).best, deviation.engineMonths,

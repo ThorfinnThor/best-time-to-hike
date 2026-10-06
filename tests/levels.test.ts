@@ -40,11 +40,6 @@ test("confidence labels come from methodology/confidence-v1.json", () => {
   assert.equal(confidenceLevel(band.moderateMinimum - 1), "low");
 });
 
-test("the provisional single-point cap of 64 lands in the low band", () => {
-  assert.equal(confidenceLevel(64), "low");
-  assert.ok(confidenceConfig.levels.moderateMinimum > 64, "a capped destination would stop reading as low confidence");
-});
-
 test("no hardcoded level ladder survives anywhere", () => {
   const ladder = /\b(score|confidence|value)\s*>=\s*\d+\s*\?/;
   const offenders: string[] = [];

@@ -34,8 +34,8 @@ export function datasetLd(locale: Locale) {
     "@id": `${pageUrl(links.methodology(locale))}#dataset`,
     name: de ? "BestTimeToHike Datensatz zur saisonalen Wandereignung" : "BestTimeToHike hiking-season suitability dataset",
     description: de
-      ? "Monatliche historische Klimakennwerte und nachvollziehbare Eignungsregeln für weltweite Wanderziele, abgeleitet aus dem ERA5-Land-Klimanormal 1991 bis 2020."
-      : "Monthly historical climate indicators and reproducible suitability rules for hiking destinations worldwide, derived from the ERA5-Land 1991-2020 climate normal.",
+      ? "Monatliche historische Klimakennwerte und nachvollziehbare Eignungsregeln für weltweite Wanderziele, abgeleitet aus dem ERA5-Land-Zeitraum 1991 bis 2025."
+      : "Monthly historical climate indicators and reproducible suitability rules for hiking destinations worldwide, derived from the ERA5-Land 1991-2025 historical period.",
     url: pageUrl(links.methodology(locale)),
     inLanguage: locale,
     creator: {"@id": absoluteUrl("/#organization")},
@@ -89,8 +89,8 @@ export function destinationFaqEntries(destination: PublicDestination, locale: Lo
   }
   entries.push({
     q: de ? `Worauf beziehen sich diese Werte?` : `What do these figures describe?`,
-    a: de ? `Auf eine ausgewählte ERA5-Land-Modellgitterzelle auf ${destination.representativeCell.modelElevationM} Metern, gemittelt über 1991 bis 2020. Es ist keine Vorhersage und keine Aussage über einzelne Wege.`
-          : `One selected ERA5-Land model grid cell at ${destination.representativeCell.modelElevationM} metres, averaged over 1991 to 2020. It is not a forecast and not a statement about individual trails.`});
+    a: de ? `Auf eine ausgewählte ERA5-Land-Modellgitterzelle auf ${destination.representativeCell.modelElevationM} Metern, gemittelt über 1991 bis 2025. Es ist keine Vorhersage und keine Aussage über einzelne Wege.`
+          : `One selected ERA5-Land model grid cell at ${destination.representativeCell.modelElevationM} metres, averaged over 1991 to 2025. It is not a forecast and not a statement about individual trails.`});
 
   return entries;
 }

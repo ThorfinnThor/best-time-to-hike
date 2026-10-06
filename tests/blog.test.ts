@@ -53,7 +53,7 @@ test("the first published batch clears the bilingual article quality floor", () 
     assert.ok(post.evidence.length >= 1, `${post.slug} needs an evidence manifest`);
     const evidenceKeys = new Set(post.evidence.map((item) => item.key));
     for (const item of post.evidence) {
-      assert.equal(item.datasetVersion, "era5-land-representative-point-1991-2020-v1");
+      assert.equal(item.datasetVersion, "era5-land-representative-point-1991-2025-v1");
       assert.equal(item.checkedAt, "2026-09-30");
       assert.ok(item.sourcePaths.length > 0);
       for (const sourcePath of item.sourcePaths) assert.equal(fs.existsSync(sourcePath), true, `${post.slug}: missing ${sourcePath}`);

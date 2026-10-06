@@ -36,7 +36,7 @@ test("an unscored destination names nothing rather than guessing", () => {
 });
 
 test("nothing is labelled above good while a component sits at the floor", () => {
-  // 20 percent weight cannot cost more than 20 points, so a month with rain at
+  // 22.22 percent weight cannot cost more than 22.22 points, so a month with rain at
   // 1 reached 82 and called itself very good. The number stands; the word does not.
   assert.equal(cappedScoreLevel(82, ["precipitation"]), "good");
   assert.equal(cappedScoreLevel(94, ["precipitation"]), "good");

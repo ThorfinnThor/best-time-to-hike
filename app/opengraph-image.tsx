@@ -18,7 +18,7 @@ export const alt = "BestTimeToHike";
  */
 export default function Image() {
   const manifest = getManifest();
-  const summary = `${manifest.destinationCount} destinations scored from the ERA5-Land ${manifest.climateNormal.startYear}-${manifest.climateNormal.endYear} climate normal. Historical climatology, not a forecast.`;
+  const summary = `${manifest.destinationCount} destinations scored from the ERA5-Land ${manifest.climateNormal.startYear}-${manifest.climateNormal.endYear} historical period. Historical climatology, not a forecast.`;
   return new ImageResponse(
     (
       <div style={{width: "100%", height: "100%", display: "flex", flexDirection: "column", justifyContent: "space-between",

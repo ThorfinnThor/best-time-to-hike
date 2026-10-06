@@ -87,7 +87,7 @@ for (const destination of destinations) {
     }
     for (const month of months) {
       if (month.dataCompleteness !== 1 || month.sampleYearCount !== 30 || month.validInterannualYearCount !== 30) {
-        fail(`${destination.slug}/${bandId}/${month.month} is not a complete 1991-2020 normal`);
+        fail(`${destination.slug}/${bandId}/${month.month} is not a complete 1991-2025 historical period`);
       }
     }
     bandMonthCount += months.length;

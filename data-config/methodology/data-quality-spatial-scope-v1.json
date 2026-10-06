@@ -1,0 +1,82 @@
+{
+  "schemaVersion": 1,
+  "decisionDate": "2026-10-06",
+  "decisionStatus": "approved-for-implementation",
+  "scope": "Public 315-destination selected-cell catalogue for the 1991-2025 historical period",
+  "supersededSemantics": {
+    "numericCompositeConfidence": "retired-from-publication-and-ranking",
+    "provisionalSinglePointConfidenceCap": "retired",
+    "reason": "A single composite number mixes temporal completeness, elevation alignment, interannual variability and spatial representativeness. Capping every selected-cell record at 64 does not communicate which limitation exists and makes complete 35-year records appear uniformly low quality."
+  },
+  "replacement": {
+    "temporalDataQuality": {
+      "publishedValues": ["complete", "withheld"],
+      "completeRequirements": {
+        "periodStartYear": 1991,
+        "periodEndYear": 2025,
+        "completeCalendarYears": 35,
+        "sampleYearCountPerMonth": 35,
+        "minimumDataCompleteness": 1,
+        "missingOrDuplicateHoursAllowed": false,
+        "temporalImputationAllowed": false,
+        "aggregationPolicyVersion": "observation-validity-v1"
+      },
+      "failurePolicy": "Withhold affected metric, score and recommendation; do not publish a lower confidence number as a substitute for missing evidence."
+    },
+    "sourceIntegrity": {
+      "publishedValues": ["verified", "withheld"],
+      "verifiedRequirements": [
+        "canonical source and observation hashes retained",
+        "required variables and units validated",
+        "consolidated ERA5-Land rather than preliminary ERA5-Land-T",
+        "precipitation accumulation semantics validated"
+      ]
+    },
+    "spatialScope": {
+      "publishedValue": "selected-era5-land-cell",
+      "requiredClaim": "Historical conditions at one selected ERA5-Land model cell; not a whole-destination or route-specific average.",
+      "numericPenaltyOrCap": false
+    },
+    "routeRepresentativeness": {
+      "publishedValues": ["not-assessed", "supported"],
+      "defaultValue": "not-assessed",
+      "supportedRequirement": "Independent route geometry or equivalent official evidence intersects the selected model cell and is recorded in provenance.",
+      "claimPolicy": "A not-assessed value permits selected-cell climatology only and prohibits whole-destination or route-specific claims."
+    },
+    "elevationAlignment": {
+      "publication": "Publish the selected cell model elevation and the documented destination or route elevation context directly.",
+      "numericConfidenceConversion": false
+    }
+  },
+  "recommendationAndRanking": {
+    "dataQualityGate": "Only complete and source-verified records may receive a score or recommendation.",
+    "spatialScopeGate": "Selected-cell scope is expressed as provenance and a claim restriction, not as a numeric confidence penalty.",
+    "confidenceTieBreakerAllowed": false,
+    "rankingOrder": ["overallScoreDescending", "slugAscending"],
+    "indexabilityConfidenceThresholdAllowed": false,
+    "indexabilityReplacement": [
+      "complete temporal data",
+      "verified source integrity",
+      "supported page claims",
+      "editorial quality and uniqueness",
+      "valid canonical and structured metadata"
+    ]
+  },
+  "wind": {
+    "gridWindMayIncreaseDataQuality": false,
+    "gridWindMayValidateRouteWind": false,
+    "rule": "Unvalidated ERA5-Land 10 m grid wind remains excluded from evidence-quality decisions and must not be presented as exposed-trail or gust evidence."
+  },
+  "legacyMigration": {
+    "removeFromRuntime": [
+      "provisionalSinglePointConfidenceCap",
+      "guardConfidence",
+      "confidenceScore",
+      "confidenceLevel",
+      "confidence ranking tie-breakers",
+      "confidence-based SEO indexability gates"
+    ],
+    "temporaryInternalDiagnosticAllowed": "The old raw composite may be retained only in a non-public migration comparison and must not affect scores, rankings, recommendations, indexability or user-facing copy.",
+    "publicSchemaPolicy": "Do not expose the legacy numeric confidence fields in newly generated public destination, ranking or search files."
+  }
+}

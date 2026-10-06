@@ -77,8 +77,6 @@ export interface PublicBandMonth extends BandClimateMonth {
   components: ComponentScores | null;
   overallScore: number | null;
   scoreLevel: ScoreLevel | null;
-  confidenceScore: number | null;
-  confidenceLevel: ConfidenceLevel | null;
 }
 
 export interface PublicMonth {
@@ -87,8 +85,6 @@ export interface PublicMonth {
   /** Null on review-only held destinations: no score claim is published. */
   overallScore: number | null;
   scoreLevel: ScoreLevel | null;
-  confidenceScore: number | null;
-  confidenceLevel: ConfidenceLevel | null;
   components: ComponentScores | null;
   metrics: ClimateMetrics;
   bands: PublicBandMonth[];
@@ -99,6 +95,7 @@ export interface PublicMonth {
 export interface PublicDestination {
   schemaVersion: 1;
   algorithmVersion: string;
+  aggregationPolicyVersion: string;
   datasetStatus: DatasetStatus;
   id: string;
   slug: string;
@@ -115,7 +112,8 @@ export interface PublicDestination {
   representativeCell: { lat: number; lon: number; modelElevationM: number; overrideLabel?: string; overrideReason?: string };
   months: PublicMonth[];
   recommendationEligible: boolean;
-  recommendationHoldReason?: "persistent-snow";
+  recommendationHoldReason?: "persistent-snow" | "precipitation-validation";
+  historicalPeriod: { startYear: number; endYear: number; classification: string };
   bestMonths: number[];
   alternatives: string[];
   provenance: Record<string, string>;
@@ -164,7 +162,7 @@ export interface SearchDestination {
   tags: string[];
   elevationM: number;
   recommendationEligible: boolean;
-  monthly: Array<{m: number; score: number; temp: number; wet: number; snow: number; hot: number; wind: number; daylight: number; confidence: number; recommendationEligible: boolean}>;
+  monthly: Array<{m: number; score: number; temp: number; wet: number; snow: number; hot: number; wind: number; daylight: number; recommendationEligible: boolean}>;
 }
 
 export interface RankingEntry {
@@ -173,7 +171,6 @@ export interface RankingEntry {
   name: string;
   countryCode: string;
   score: number;
-  confidence: number;
   tempC: number;
   wet: number;
   snow: number;

@@ -173,7 +173,7 @@ function buildPlan(destinations: DestinationConfig[], samplingRoot: string): Req
             dataset: "reanalysis-era5-land-timeseries",
             variable: VARIABLES,
             location: {longitude:point.lon,latitude:point.lat},
-            date: ["1991-01-01/2020-12-31"],
+            date: ["1990-12-31/2026-01-01"],
             data_format: "netcdf"
           }
         };
@@ -223,7 +223,7 @@ async function main() {
       downloadBytes: orographyConfig.downloadBytes,
       downloadSha256: orographyConfig.downloadSha256
     },
-    climateNormal: {startYear:1991,endYear:2020},
+    climateNormal: {startYear:1991,endYear:2025},
     uniquePointCount: plan.length,
     entries: plan
   });
@@ -272,10 +272,10 @@ async function main() {
       const entry = pendingDownloads[nextDownload++];
       const rawPath = `${stagingRoot}/era5-raw/${entry.key}.ndjson.gz`;
       const metadataPath = `${stagingRoot}/era5-raw/${entry.key}.meta.json`;
-      console.log(`Downloading ERA5-Land 1991–2020 for ${entry.key} at ${entry.lat.toFixed(1)}, ${entry.lon.toFixed(1)}...`);
+      console.log(`Downloading ERA5-Land 1991–2025 for ${entry.key} at ${entry.lat.toFixed(1)}, ${entry.lon.toFixed(1)}...`);
       await runPython("scripts/import/download_era5.py", [
         "--lat",String(entry.lat),"--lon",String(entry.lon),
-        "--start-date","1991-01-01","--end-date","2020-12-31",
+        "--start-date","1990-12-31","--end-date","2026-01-01",
         "--output",rawPath,"--metadata",metadataPath
       ], "ERA5_DOWNLOAD001");
     }
@@ -316,16 +316,16 @@ async function main() {
       const expectedRequest = {
         variable: VARIABLES,
         location: {longitude:point.lon,latitude:point.lat},
-        date: ["1991-01-01/2020-12-31"],
+        date: ["1990-12-31/2026-01-01"],
         data_format: "netcdf"
       };
-      if (metadata.observationCount !== 262_992
+      if (metadata.observationCount !== 306_864
         || metadata.dataset !== "reanalysis-era5-land-timeseries"
         || metadata.datasetDoi !== "10.24381/ee82e357"
         || metadata.precipitationSemantics !== "INCREMENTAL_PER_TIMESTEP_M"
         || metadata.snowCoverSemantics !== "FRACTION_0_TO_1"
-        || metadata.firstUtcInstant !== "1991-01-01T00:00:00.000Z"
-        || metadata.lastUtcInstant !== "2020-12-31T23:00:00.000Z"
+        || metadata.firstUtcInstant !== "1990-12-31T00:00:00.000Z"
+        || metadata.lastUtcInstant !== "2026-01-01T23:00:00.000Z"
         || metadata.canonicalObservation?.encoding !== "gzip-ndjson-utf8"
         || metadata.canonicalObservation?.gzipMtime !== 0
         || !/^[a-f0-9]{64}$/.test(metadata.canonicalObservation?.sha256 ?? "")
@@ -364,7 +364,7 @@ async function main() {
           targetElevationM: consumer.targetElevationM,
           precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
           startYear: 1991,
-          endYear: 2020
+          endYear: 2025
         });
         result.monthly.forEach((metrics, monthIndex) => {
           try {
@@ -388,7 +388,7 @@ async function main() {
         const weightedPoints = results.map((result) => ({sampleWeight:result.point.sampleWeight,metrics:result.monthly[monthIndex]}));
         const metrics = roundClimateMetrics(aggregateBandPointMetrics(weightedPoints));
         const yearlyScores: number[] = [];
-        for (let year = 1991; year <= 2020; year += 1) {
+        for (let year = 1991; year <= 2025; year += 1) {
           const yearlyPointMetrics = results.map((result) => aggregateMonthlyClimate(result.daily, monthIndex + 1, {
             timezone: destination.timezone,
             lat: result.point.lat,
@@ -444,7 +444,7 @@ async function main() {
       source: "era5-land-timeseries",
       sourceDataset: "reanalysis-era5-land-timeseries",
       sourceDoi: "10.24381/ee82e357",
-      climateNormal: {startYear:1991,endYear:2020},
+      historicalPeriod: {startYear:1991,endYear:2025,classification:"project-defined-historical-climate-average",coreLocalDateStart:"1991-01-01",coreLocalDateEnd:"2025-12-31"},
       retrievedAt,
       precipitationSemantics: "INCREMENTAL_PER_TIMESTEP_M",
       temperatureElevationCorrection: {

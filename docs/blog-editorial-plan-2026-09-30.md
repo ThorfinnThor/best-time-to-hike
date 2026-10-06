@@ -1,7 +1,7 @@
 # BestTimeToHike blog editorial plan
 
 Status: editorial blueprint for implementation  
-Evidence base: the 94 quality-gated destination articles and their published 1991–2020 historical monthly metrics  
+Evidence base: the 94 quality-gated destination articles and their published 1991–2025 historical monthly metrics
 Languages: English and German
 
 ## Editorial promise
@@ -12,7 +12,7 @@ Every article must have its own question, argument, evidence selection, visual r
 
 ## Scientific boundaries
 
-- Describe historical 1991–2020 conditions, never a forecast or a guarantee for a particular trip.
+- Describe the project-defined historical period 1991–2025, never a forecast or a guarantee for a particular trip.
 - Attribute every numeric claim to the published BestTimeToHike dataset version.
 - Use temperature during sampled hiking hours, wet-day probability, snow-day probability, hot-day probability, daylight and the selected representative elevation/cell only with their published definitions.
 - Do not use unvalidated ERA5-Land grid wind to recommend, rank or characterise a destination.

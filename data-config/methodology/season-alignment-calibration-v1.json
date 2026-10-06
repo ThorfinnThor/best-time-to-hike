@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "purpose": "Calibrate the relative climate-fit ranking against independently labelled hiking seasons; never calibrate or claim trail safety.",
+  "activeComponents": ["temperature", "precipitation", "snow", "heatStress", "daylight"],
+  "weightStep": 0.1,
+  "minimumComponentWeight": 0.1,
+  "criticalFloorCandidates": [15, 20, 25],
+  "bestMonthFloorCandidates": [0, 5, 10],
+  "validationSplit": {
+    "method": "sha256-destination-id-first-byte-modulo",
+    "modulo": 3,
+    "validationRemainder": 0
+  },
+  "exclusions": [
+    "persistent-snow-review-holds",
+    "independent-precipitation-review-holds"
+  ],
+  "selectionMetric": "mean-per-destination-f1",
+  "tieBreakers": ["smaller-distance-from-expert-baseline", "lower-policy-complexity", "lexicographic"]
+}

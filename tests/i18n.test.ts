@@ -76,7 +76,7 @@ test("no dictionary string is empty", () => {
 
 test("German copy avoids the Gedankenstrich", () => {
   // A spaced en/em dash is the prose dash that reads as machine-written.
-  // Unspaced dashes are numeric ranges (1991-2020, 1500-2200 m) and are fine.
+  // Unspaced dashes are numeric ranges (1991-2025, 1500-2200 m) and are fine.
   walkStrings(DICT.de, "de", (text, path) => {
     assert.ok(!/ [–—] /.test(text), `Gedankenstrich in ${path}: ${text}`);
   });
