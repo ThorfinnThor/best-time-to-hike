@@ -44,9 +44,10 @@ function wordCount(value: unknown): number {
 }
 
 test("the first published batch clears the bilingual article quality floor", () => {
-  assert.equal(BLOG_POSTS.length, 6);
+  const approvedPosts = BLOG_POSTS.filter((post) => post.status === "approved");
+  assert.equal(approvedPosts.length, 6);
   const titles = new Set<string>();
-  for (const post of BLOG_POSTS) {
+  for (const post of approvedPosts) {
     assert.equal(post.status, "approved");
     assert.equal(post.publishedAt, "2026-09-30");
     assert.ok(post.heroImageSlug && imageFor(post.heroImageSlug), `${post.slug} needs a licensed hero image`);
@@ -96,11 +97,23 @@ test("the approved bilingual articles enter the index and sitemap", () => {
     const index = pageSeo({kind: "blogIndex"}, locale);
     assert.equal(index.index, true);
     assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog`)));
-    for (const post of BLOG_POSTS) {
+    for (const post of BLOG_POSTS.filter((item) => item.status === "approved")) {
       const seo = pageSeo({kind: "blogPost", slug: post.slug}, locale);
       assert.equal(seo.index, true);
       assert.deepEqual(seo.reasons, []);
       assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}`)));
+    }
+  }
+});
+
+test("new editorial drafts remain out of search and sitemap", () => {
+  const drafts = BLOG_POSTS.filter((post) => post.status === "draft");
+  assert.equal(drafts.length, 4);
+  for (const post of drafts) {
+    assert.equal(post.publishedAt, null);
+    for (const locale of locales) {
+      assert.equal(pageSeo({ kind: "blogPost", slug: post.slug }, locale).index, false);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}`)), false);
     }
   }
 });
