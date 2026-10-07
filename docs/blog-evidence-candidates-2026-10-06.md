@@ -53,4 +53,4 @@ Dataset at time of scan: `era5-land-representative-point-1991-2020-v1`. The curr
 
 ## Sol handoff
 
-For each candidate, confirm the source definitions and status, inspect the exact month records and caveats, decide whether the example is suitable, and either approve it or replace it with a better-supported case. The current data status is a publication gate: keep the four posts as drafts until this is resolved.
+The four candidates were reviewed against the migrated public dataset and the claim-level evidence manifest in `docs/blog-batch-2-science-review-2026-10-06.md`. They were approved and published bilingually on 2026-10-07. The publication decision remains editorial: it does not upgrade the destination dataset from `provisional` or turn grid-cell wind into route-safety evidence.
