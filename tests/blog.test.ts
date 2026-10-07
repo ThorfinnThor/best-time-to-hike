@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { BLOG_POSTS, blogIndexMayBeIndexed, blockSignature } from "../lib/blog/content";
+import { BLOG_POSTS, blogIndexMayBeIndexed, blogPostsForLocale, blockSignature } from "../lib/blog/content";
 import { locales } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
 import { imageFor } from "../lib/media/images";
@@ -23,6 +23,18 @@ test("blog routes are locale-safe and never manufacture an unregistered article"
   assert.equal(resolvePageId("en", ["blog", "not-a-real-post"]), null);
   assert.equal(resolvePageId("de", ["blog", "not-a-real-post"]), null);
   assert.equal(pathFor({kind: "blogIndex"}, "en"), "/en/blog");
+});
+
+test("the blog index puts the newest approved articles first", () => {
+  for (const locale of locales) {
+    const posts = blogPostsForLocale(locale);
+    assert.deepEqual(
+      posts.slice(0, 4).map((post) => post.publishedAt),
+      ["2026-10-07", "2026-10-07", "2026-10-07", "2026-10-07"],
+      `${locale} should lead with the latest publication batch`,
+    );
+    assert.ok(posts.slice(4).every((post) => post.publishedAt === "2026-09-30"));
+  }
 });
 
 test("approved articles cannot reuse an ordered block signature", () => {

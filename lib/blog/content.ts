@@ -60,7 +60,13 @@ export function getBlogPost(slug: string): BlogPost | null {
 }
 
 export function blogPostsForLocale(locale: Locale): BlogPost[] {
-  return BLOG_POSTS.filter((post) => post.status === "approved" && Boolean(post.publishedAt) && Boolean(post.translations[locale]));
+  return BLOG_POSTS
+    .filter((post) => post.status === "approved" && Boolean(post.publishedAt) && Boolean(post.translations[locale]))
+    .sort((first, second) =>
+      (second.publishedAt ?? "").localeCompare(first.publishedAt ?? "")
+      || (second.modifiedAt ?? "").localeCompare(first.modifiedAt ?? "")
+      || first.slug.localeCompare(second.slug),
+    );
 }
 
 /** The index gate stays closed until at least three complete posts are approved. */
