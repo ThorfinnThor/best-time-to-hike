@@ -2,12 +2,12 @@ import type { BlogPost } from "@/lib/blog/content";
 import { links } from "@/lib/i18n/links";
 import { evidence } from "./shared";
 
-const checkedAt = "2026-10-06";
+const checkedAt = "2026-10-07";
 
 export const sameTemperatureDifferentAir: BlogPost = {
   slug: "same-temperature-different-air",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-10-07",
   modifiedAt: checkedAt,
   heroImageSlug: "bryce-canyon",
   evidence: [
@@ -56,6 +56,7 @@ export const sameTemperatureDifferentAir: BlogPost = {
           { label: "Mount Roraima in June", href: links.destinationMonth("en", "roraima", 6), detail: "Inspect the warm, wet June record." },
           { label: "Methodology", href: links.methodology("en"), detail: "Read how precipitation and gates are defined." },
           { label: "Find a month", href: links.finder("en"), detail: "Compare other destinations and months." },
+          { label: "Best destinations", href: links.rankingIndex("en"), detail: "Browse the published monthly rankings." },
         ] },
       ],
     },
@@ -95,6 +96,7 @@ export const sameTemperatureDifferentAir: BlogPost = {
           { label: "Mount Roraima im Juni", href: links.destinationMonth("de", "roraima", 6), detail: "Das warme, nasse Juni-Profil prüfen." },
           { label: "Methodik", href: links.methodology("de"), detail: "Definitionen von Niederschlag und Toren nachlesen." },
           { label: "Monat finden", href: links.finder("de"), detail: "Weitere Ziele und Monate vergleichen." },
+          { label: "Beste Ziele", href: links.rankingIndex("de"), detail: "Die veröffentlichten Monatsrankings durchsuchen." },
         ] },
       ],
     },

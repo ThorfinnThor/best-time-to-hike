@@ -2,12 +2,12 @@ import type { BlogPost } from "@/lib/blog/content";
 import { links } from "@/lib/i18n/links";
 import { evidence } from "./shared";
 
-const checkedAt = "2026-10-06";
+const checkedAt = "2026-10-07";
 
 export const warmestDriestOrStrongestMonth: BlogPost = {
   slug: "warmest-driest-or-strongest-month",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-10-07",
   modifiedAt: checkedAt,
   heroImageSlug: "blue-mountains",
   evidence: [
@@ -60,6 +60,7 @@ export const warmestDriestOrStrongestMonth: BlogPost = {
           { label: "September", href: links.destinationMonth("en", "blue-mountains", 9), detail: "Highest configured score." },
           { label: "December", href: links.destinationMonth("en", "blue-mountains", 12), detail: "Longest daylight record." },
           { label: "Methodology", href: links.methodology("en"), detail: "Read how scores and gates are defined." },
+          { label: "Find a month", href: links.finder("en"), detail: "Compare the same priorities across destinations." },
         ] },
       ],
     },
@@ -104,6 +105,7 @@ export const warmestDriestOrStrongestMonth: BlogPost = {
           { label: "September", href: links.destinationMonth("de", "blue-mountains", 9), detail: "Höchster konfigurierter Score." },
           { label: "Dezember", href: links.destinationMonth("de", "blue-mountains", 12), detail: "Längstes Tageslicht." },
           { label: "Methodik", href: links.methodology("de"), detail: "Definitionen von Score und Toren nachlesen." },
+          { label: "Monat finden", href: links.finder("de"), detail: "Dieselben Prioritäten an anderen Zielen vergleichen." },
         ] },
       ],
     },

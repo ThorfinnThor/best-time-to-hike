@@ -2,12 +2,12 @@ import type { BlogPost } from "@/lib/blog/content";
 import { links } from "@/lib/i18n/links";
 import { evidence } from "./shared";
 
-const checkedAt = "2026-10-06";
+const checkedAt = "2026-10-07";
 
 export const mildAirFrequentModelledSnowDays: BlogPost = {
   slug: "mild-air-frequent-modelled-snow-days",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-10-07",
   modifiedAt: checkedAt,
   heroImageSlug: "lake-tahoe",
   evidence: [
@@ -60,6 +60,7 @@ export const mildAirFrequentModelledSnowDays: BlogPost = {
           { label: "Berchtesgaden", href: links.destination("en", "berchtesgaden"), detail: "Inspect the Alpine May record." },
           { label: "Methodology", href: links.methodology("en"), detail: "Snow definitions and recommendation gates." },
           { label: "Find a month", href: links.finder("en"), detail: "Search for eligible alternatives by month." },
+          { label: "Low-rain hiking", href: links.themeIndex("en", "lowRain"), detail: "Explore the site's low-rain entry point." },
         ] },
       ],
     },
@@ -101,6 +102,7 @@ export const mildAirFrequentModelledSnowDays: BlogPost = {
           { label: "Berchtesgaden", href: links.destination("de", "berchtesgaden"), detail: "Den alpinen Maiverlauf prüfen." },
           { label: "Methodik", href: links.methodology("de"), detail: "Schneedefinitionen und Empfehlungstore." },
           { label: "Monat finden", href: links.finder("de"), detail: "Zulässige Alternativen nach Monat suchen." },
+          { label: "Wenig Regen", href: links.themeIndex("de", "lowRain"), detail: "Den Einstieg für regenärmere Monate öffnen." },
         ] },
       ],
     },
