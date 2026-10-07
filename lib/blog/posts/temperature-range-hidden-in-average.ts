@@ -2,12 +2,12 @@ import type { BlogPost } from "@/lib/blog/content";
 import { links } from "@/lib/i18n/links";
 import { evidence } from "./shared";
 
-const checkedAt = "2026-10-06";
+const checkedAt = "2026-10-07";
 
 export const temperatureRangeHiddenInAverage: BlogPost = {
   slug: "temperature-range-hidden-in-average",
-  status: "draft",
-  publishedAt: null,
+  status: "approved",
+  publishedAt: "2026-10-07",
   modifiedAt: checkedAt,
   heroImageSlug: "mount-shasta",
   evidence: [
@@ -53,6 +53,7 @@ export const temperatureRangeHiddenInAverage: BlogPost = {
           { label: "Zion in October", href: links.destinationMonth("en", "zion", 10), detail: "Inspect the historical month record." },
           { label: "Methodology", href: links.methodology("en"), detail: "Read the aggregation window and gate definitions." },
           { label: "Find a month", href: links.finder("en"), detail: "Filter destinations by the conditions you prefer." },
+          { label: "Best destinations", href: links.rankingIndex("en"), detail: "Browse the published monthly rankings." },
         ] },
       ],
     },
@@ -89,6 +90,7 @@ export const temperatureRangeHiddenInAverage: BlogPost = {
           { label: "Zion im Oktober", href: links.destinationMonth("de", "zion", 10), detail: "Den historischen Monatsdatensatz ansehen." },
           { label: "Methodik", href: links.methodology("de"), detail: "Aggregationsfenster und Grenzwerte nachlesen." },
           { label: "Monat finden", href: links.finder("de"), detail: "Ziele nach den eigenen Bedingungen filtern." },
+          { label: "Beste Ziele", href: links.rankingIndex("de"), detail: "Die veröffentlichten Monatsrankings durchsuchen." },
         ] },
       ],
     },

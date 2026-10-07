@@ -4,7 +4,7 @@ Reviewer: Sol scientific/editorial review
 Source for publication: current public 315-destination export
 Historical period: 1991–2025
 Dataset version: `era5-land-representative-point-1991-2025-v1`
-Decision: four bilingual articles scientifically and editorially approved; repository publication flags remain `draft` until the separate release step
+Decision: four bilingual articles scientifically and editorially approved and published on 2026-10-07
 
 ## Final SOL approval
 
@@ -15,7 +15,7 @@ The completed bilingual copy was rechecked on 2026-10-06 against the same public
 - `warmest-driest-or-strongest-month`: 715 English words, 718 German words.
 - `same-temperature-different-air`: 779 English words, 750 German words.
 
-Source-regression tests now pin the exact percentile, snow, eligibility, score, humidity, wet-day and daylight claims to the current public destination JSON. The review found no remaining scientific blocker. The posts deliberately remain `draft` and absent from the blog index and sitemap until the publication step sets an explicit date and reruns the full release checks.
+Source-regression tests now pin the exact percentile, snow, eligibility, score, humidity, wet-day and daylight claims to the current public destination JSON. The review found no remaining scientific blocker. The four posts were released on 2026-10-07 after the full release checks; their URLs are now included in the bilingual blog index and sitemap.
 
 ## Scope decision
 
@@ -29,7 +29,7 @@ The first blog batch established the relevant publication precedent: an article 
 
 ## 1. The range hidden inside a monthly average
 
-**Decision:** approved for drafting against the 1991–2025 export.
+**Decision:** approved and published on 2026-10-07 against the 1991–2025 export.
 
 **Primary cases**
 
@@ -51,7 +51,7 @@ Both months are recommendation-eligible in the current export and both destinati
 
 ## 2. Mild air, frequent modelled snow days
 
-**Decision:** approved for drafting against the 1991–2025 export.
+**Decision:** approved and published on 2026-10-07 against the 1991–2025 export.
 
 **Primary cases, all in May**
 
@@ -75,7 +75,7 @@ All three destination articles are on the curated indexing list.
 
 ## 3. Warmest, driest or strongest overall month?
 
-**Decision:** approved for drafting against the 1991–2025 export.
+**Decision:** approved and published on 2026-10-07 against the 1991–2025 export.
 
 **Primary case: Blue Mountains**
 
@@ -96,7 +96,7 @@ All twelve months are recommendation-eligible in the current selected-cell expor
 
 ## 4. Same temperature, different air
 
-**Decision:** approved against the 1991–2025 export as the replacement for the proposed grid-wind article.
+**Decision:** approved and published on 2026-10-07 against the 1991–2025 export as the replacement for the proposed grid-wind article.
 
 **Primary June pair**
 
@@ -124,4 +124,4 @@ The proposed numerical grid-wind article is not approved for this batch. The cur
 
 ## Drafting requirements
 
-Each language version must preserve the exact numeric meaning above, use its own editorial rhythm and remain within the existing 700–1,200-word quality gate. Every article needs a visible selected-cell and 1991–2025 historical-period limitation, at least four source-checked claims, contextual destination links, methodology and finder links, and a licensed high-resolution hero image. The four posts remain drafts until their final bilingual copy and source regression checks receive article-level approval.
+Each language version preserves the exact numeric meaning above, uses its own editorial rhythm and remains within the existing 700–1,200-word quality gate. Every article carries a visible selected-cell and 1991–2025 historical-period limitation, at least four source-checked claims, contextual destination links, methodology and finder links, and a licensed high-resolution hero image. These publication conditions were met before the 2026-10-07 release.

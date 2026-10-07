@@ -43,19 +43,20 @@ function wordCount(value: unknown): number {
   return 0;
 }
 
-test("the first published batch clears the bilingual article quality floor", () => {
+test("all published articles clear the bilingual quality floor", () => {
   const approvedPosts = BLOG_POSTS.filter((post) => post.status === "approved");
-  assert.equal(approvedPosts.length, 6);
+  assert.equal(approvedPosts.length, 10);
+  assert.equal(approvedPosts.filter((post) => post.publishedAt === "2026-09-30").length, 6);
   const titles = new Set<string>();
   for (const post of approvedPosts) {
     assert.equal(post.status, "approved");
-    assert.equal(post.publishedAt, "2026-09-30");
+    assert.ok(post.publishedAt);
     assert.ok(post.heroImageSlug && imageFor(post.heroImageSlug), `${post.slug} needs a licensed hero image`);
     assert.ok(post.evidence.length >= 1, `${post.slug} needs an evidence manifest`);
     const evidenceKeys = new Set(post.evidence.map((item) => item.key));
     for (const item of post.evidence) {
       assert.equal(item.datasetVersion, "era5-land-representative-point-1991-2025-v1");
-      assert.equal(item.checkedAt, "2026-09-30");
+      assert.ok(["2026-09-30", "2026-10-07"].includes(item.checkedAt));
       assert.ok(item.sourcePaths.length > 0);
       for (const sourcePath of item.sourcePaths) assert.equal(fs.existsSync(sourcePath), true, `${post.slug}: missing ${sourcePath}`);
     }
@@ -92,7 +93,7 @@ test("the first published batch clears the bilingual article quality floor", () 
 
 test("the approved bilingual articles enter the index and sitemap", () => {
   const blogUrls = sitemap().filter((entry) => entry.url.includes("/blog"));
-  assert.equal(blogUrls.length, 14, "six articles plus two localized index pages should produce fourteen blog URLs");
+  assert.equal(blogUrls.length, 22, "ten articles plus two localized index pages should produce twenty-two blog URLs");
   for (const locale of locales) {
     const index = pageSeo({kind: "blogIndex"}, locale);
     assert.equal(index.index, true);
@@ -106,31 +107,7 @@ test("the approved bilingual articles enter the index and sitemap", () => {
   }
 });
 
-test("new editorial drafts remain out of search and sitemap", () => {
+test("the publication registry contains no unreviewed drafts", () => {
   const drafts = BLOG_POSTS.filter((post) => post.status === "draft");
-  assert.equal(drafts.length, 4);
-  for (const post of drafts) {
-    assert.equal(post.publishedAt, null);
-    assert.ok(post.heroImageSlug && imageFor(post.heroImageSlug), `${post.slug} needs a licensed hero image`);
-    assert.ok(post.evidence.length >= 2, `${post.slug} needs a complete evidence manifest`);
-    const evidenceKeys = new Set(post.evidence.map((item) => item.key));
-    for (const item of post.evidence) {
-      assert.equal(item.datasetVersion, "era5-land-representative-point-1991-2025-v1");
-      assert.equal(item.checkedAt, "2026-10-06");
-      for (const sourcePath of item.sourcePaths) assert.equal(fs.existsSync(sourcePath), true, `${post.slug}: missing ${sourcePath}`);
-    }
-    for (const locale of locales) {
-      const translation = post.translations[locale];
-      const count = wordCount(translation.blocks);
-      assert.ok(count >= 700 && count <= 1200, `${post.slug}/${locale}: ${count} words`);
-      const evidenceRefs = translation.blocks.flatMap((block) => "evidenceKey" in block ? [block.evidenceKey] : []);
-      assert.ok(evidenceRefs.length >= 3, `${post.slug}/${locale} needs at least three checked block references`);
-      for (const key of evidenceRefs) assert.equal(evidenceKeys.has(key), true, `${post.slug}/${locale}: missing evidence ${key}`);
-      const related = translation.blocks.find((block) => block.type === "destinationLinks");
-      assert.ok(related && related.links.length >= 5, `${post.slug}/${locale} needs contextual links`);
-      assert.ok(related?.links.some((link) => link.href === links.methodology(locale)));
-      assert.equal(pageSeo({ kind: "blogPost", slug: post.slug }, locale).index, false);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}`)), false);
-    }
-  }
+  assert.equal(drafts.length, 0);
 });
