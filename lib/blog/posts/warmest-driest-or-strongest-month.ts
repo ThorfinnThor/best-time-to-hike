@@ -21,7 +21,7 @@ export const warmestDriestOrStrongestMonth: BlogPost = {
   ],
   translations: {
     en: {
-      title: "The warmest, driest or strongest month?",
+      title: "Best time to hike the Blue Mountains: heat, rain or score?",
       description: "Blue Mountains data shows why the best hiking month depends on the question you ask first.",
       heroAlt: "Layered sandstone cliffs and eucalyptus forest in the Blue Mountains",
       category: "seasonal",
@@ -65,7 +65,7 @@ export const warmestDriestOrStrongestMonth: BlogPost = {
       ],
     },
     de: {
-      title: "Der wärmste, trockenste oder stärkste Monat?",
+      title: "Beste Wanderzeit für die Blue Mountains: Hitze oder Regen?",
       description: "Die Daten der Blue Mountains zeigen, warum die passende Wanderzeit von der zuerst gestellten Frage abhängt.",
       heroAlt: "Geschichtete Sandsteinfelsen und Eukalyptuswald in den Blue Mountains",
       category: "seasonal",

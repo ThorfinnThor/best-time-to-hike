@@ -22,7 +22,7 @@ export const temperatureRangeHiddenInAverage: BlogPost = {
   ],
   translations: {
     en: {
-      title: "The temperature range hidden in an average",
+      title: "Average hiking temperature vs daily temperature range",
       description: "Two strong hiking months show why a mean temperature is only the first line of a climate decision.",
       heroAlt: "Snowy volcanic slopes of Mount Shasta beneath a clear sky",
       category: "data-insight",
@@ -58,7 +58,7 @@ export const temperatureRangeHiddenInAverage: BlogPost = {
       ],
     },
     de: {
-      title: "Die Temperaturspanne hinter dem Mittelwert",
+      title: "Mittlere Wandertemperatur oder tägliche Temperaturspanne",
       description: "Zwei gute Wandermonate zeigen, warum die mittlere Temperatur nur der erste Schritt einer Klimasentscheidung ist.",
       heroAlt: "Verschneite Hänge des Mount Shasta unter klarem Himmel",
       category: "data-insight",

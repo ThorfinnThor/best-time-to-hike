@@ -27,7 +27,7 @@ export const wideAndNarrowHikingSeasons: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Twelve months or three: how wide is a hiking window?",
+      title: "Year-round hiking or short season? Climate windows compared",
       description: "A paired calendar explains why some destinations stay inside the model's climate limits all year while mountain regions pass for only a short season.",
       heroAlt: "Mountain landscape in Grand Teton, a destination with a narrow modelled hiking window",
       category: "seasonal",
@@ -70,7 +70,7 @@ export const wideAndNarrowHikingSeasons: BlogPost = {
       ],
     },
     de: {
-      title: "Zwölf Monate oder drei: Wie groß ist das Wanderfenster?",
+      title: "Ganzjährig wandern oder kurze Saison? Klimavergleich",
       description: "Zwei gegensätzliche Kalender erklären, warum manche Ziele ganzjährig innerhalb der Klimagrenzen bleiben und Bergregionen nur kurz bestehen.",
       heroAlt: "Berglandschaft im Grand Teton, einem Ziel mit kurzem modelliertem Wanderfenster",
       category: "seasonal",

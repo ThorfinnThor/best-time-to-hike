@@ -22,7 +22,7 @@ export const daylightAndHikingSeason: BlogPost = {
   ],
   translations: {
     en: {
-      title: "When daylight changes the hiking decision",
+      title: "How daylight affects the best time to hike",
       description: "From 24-hour light in Lofotodden to an almost fixed 12-hour equatorial day, daylight reshapes the time available for a hike without describing the weather.",
       heroAlt: "Mountain and coastal landscape in Lofotodden National Park under northern light",
       category: "data-insight",
@@ -65,7 +65,7 @@ export const daylightAndHikingSeason: BlogPost = {
       ],
     },
     de: {
-      title: "Wenn Tageslicht die Wanderentscheidung verändert",
+      title: "Wie Tageslicht die beste Wanderzeit beeinflusst",
       description: "Von 24 Stunden Licht in Lofotodden bis zum fast festen Zwölfstundentag am Äquator: Tageslicht verändert die verfügbare Zeit, nicht das Wetter.",
       heroAlt: "Berg- und Küstenlandschaft im Lofotodden-Nationalpark unter nordischem Licht",
       category: "data-insight",

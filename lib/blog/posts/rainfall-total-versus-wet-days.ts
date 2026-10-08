@@ -20,7 +20,7 @@ export const rainfallTotalVersusWetDays: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Rainfall total vs wet days: two different questions",
+      title: "Rainfall vs rainy days: what hikers need to know",
       description: "Salkantay, Cederberg and Jeju receive similar monthly rain totals in selected months, yet the rain falls across very different numbers of days.",
       heroAlt: "Rock formations and mountain terrain in Cederberg, part of the matched rainfall comparison",
       category: "data-insight",
@@ -57,7 +57,7 @@ export const rainfallTotalVersusWetDays: BlogPost = {
       ],
     },
     de: {
-      title: "Regenmenge und Regentage sagen nicht dasselbe aus",
+      title: "Regenmenge oder Regentage: Was Wanderer wissen müssen",
       description: "Salkantay, Cederberg und Jeju erhalten in ausgewählten Monaten fast dieselbe Regenmenge, verteilt auf völlig unterschiedliche Anzahlen nasser Tage.",
       heroAlt: "Felsformationen und Berggelände im Cederberg als Teil des Regenvergleichs",
       category: "data-insight",

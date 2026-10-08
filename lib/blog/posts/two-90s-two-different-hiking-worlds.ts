@@ -25,7 +25,7 @@ export const two90sTwoDifferentHikingWorlds: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Two 90s, two different hiking worlds",
+      title: "Larapinta vs Lofotodden: hiking weather compared",
       description: "Larapinta and Lofotodden both score 90, yet temperature, rain, humidity and daylight describe very different July and August hiking climates.",
       heroAlt: "Green mountain slopes and dark rock beneath a blue July sky in Lofotodden National Park",
       category: "data-insight",
@@ -59,7 +59,7 @@ export const two90sTwoDifferentHikingWorlds: BlogPost = {
       ],
     },
     de: {
-      title: "Zweimal 90, zwei verschiedene Wanderwelten",
+      title: "Larapinta vs. Lofotodden: Wanderwetter im Vergleich",
       description: "Larapinta und Lofotodden erreichen beide 90 Punkte, doch Temperatur, Regen, Feuchte und Tageslicht ergeben sehr verschiedene Wanderprofile.",
       heroAlt: "Grüne Berghänge und dunkler Fels unter blauem Julihimmel im Nationalpark Lofotodden",
       category: "data-insight",

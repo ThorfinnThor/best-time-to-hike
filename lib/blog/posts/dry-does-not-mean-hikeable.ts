@@ -20,7 +20,7 @@ export const dryDoesNotMeanHikeable: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Dry does not always mean good hiking weather",
+      title: "Dry hiking weather: why low rain can still mean high heat",
       description: "Three very dry July climates show why rainfall alone can point hikers toward the wrong month, and why heat probability belongs in the decision.",
       heroAlt: "Sandstone landscape in Wadi Rum, one of the dry destinations examined in the article",
       category: "data-insight",
@@ -58,7 +58,7 @@ export const dryDoesNotMeanHikeable: BlogPost = {
       ],
     },
     de: {
-      title: "Trocken heißt nicht automatisch gutes Wanderwetter",
+      title: "Trockenes Wanderwetter: Wenig Regen kann Hitze bedeuten",
       description: "Drei sehr trockene Juliklimata zeigen, warum Regen allein in den falschen Monat führen kann und warum die Hitzewahrscheinlichkeit mitentscheiden muss.",
       heroAlt: "Sandsteinlandschaft im Wadi Rum, eines der trockenen Ziele aus dem Artikel",
       category: "data-insight",

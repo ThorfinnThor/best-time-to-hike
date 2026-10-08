@@ -24,7 +24,7 @@ export const mildAirFrequentModelledSnowDays: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Mild air does not mean snow-free trails",
+      title: "Can hiking trails have snow in mild weather?",
       description: "Lake Tahoe, Yosemite and Berchtesgaden show why a mild May average cannot erase a critical snow signal.",
       heroAlt: "Clear blue water and mountain ridges at Lake Tahoe",
       category: "seasonal",
@@ -65,7 +65,7 @@ export const mildAirFrequentModelledSnowDays: BlogPost = {
       ],
     },
     de: {
-      title: "Milde Luft bedeutet keine schneefreien Wege",
+      title: "Können Wanderwege trotz mildem Wetter verschneit sein?",
       description: "Lake Tahoe, Yosemite und Berchtesgaden zeigen, warum ein mildes Maimittel ein kritisches Schneesignal nicht aufhebt.",
       heroAlt: "Klares blaues Wasser und Bergkämme am Lake Tahoe",
       category: "seasonal",

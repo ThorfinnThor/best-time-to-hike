@@ -22,7 +22,7 @@ export const sameTemperatureDifferentAir: BlogPost = {
   ],
   translations: {
     en: {
-      title: "The same temperature can mean very different air",
+      title: "Bryce Canyon vs Mount Roraima: hiking weather in June",
       description: "Bryce Canyon and Mount Roraima share a warm June mean, but humidity and wet-day frequency tell different stories.",
       heroAlt: "Red hoodoos and a trail in Bryce Canyon under a clear sky",
       category: "data-insight",
@@ -61,7 +61,7 @@ export const sameTemperatureDifferentAir: BlogPost = {
       ],
     },
     de: {
-      title: "Gleiche Temperatur, ganz andere Luft",
+      title: "Bryce Canyon oder Mount Roraima: Wanderwetter im Juni",
       description: "Bryce Canyon und Mount Roraima haben im Juni ein ähnliches Temperaturmittel, aber Feuchte und Regentage erzählen unterschiedliche Geschichten.",
       heroAlt: "Rote Hoodoos und ein Weg im Bryce Canyon unter klarem Himmel",
       category: "data-insight",

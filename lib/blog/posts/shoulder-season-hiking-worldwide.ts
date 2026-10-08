@@ -21,7 +21,7 @@ export const shoulderSeasonHikingWorldwide: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Shoulder-season hiking across both hemispheres",
+      title: "Best shoulder-season hiking months around the world",
       description: "Five historical climate profiles show why spring and autumn are directions on a globe, not fixed months on a universal hiking calendar.",
       heroAlt: "Rocky trail landscape in Samaria Gorge, used in the Northern Hemisphere shoulder-season comparison",
       category: "planning",
@@ -64,7 +64,7 @@ export const shoulderSeasonHikingWorldwide: BlogPost = {
       ],
     },
     de: {
-      title: "Wandern in der Nebensaison auf beiden Hemisphären",
+      title: "Die besten Monate zum Wandern in der Nebensaison",
       description: "Fünf historische Klimaprofile zeigen, warum Frühling und Herbst Richtungen auf dem Globus sind und keine festen Monate im Weltkalender.",
       heroAlt: "Felsige Wanderlandschaft in der Samaria-Schlucht für den Vergleich der nördlichen Nebensaison",
       category: "planning",

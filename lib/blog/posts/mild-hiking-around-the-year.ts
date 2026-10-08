@@ -26,7 +26,7 @@ export const mildHikingAroundTheYear: BlogPost = {
   ],
   translations: {
     en: {
-      title: "A year of mild hiking: twelve months, twelve places",
+      title: "Where to hike each month for mild weather",
       description: "An explicit climate rule builds a twelve-stop planning atlas, following historically mild hiking-hour temperatures without pretending to rank the world.",
       heroAlt: "Mountain trail on Madeira, the June stop in a twelve-month mild-climate hiking atlas",
       category: "planning",
@@ -80,7 +80,7 @@ export const mildHikingAroundTheYear: BlogPost = {
       ],
     },
     de: {
-      title: "Ein Jahr mit mildem Wanderklima: zwölf Monate, zwölf Orte",
+      title: "Wo man jeden Monat bei mildem Wetter wandern kann",
       description: "Eine klare Klimaregel erzeugt einen Atlas mit zwölf Stationen und folgt milden historischen Wandertemperaturen, ohne die Welt in eine Rangliste zu pressen.",
       heroAlt: "Bergweg auf Madeira, der Juni-Stopp in einem zwölfmonatigen Atlas mit mildem Wanderklima",
       category: "planning",

@@ -24,7 +24,7 @@ export const cappadociaBetweenSnowAndHeat: BlogPost = {
   ],
   translations: {
     en: {
-      title: "Cappadocia between snow and heat",
+      title: "Best time to hike Cappadocia: spring or autumn?",
       description: "Cappadocia's historical record moves from a winter snow gate to a midsummer heat gate, leaving two different shoulder-season arcs.",
       heroAlt: "Fairy chimneys and layered rock formations in Cappadocia",
       category: "seasonal",
@@ -68,7 +68,7 @@ export const cappadociaBetweenSnowAndHeat: BlogPost = {
       ],
     },
     de: {
-      title: "Kappadokien zwischen Schnee und Hitze",
+      title: "Beste Wanderzeit für Kappadokien: Frühling oder Herbst?",
       description: "Kappadokiens historischer Datensatz wechselt vom winterlichen Schneetor zum sommerlichen Hitzetor und bildet zwei unterschiedliche Übergangszeiten.",
       heroAlt: "Feenkamine und geschichtete Felsformationen in Kappadokien",
       category: "seasonal",
