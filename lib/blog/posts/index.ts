@@ -9,6 +9,8 @@ import { temperatureRangeHiddenInAverage } from "./temperature-range-hidden-in-a
 import { mildAirFrequentModelledSnowDays } from "./mild-air-frequent-modelled-snow-days";
 import { warmestDriestOrStrongestMonth } from "./warmest-driest-or-strongest-month";
 import { sameTemperatureDifferentAir } from "./same-temperature-different-air";
+import { two90sTwoDifferentHikingWorlds } from "./two-90s-two-different-hiking-worlds";
+import { cappadociaBetweenSnowAndHeat } from "./cappadocia-between-snow-and-heat";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -21,4 +23,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   mildAirFrequentModelledSnowDays,
   warmestDriestOrStrongestMonth,
   sameTemperatureDifferentAir,
+  two90sTwoDifferentHikingWorlds,
+  cappadociaBetweenSnowAndHeat,
 ];

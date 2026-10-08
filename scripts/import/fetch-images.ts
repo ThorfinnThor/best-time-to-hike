@@ -126,6 +126,10 @@ const QUERY_OVERRIDE: Record<string, string[]> = {
   "mount-apo": ["Mount Apo Davao Philippines", "Mount Apo summit Philippines", "Mount Apo national park"],
   "uinta-mountains": ["High Uintas Wilderness Utah", "Uinta Mountains Utah lakes", "Kings Peak Utah Uinta"],
   "cape-breton-highlands": ["Skyline Trail Cape Breton Highlands", "Cape Breton Highlands National Park", "Cabot Trail Cape Breton Nova Scotia"],
+  // July-specific source candidate for the equal-score blog comparison. The
+  // previous Lofotodden photograph was sharp but visibly wintry, which made it
+  // a poor lead image for a July climate record.
+  "lofotodden": ["File:Nationalpark Lofotodden lub 2025-07-22 img03.jpg", "Lofotodden National Park July Norway", "Lofotodden summer hiking Norway"],
   "sangre-de-cristo": ["Sangre de Cristo Mountains Colorado", "Crestone Peak Colorado", "Great Sand Dunes Colorado mountains"],
   "acatenango": ["Volcan Acatenango Guatemala", "Acatenango crater Guatemala", "Acatenango hike Guatemala"],
   "cajas": ["Cajas National Park Ecuador", "Parque Nacional Cajas lagunas", "Cajas paramo Ecuador"],
@@ -154,11 +158,17 @@ function queriesFor(destination: DestinationConfig): string[] {
 }
 
 async function search(query: string): Promise<any[]> {
+  const exactFile = query.startsWith("File:");
   const url = `${API}?${new URLSearchParams({
-    action: "query", format: "json", generator: "search", gsrsearch: `filetype:bitmap ${query}`,
-    gsrnamespace: "6", gsrlimit: "20", prop: "imageinfo",
+    action: "query", format: "json",
+    ...(exactFile
+      ? {titles: query}
+      : {generator: "search", gsrsearch: `filetype:bitmap ${query}`, gsrnamespace: "6", gsrlimit: "20"}),
+    prop: "imageinfo",
     iiprop: "url|extmetadata|size|mime", iiurlwidth: String(WIDTH),
-    iiextmetadatafilter: "LicenseShortName|Artist|Credit|DateTimeOriginal|Categories|ObjectName",
+    // Keep every field used by acceptable() and the persisted attribution.
+    // Omitting LicenseUrl made valid CC files fail the deed-origin check.
+    iiextmetadatafilter: "LicenseShortName|LicenseUrl|Artist|Credit|Attribution|Restrictions|DateTimeOriginal|Categories|ObjectName",
   })}`;
   const response = await fetch(url, {headers: {"User-Agent": UA}});
   if (!response.ok) throw new Error(`IMAGE001 Commons search failed with ${response.status}`);

@@ -74,10 +74,10 @@ test("category links open unselected month pickers in both languages", {skip: !b
 test("the bilingual blog index renders an image-led card for every published article", {skip: !built}, () => {
   for (const locale of locales) {
     const html = page(`${locale}/blog/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
-    assert.equal((html.match(/class="blog-card-media"/g) ?? []).length, 10, `${locale} blog cards should all have media`);
-    assert.equal((html.match(/class="blog-card-badge"/g) ?? []).length, 10, `${locale} blog cards should all have category labels`);
-    assert.equal((html.match(/class="blog-card-meta"/g) ?? []).length, 10, `${locale} blog cards should all have publication metadata`);
-    assert.equal((html.match(/<img /g) ?? []).length, 10, `${locale} blog cards should all render a licensed image`);
+    assert.equal((html.match(/class="blog-card-media"/g) ?? []).length, 12, `${locale} blog cards should all have media`);
+    assert.equal((html.match(/class="blog-card-badge"/g) ?? []).length, 12, `${locale} blog cards should all have category labels`);
+    assert.equal((html.match(/class="blog-card-meta"/g) ?? []).length, 12, `${locale} blog cards should all have publication metadata`);
+    assert.equal((html.match(/<img /g) ?? []).length, 12, `${locale} blog cards should all render a licensed image`);
   }
 });
 

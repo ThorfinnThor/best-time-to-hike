@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { BLOG_POSTS, blogIndexMayBeIndexed, blogPostsForLocale, blockSignature } from "../lib/blog/content";
+import { BLOG_POSTS, blogIndexMayBeIndexed, blogPostMayBeIndexed, blogPostsForLocale, blockSignature } from "../lib/blog/content";
 import { locales } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
 import { imageFor } from "../lib/media/images";
@@ -29,11 +29,12 @@ test("the blog index puts the newest approved articles first", () => {
   for (const locale of locales) {
     const posts = blogPostsForLocale(locale);
     assert.deepEqual(
-      posts.slice(0, 4).map((post) => post.publishedAt),
-      ["2026-10-07", "2026-10-07", "2026-10-07", "2026-10-07"],
+      posts.slice(0, 2).map((post) => post.publishedAt),
+      ["2026-10-08", "2026-10-08"],
       `${locale} should lead with the latest publication batch`,
     );
-    assert.ok(posts.slice(4).every((post) => post.publishedAt === "2026-09-30"));
+    assert.ok(posts.slice(2, 6).every((post) => post.publishedAt === "2026-10-07"));
+    assert.ok(posts.slice(6).every((post) => post.publishedAt === "2026-09-30"));
   }
 });
 
@@ -57,7 +58,7 @@ function wordCount(value: unknown): number {
 
 test("all published articles clear the bilingual quality floor", () => {
   const approvedPosts = BLOG_POSTS.filter((post) => post.status === "approved");
-  assert.equal(approvedPosts.length, 10);
+  assert.equal(approvedPosts.length, 12);
   assert.equal(approvedPosts.filter((post) => post.publishedAt === "2026-09-30").length, 6);
   const titles = new Set<string>();
   for (const post of approvedPosts) {
@@ -68,7 +69,7 @@ test("all published articles clear the bilingual quality floor", () => {
     const evidenceKeys = new Set(post.evidence.map((item) => item.key));
     for (const item of post.evidence) {
       assert.equal(item.datasetVersion, "era5-land-representative-point-1991-2025-v1");
-      assert.ok(["2026-09-30", "2026-10-07"].includes(item.checkedAt));
+      assert.ok(["2026-09-30", "2026-10-07", "2026-10-08"].includes(item.checkedAt));
       assert.ok(item.sourcePaths.length > 0);
       for (const sourcePath of item.sourcePaths) assert.equal(fs.existsSync(sourcePath), true, `${post.slug}: missing ${sourcePath}`);
     }
@@ -105,7 +106,7 @@ test("all published articles clear the bilingual quality floor", () => {
 
 test("the approved bilingual articles enter the index and sitemap", () => {
   const blogUrls = sitemap().filter((entry) => entry.url.includes("/blog"));
-  assert.equal(blogUrls.length, 22, "ten articles plus two localized index pages should produce twenty-two blog URLs");
+  assert.equal(blogUrls.length, 26, "twelve articles plus two localized index pages should produce twenty-six blog URLs");
   for (const locale of locales) {
     const index = pageSeo({kind: "blogIndex"}, locale);
     assert.equal(index.index, true);
@@ -119,7 +120,18 @@ test("the approved bilingual articles enter the index and sitemap", () => {
   }
 });
 
-test("the publication registry contains no unreviewed drafts", () => {
+test("the publication registry contains the two explicitly planned batch-three releases", () => {
   const drafts = BLOG_POSTS.filter((post) => post.status === "draft");
   assert.equal(drafts.length, 0);
+  for (const slug of ["two-90s-two-different-hiking-worlds", "cappadocia-between-snow-and-heat"]) {
+    const post = BLOG_POSTS.find((item) => item.slug === slug);
+    assert.ok(post);
+    assert.equal(post.status, "approved");
+    assert.equal(post.publishedAt, "2026-10-08");
+    assert.equal(blogPostMayBeIndexed(post), true);
+    for (const locale of locales) {
+      assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}`)), true);
+    }
+  }
 });
