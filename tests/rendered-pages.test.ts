@@ -6,6 +6,7 @@ import { getDestinationIndex } from "../lib/data/load";
 import { locales, monthName, themeKeys } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
 import { publicIndexTargetUrlCount } from "../lib/seo/editorial-index";
+import { blogPostsForLocale } from "../lib/blog/content";
 
 /**
  * Assertions against the built HTML.
@@ -74,10 +75,11 @@ test("category links open unselected month pickers in both languages", {skip: !b
 test("the bilingual blog index renders an image-led card for every published article", {skip: !built}, () => {
   for (const locale of locales) {
     const html = page(`${locale}/blog/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
-    assert.equal((html.match(/class="blog-card-media"/g) ?? []).length, 12, `${locale} blog cards should all have media`);
-    assert.equal((html.match(/class="blog-card-badge"/g) ?? []).length, 12, `${locale} blog cards should all have category labels`);
-    assert.equal((html.match(/class="blog-card-meta"/g) ?? []).length, 12, `${locale} blog cards should all have publication metadata`);
-    assert.equal((html.match(/<img /g) ?? []).length, 12, `${locale} blog cards should all render a licensed image`);
+    const publishedCount = blogPostsForLocale(locale).length;
+    assert.equal((html.match(/class="blog-card-media"/g) ?? []).length, publishedCount, `${locale} blog cards should all have media`);
+    assert.equal((html.match(/class="blog-card-badge"/g) ?? []).length, publishedCount, `${locale} blog cards should all have category labels`);
+    assert.equal((html.match(/class="blog-card-meta"/g) ?? []).length, publishedCount, `${locale} blog cards should all have publication metadata`);
+    assert.equal((html.match(/<img /g) ?? []).length, publishedCount, `${locale} blog cards should all render a licensed image`);
   }
 });
 

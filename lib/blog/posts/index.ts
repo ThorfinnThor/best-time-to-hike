@@ -11,6 +11,8 @@ import { warmestDriestOrStrongestMonth } from "./warmest-driest-or-strongest-mon
 import { sameTemperatureDifferentAir } from "./same-temperature-different-air";
 import { two90sTwoDifferentHikingWorlds } from "./two-90s-two-different-hiking-worlds";
 import { cappadociaBetweenSnowAndHeat } from "./cappadocia-between-snow-and-heat";
+import { madeiraVsTenerifeWinterHikingWeather } from "./madeira-vs-tenerife-winter-hiking-weather";
+import { bestTimeToHikeJapanByRoute } from "./best-time-to-hike-japan-by-route";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -25,4 +27,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   sameTemperatureDifferentAir,
   two90sTwoDifferentHikingWorlds,
   cappadociaBetweenSnowAndHeat,
+  madeiraVsTenerifeWinterHikingWeather,
+  bestTimeToHikeJapanByRoute,
 ];

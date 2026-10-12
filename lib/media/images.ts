@@ -4,6 +4,8 @@ import { normaliseLicence } from "@/lib/media/licence";
 export interface DestinationImage {
   slug: string;
   file: string;
+  width?: number;
+  height?: number;
   sourceUrl: string;
   sourceFile: string;
   author: string;
