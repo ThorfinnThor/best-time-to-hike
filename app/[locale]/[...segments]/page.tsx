@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import weights from "@/data-config/scoring/weights.json";
-import { allImages } from "@/lib/media/images";
+import { allImages, imageFor } from "@/lib/media/images";
 import { licenceUrl, sourceLicenceUrl } from "@/lib/media/licence";
 import { Finder } from "@/components/finder/Finder";
 import { HomePage } from "@/components/home/HomePage";
@@ -47,6 +47,14 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
   if(!page) return {};
   const seo = pageSeo(page, locale);
   const canonical = absoluteUrl(pathFor(page, locale));
+  const blogPost = page.kind === "blogPost" ? getBlogPost(page.slug) : null;
+  const heroImage = blogPost?.heroImageSlug ? imageFor(blogPost.heroImageSlug) : null;
+  const socialImage = heroImage ? {
+    url: absoluteUrl(heroImage.file),
+    ...(heroImage.width ? {width: heroImage.width} : {}),
+    ...(heroImage.height ? {height: heroImage.height} : {}),
+    alt: blogPost?.translations[locale].heroAlt ?? seo.title,
+  } : {url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: seo.title};
   return {
     title: seo.title,
     description: seo.description,
@@ -65,10 +73,10 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
       title: seo.title,
       description: seo.description,
       url: canonical,
-      images: [{url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: seo.title}],
+      images: [socialImage],
     },
     twitter: {card: "summary_large_image", title: seo.title, description: seo.description,
-      images: [{url: absoluteUrl("/opengraph-image"), alt: seo.title}]},
+      images: [{url: socialImage.url, alt: socialImage.alt}]},
   };
 }
 
