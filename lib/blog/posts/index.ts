@@ -13,6 +13,8 @@ import { two90sTwoDifferentHikingWorlds } from "./two-90s-two-different-hiking-w
 import { cappadociaBetweenSnowAndHeat } from "./cappadocia-between-snow-and-heat";
 import { madeiraVsTenerifeWinterHikingWeather } from "./madeira-vs-tenerife-winter-hiking-weather";
 import { bestTimeToHikeJapanByRoute } from "./best-time-to-hike-japan-by-route";
+import { bestTimeToHikeDolomitesByMonth } from "./best-time-to-hike-dolomites-by-month";
+import { bestTimeToTrekNepalAnnapurnaVsEverest } from "./best-time-to-trek-nepal-annapurna-vs-everest";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -29,4 +31,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   cappadociaBetweenSnowAndHeat,
   madeiraVsTenerifeWinterHikingWeather,
   bestTimeToHikeJapanByRoute,
+  bestTimeToHikeDolomitesByMonth,
+  bestTimeToTrekNepalAnnapurnaVsEverest,
 ];

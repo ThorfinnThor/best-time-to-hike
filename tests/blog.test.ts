@@ -30,12 +30,13 @@ test("the blog index puts the newest approved articles first", () => {
     const posts = blogPostsForLocale(locale);
     assert.deepEqual(
       posts.slice(0, 2).map((post) => post.publishedAt),
-      ["2026-10-12", "2026-10-12"],
+      ["2026-10-17", "2026-10-17"],
       `${locale} should lead with the latest publication batch`,
     );
-    assert.ok(posts.slice(2, 4).every((post) => post.publishedAt === "2026-10-08"));
-    assert.ok(posts.slice(4, 8).every((post) => post.publishedAt === "2026-10-07"));
-    assert.ok(posts.slice(8).every((post) => post.publishedAt === "2026-09-30"));
+    assert.ok(posts.slice(2, 4).every((post) => post.publishedAt === "2026-10-12"));
+    assert.ok(posts.slice(4, 6).every((post) => post.publishedAt === "2026-10-08"));
+    assert.ok(posts.slice(6, 10).every((post) => post.publishedAt === "2026-10-07"));
+    assert.ok(posts.slice(10).every((post) => post.publishedAt === "2026-09-30"));
   }
 });
 
@@ -59,7 +60,7 @@ function wordCount(value: unknown): number {
 
 test("all published articles clear the bilingual quality floor", () => {
   const approvedPosts = BLOG_POSTS.filter((post) => post.status === "approved");
-  assert.equal(approvedPosts.length, 14);
+  assert.equal(approvedPosts.length, 16);
   assert.equal(approvedPosts.filter((post) => post.publishedAt === "2026-09-30").length, 6);
   const titles = new Set<string>();
   for (const post of approvedPosts) {
@@ -70,7 +71,7 @@ test("all published articles clear the bilingual quality floor", () => {
     const evidenceKeys = new Set(post.evidence.map((item) => item.key));
     for (const item of post.evidence) {
       assert.equal(item.datasetVersion, "era5-land-representative-point-1991-2025-v1");
-      assert.ok(["2026-09-30", "2026-10-07", "2026-10-08", "2026-10-11"].includes(item.checkedAt));
+      assert.ok(["2026-09-30", "2026-10-07", "2026-10-08", "2026-10-11", "2026-10-17"].includes(item.checkedAt));
       assert.ok(item.sourcePaths.length > 0);
       for (const sourcePath of item.sourcePaths) assert.equal(fs.existsSync(sourcePath), true, `${post.slug}: missing ${sourcePath}`);
     }
@@ -107,7 +108,7 @@ test("all published articles clear the bilingual quality floor", () => {
 
 test("the approved bilingual articles enter the index and sitemap", () => {
   const blogUrls = sitemap().filter((entry) => entry.url.includes("/blog"));
-  assert.equal(blogUrls.length, 30, "fourteen articles plus two localized index pages should produce thirty blog URLs");
+  assert.equal(blogUrls.length, 34, "sixteen articles plus two localized index pages should produce thirty-four blog URLs");
   for (const locale of locales) {
     const index = pageSeo({kind: "blogIndex"}, locale);
     assert.equal(index.index, true);
@@ -121,7 +122,7 @@ test("the approved bilingual articles enter the index and sitemap", () => {
   }
 });
 
-test("the publication registry keeps the released batches approved and batch-four articles indexable", () => {
+test("the publication registry keeps every released batch approved and indexable", () => {
   const drafts = BLOG_POSTS.filter((post) => post.status === "draft");
   assert.deepEqual(drafts.map((post) => post.slug), []);
   for (const slug of ["two-90s-two-different-hiking-worlds", "cappadocia-between-snow-and-heat"]) {
@@ -140,6 +141,17 @@ test("the publication registry keeps the released batches approved and batch-fou
     assert.ok(post);
     assert.equal(post.status, "approved");
     assert.equal(post.publishedAt, "2026-10-12");
+    assert.equal(blogPostMayBeIndexed(post), true);
+    for (const locale of locales) {
+      assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}`)), true);
+    }
+  }
+  for (const slug of ["best-time-to-hike-dolomites-by-month", "best-time-to-trek-nepal-annapurna-vs-everest"]) {
+    const post = BLOG_POSTS.find((item) => item.slug === slug);
+    assert.ok(post);
+    assert.equal(post.status, "approved");
+    assert.equal(post.publishedAt, "2026-10-17");
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
