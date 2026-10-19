@@ -83,7 +83,7 @@ test("batch five is documented and approved by the final Sol review", () => {
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug: article.slug}, locale).index, true);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${article.slug}`)), true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${article.slug}/`)), true);
     }
   }
 });

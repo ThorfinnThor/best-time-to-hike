@@ -123,7 +123,7 @@ test("the two bilingual articles clear the editorial floor without sharing a tem
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug: post.slug}, locale).index, true);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}`)), true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}/`)), true);
     }
   }
 });

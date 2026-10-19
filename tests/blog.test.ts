@@ -113,12 +113,12 @@ test("the approved bilingual articles enter the index and sitemap", () => {
   for (const locale of locales) {
     const index = pageSeo({kind: "blogIndex"}, locale);
     assert.equal(index.index, true);
-    assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog`)));
+    assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog/`)));
     for (const post of BLOG_POSTS.filter((item) => item.status === "approved")) {
       const seo = pageSeo({kind: "blogPost", slug: post.slug}, locale);
       assert.equal(seo.index, true);
       assert.deepEqual(seo.reasons, []);
-      assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}`)));
+      assert.ok(blogUrls.some((entry) => entry.url.endsWith(`/${locale}/blog/${post.slug}/`)));
     }
   }
 });
@@ -134,7 +134,7 @@ test("the publication registry keeps every released batch approved and indexable
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}`)), true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}/`)), true);
     }
   }
   for (const slug of ["madeira-vs-tenerife-winter-hiking-weather", "best-time-to-hike-japan-by-route"]) {
@@ -145,7 +145,7 @@ test("the publication registry keeps every released batch approved and indexable
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}`)), true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}/`)), true);
     }
   }
   for (const slug of ["best-time-to-hike-dolomites-by-month", "best-time-to-trek-nepal-annapurna-vs-everest"]) {
@@ -156,7 +156,7 @@ test("the publication registry keeps every released batch approved and indexable
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}`)), true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}/`)), true);
     }
   }
   for (const slug of ["best-time-to-hike-yosemite-zion-grand-canyon", "best-time-to-hike-new-zealand-routes"]) {
@@ -167,7 +167,7 @@ test("the publication registry keeps every released batch approved and indexable
     assert.equal(blogPostMayBeIndexed(post), true);
     for (const locale of locales) {
       assert.equal(pageSeo({kind: "blogPost", slug}, locale).index, true);
-      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}`)), true);
+      assert.equal(sitemap().some((entry) => entry.url.endsWith(`/${locale}/blog/${slug}/`)), true);
     }
   }
 });

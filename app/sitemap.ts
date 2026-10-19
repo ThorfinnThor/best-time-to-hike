@@ -8,6 +8,10 @@ import { getManifest } from "@/lib/data/load";
 import { siteMayBeIndexed } from "@/lib/seo/crawl-policy";
 export const dynamic = "force-static";
 
+// next.config sets trailingSlash: the slash-less form 308-redirects, so list
+// the canonical (slashed) URL, as the page canonicals and JSON-LD do.
+const pageUrl = (path: string) => absoluteUrl(path.endsWith("/") ? path : `${path}/`);
+
 /**
  * The sitemap lists what we ask Google to index, which is deliberately far less
  * than what the site renders. A sitemap containing 3,180 structurally identical
@@ -24,13 +28,13 @@ export default function sitemap():MetadataRoute.Sitemap {
     if (!page) continue;
     if (!pageSeo(page, route.locale).index) continue;
     entries.push({
-      url: absoluteUrl(pathFor(page, route.locale)),
+      url: pageUrl(pathFor(page, route.locale)),
       lastModified: new Date(getManifest().generatedAt),
       changeFrequency: "monthly" as const,
       priority: page.kind === "home" ? 1 : page.kind === "destination" ? 0.8 : 0.6,
       alternates: {languages: {
-        ...Object.fromEntries(locales.map((l) => [l, absoluteUrl(pathFor(page, l))])),
-        "x-default": absoluteUrl(pathFor(page, "en")),
+        ...Object.fromEntries(locales.map((l) => [l, pageUrl(pathFor(page, l))])),
+        "x-default": pageUrl(pathFor(page, "en")),
       }},
     });
   }
