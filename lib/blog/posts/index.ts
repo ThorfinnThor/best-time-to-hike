@@ -17,6 +17,8 @@ import { bestTimeToHikeDolomitesByMonth } from "./best-time-to-hike-dolomites-by
 import { bestTimeToTrekNepalAnnapurnaVsEverest } from "./best-time-to-trek-nepal-annapurna-vs-everest";
 import { bestTimeToHikeYosemiteZionGrandCanyon } from "./best-time-to-hike-yosemite-zion-grand-canyon";
 import { bestTimeToHikeNewZealandRoutes } from "./best-time-to-hike-new-zealand-routes";
+import { bestTimeToHikeIcelandByRegion } from "./best-time-to-hike-iceland-by-region";
+import { bestTimeToHikeUkRegions } from "./best-time-to-hike-uk-regions";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -37,4 +39,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   bestTimeToTrekNepalAnnapurnaVsEverest,
   bestTimeToHikeYosemiteZionGrandCanyon,
   bestTimeToHikeNewZealandRoutes,
+  bestTimeToHikeIcelandByRegion,
+  bestTimeToHikeUkRegions,
 ];
