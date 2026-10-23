@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { DICT } from "../lib/i18n/dict";
+import { pageSeo } from "../lib/seo/page-seo";
 
 /**
  * Google Analytics runs only after an explicit opt-in. These checks keep the
@@ -50,6 +51,18 @@ test("the privacy notice discloses Cloudflare Web Analytics and GetYourGuide on-
     const text = JSON.stringify(DICT[locale].info.privacy);
     for (const needle of ["Cloudflare Web Analytics", "static.cloudflareinsights.com", "/cdn-cgi/rum", "session_id", "gyg_visitor_id", "partner_id", "collector.getyourguide.com"]) {
       assert.ok(text.includes(needle), `${locale} privacy notice is missing "${needle}"`);
+    }
+  }
+});
+
+test("legal and credits pages carry their own title, not the about page's", () => {
+  for (const locale of ["en", "de"] as const) {
+    const about = pageSeo({kind: "info", key: "about"}, locale).title;
+    for (const key of ["privacy", "imprint", "credits"] as const) {
+      const seo = pageSeo({kind: "info", key}, locale);
+      assert.equal(seo.title, DICT[locale].info[key].title);
+      assert.notEqual(seo.title, about);
+      assert.equal(seo.index, false);
     }
   }
 });

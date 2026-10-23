@@ -223,13 +223,19 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       index: false, reasons: ["interactive-tool-not-a-document"]};
     case "info": {
       const isEditorialPage = page.key === "methodology" || page.key === "about";
-      const indexable = isEditorialPage && publicIndexingEnabled();
+      if (!isEditorialPage) {
+        // Legal and credits pages: the tab must say what the page is, so the
+        // title and description come from the page's own heading and lead.
+        const info = t(locale).info[page.key];
+        return {title: info.title, description: clamp(info.paragraphs[0]), index: false, reasons: ["boilerplate-page"]};
+      }
+      const indexable = publicIndexingEnabled();
       return {
         title: de ? (page.key === "methodology" ? "So funktioniert der Wanderwert" : "Über BestTimeToHike")
                   : (page.key === "methodology" ? "How the hiking score works" : "About BestTimeToHike"),
         description: clamp(de ? "Methodik, Datenquellen und die Grenzen dieser Auswertung." : "Methodology, data sources and the limits of this analysis."),
         index: indexable,
-        reasons: indexable ? [] : [isEditorialPage ? "public-indexing-not-approved" : "boilerplate-page"]};
+        reasons: indexable ? [] : ["public-indexing-not-approved"]};
     }
   }
 }
