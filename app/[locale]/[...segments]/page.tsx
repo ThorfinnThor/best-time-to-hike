@@ -10,6 +10,7 @@ import { ComparisonPage, DestinationPage, MethodNote, MonthPage, RankingPage } f
 import { BlogIndex, BlogPostPage } from "@/components/blog/BlogPages";
 import { LongformArticle } from "@/components/seo/LongformArticle";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { CookieConsent } from "@/components/layout/CookieConsent";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getAllDestinations, getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
 import { getBlogPost } from "@/lib/blog/content";
@@ -215,5 +216,5 @@ export default async function LocalizedPage({params}:{params:Params}) {
   const locale=raw as Locale;
   const page=resolvePageId(locale,segments);
   if(!page) notFound();
-  return <><SiteHeader locale={locale} page={page}/><main id="main">{renderPage(locale,page)}</main><SiteFooter locale={locale}/></>;
+  return <><SiteHeader locale={locale} page={page}/><main id="main">{renderPage(locale,page)}</main><SiteFooter locale={locale}/><CookieConsent locale={locale}/></>;
 }
