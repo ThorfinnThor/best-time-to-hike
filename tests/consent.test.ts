@@ -44,3 +44,12 @@ test("no exported page loads gtag.js before consent", {skip: !existsSync("out/en
     assert.doesNotMatch(html, /<script[^>]+googletagmanager\.com/);
   }
 });
+
+test("the privacy notice discloses Cloudflare Web Analytics and GetYourGuide on-device storage", () => {
+  for (const locale of ["en", "de"] as const) {
+    const text = JSON.stringify(DICT[locale].info.privacy);
+    for (const needle of ["Cloudflare Web Analytics", "static.cloudflareinsights.com", "/cdn-cgi/rum", "session_id", "gyg_visitor_id", "partner_id", "collector.getyourguide.com"]) {
+      assert.ok(text.includes(needle), `${locale} privacy notice is missing "${needle}"`);
+    }
+  }
+});
