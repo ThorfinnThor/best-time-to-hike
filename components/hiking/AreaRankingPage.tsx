@@ -9,6 +9,19 @@ import { DestinationImage } from "@/components/media/DestinationImage";
 import { ScoreRing } from "@/components/hiking/ScoreRing";
 import { blockingComponents } from "@/lib/scoring/recommendations";
 import { metres } from "@/lib/format";
+import { areaSections } from "@/lib/seo/area-longform";
+
+/** The area's season in prose, derived from the destinations ranked above it. */
+function AreaArticle({area, locale}: {area: Area; locale: Locale}) {
+  const sections = areaSections(area, locale);
+  if (!sections.length) return null;
+  return <section className="content-section longform">
+    {sections.map((section) => <article key={section.heading}>
+      <h2>{section.heading}</h2>
+      {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+    </article>)}
+  </section>;
+}
 
 /**
  * An area page answers "where should I hike in the Alps", and the useful part
@@ -79,6 +92,8 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
       </div>
     </section>
 
+    <AreaArticle area={area} locale={locale}/>
+
     {area.withheld.length ? <section className="content-section area-withheld">
       <div className="section-heading"><div>
         <span className="eyebrow">{copy.area.withheldEyebrow}</span>
@@ -88,6 +103,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
         {area.withheld.map((destination) => <li key={destination.slug}>
           <Link href={destinationPath(locale, destination.slug)}>{destination.name}</Link>
           <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.area.reasonSnow
+            : destination.recommendationHoldReason === "precipitation-validation" ? copy.area.reasonReview
             : blockingComponents(destination.months).length
               ? copy.area.reasonComponent(blockingComponents(destination.months).map((key) => copy.components[key]).join(", "))
               : copy.area.reasonNoMonth}</span>

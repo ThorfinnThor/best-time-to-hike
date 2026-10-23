@@ -58,7 +58,7 @@ const FACTOR_DE: Record<LimitingFactor, string> = {
   snow: "Schneedecke", precipitation: "Regen", heatStress: "Hitze",
   temperature: "Kälte", daylight: "kurze Tage", wind: "Wind",
 };
-const factor = (key: LimitingFactor, locale: Locale) => (locale === "de" ? FACTOR_DE : FACTOR_EN)[key];
+export const factor = (key: LimitingFactor, locale: Locale) => (locale === "de" ? FACTOR_DE : FACTOR_EN)[key];
 
 /** ERA5 grid coordinates decode as long floats; show them at grid precision. */
 const coord = (value: number) => value.toFixed(2);
