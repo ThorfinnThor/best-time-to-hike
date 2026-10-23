@@ -58,6 +58,14 @@ export const DICT = {
       aboutUs: "About us",
       privacy: "Privacy",
       imprint: "Imprint",
+      cookieSettings: "Cookie settings",
+    },
+    consent: {
+      title: "Audience measurement",
+      body: "With your consent we use Google Analytics 4 to count visits and see which pages are read. This sets cookies and transfers data to Google, including to the United States. Without your consent Google Analytics is not loaded at all. You can change your choice at any time via “Cookie settings” in the footer.",
+      privacyLink: "Details in the privacy notice",
+      accept: "Accept",
+      decline: "Decline",
     },
     blog: {
       eyebrow: "Field notes",
@@ -454,7 +462,7 @@ export const DICT = {
       privacy: {
         title: "Privacy notice",
         paragraphs: [
-          "This site collects as little as is technically possible: no accounts, no analytics, no advertising or tracking technology, and no third-party server is contacted when a page loads. The German version of this page is the legally binding one.",
+          "This site collects as little as is technically possible: no accounts, no newsletter and no user profiles. Audience measurement with Google Analytics 4 runs only if you consent to it. The German version of this page is the legally binding one.",
         ],
         sections: [
           {heading: "Controller", paragraphs: [
@@ -468,9 +476,20 @@ export const DICT = {
             "Processing in the United States cannot be excluded. Cloudflare is certified under the EU-US Data Privacy Framework, supplemented by standard contractual clauses under Art. 46(2)(c) GDPR. We have concluded a data processing agreement with Cloudflare under Art. 28 GDPR.",
             "We operate no database and no server-side application of our own. There are no forms, no sign-in and no newsletter.",
           ]},
-          {heading: "No analytics and limited external content", paragraphs: [
-            "BestTimeToHike itself sets no analytics or advertising cookies. We perform no audience measurement and create no user profiles.",
+          {heading: "Analytics and external content", paragraphs: [
+            "Without your consent BestTimeToHike itself sets no analytics or advertising cookies and performs no audience measurement. Google Analytics runs only after you press “Accept” in the cookie banner (see the next section). We create no user profiles.",
             "Fonts and destination photographs are served from our own domain. The GetYourGuide integration analyzer loads on every page; on eligible destination and month pages, embedded activity cards are supplied by GetYourGuide and Viator. Your browser therefore connects to widget.getyourguide.com and www.viator.com and transmits technically necessary connection data such as your IP address, the requested page, browser information and the time of access. These providers may process this data and use browser storage under their own privacy notices.",
+          ]},
+          {heading: "Audience measurement with Google Analytics 4", paragraphs: [
+            "With your consent we use Google Analytics 4, a web analytics service provided by Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Ireland (“Google”). The purpose is audience measurement: we want to know how many people visit the site, which pages they read and how they arrive, so that we can improve the content.",
+            "Google Analytics is loaded only after you press “Accept” in the cookie banner. Until then, and if you decline, no script is loaded from Google and no data is sent to Google. We use Google Consent Mode v2: every storage and advertising signal starts as denied, and your consent grants analytics storage only. Advertising features, Google signals and ad personalisation are switched off.",
+            "When Google Analytics runs, it processes usage data such as the pages visited, time and duration of the visit, the referring page, your approximate location derived from your IP address, and technical information about your browser and device. Google shortens IP addresses within the EU and does not store them in full. We do not merge this data with other data.",
+            "Cookies set: “_ga”, to distinguish visitors, and “_ga_<ID>”, to keep the session state. Both expire after 2 years unless you delete them or withdraw your consent.",
+            "Google Analytics data is retained for 14 months and then deleted automatically.",
+            "The legal basis is your consent under Art. 6(1)(a) GDPR and § 25(1) TDDDG (formerly TTDSG).",
+            "Data may be transferred to Google LLC in the United States. Google LLC is certified under the EU-US Data Privacy Framework, on the basis of the European Commission's adequacy decision of 10 July 2023. We have concluded a data processing agreement with Google under Art. 28 GDPR.",
+            "You can withdraw your consent at any time with effect for the future, via the “Cookie settings” link in the footer of every page. On withdrawal, Google Analytics is switched off for your browser and the Google Analytics cookies are deleted. The lawfulness of processing before the withdrawal is not affected.",
+            "Your choice in the cookie banner is stored in your browser's local storage under the key 'bth.consent.v1', so that the banner does not reappear on every page. This storage is strictly necessary to respect your choice and requires no consent under § 25(2) no. 2 TDDDG.",
           ]},
           {heading: "Your shortlist, stored on your device", paragraphs: [
             "When you star a destination, that list is stored in your browser's local storage under the key 'bth.saved.v1'. This is not cookie technology, but it falls under § 25 TDDDG all the same.",
@@ -590,6 +609,14 @@ export const DICT = {
       aboutUs: "Über uns",
       privacy: "Datenschutz",
       imprint: "Impressum",
+      cookieSettings: "Cookie-Einstellungen",
+    },
+    consent: {
+      title: "Reichweitenmessung",
+      body: "Mit deiner Einwilligung nutzen wir Google Analytics 4, um Besuche zu zählen und zu sehen, welche Seiten gelesen werden. Dabei werden Cookies gesetzt und Daten an Google übermittelt, auch in die USA. Ohne Einwilligung wird Google Analytics gar nicht geladen. Du kannst deine Wahl jederzeit über „Cookie-Einstellungen“ im Footer ändern.",
+      privacyLink: "Mehr in der Datenschutzerklärung",
+      accept: "Akzeptieren",
+      decline: "Ablehnen",
     },
     blog: {
       eyebrow: "Feldnotizen",
@@ -986,7 +1013,7 @@ export const DICT = {
       privacy: {
         title: "Datenschutzerklärung",
         paragraphs: [
-          "Diese Website erhebt so wenig Daten wie technisch möglich: keine Konten, keine Analyse, keine Werbe- oder Tracking-Technologien, keine Einbindung fremder Server beim Aufruf einer Seite.",
+          "Diese Website erhebt so wenig Daten wie technisch möglich: keine Konten, kein Newsletter und keine Nutzerprofile. Eine Reichweitenmessung mit Google Analytics 4 findet nur statt, wenn Sie ausdrücklich einwilligen.",
         ],
         sections: [
           {heading: "Verantwortlicher", paragraphs: [
@@ -1000,9 +1027,20 @@ export const DICT = {
             "Eine Verarbeitung in den Vereinigten Staaten ist dabei nicht ausgeschlossen. Cloudflare ist unter dem EU-US Data Privacy Framework zertifiziert; ergänzend bestehen Standardvertragsklauseln nach Art. 46 Abs. 2 lit. c DSGVO. Wir haben mit Cloudflare einen Auftragsverarbeitungsvertrag nach Art. 28 DSGVO geschlossen.",
             "Wir selbst betreiben keine Datenbank und keine serverseitige Anwendung. Es gibt keine Formulare, keine Anmeldung und keinen Newsletter.",
           ]},
-          {heading: "Keine Analyse und begrenzte externe Inhalte", paragraphs: [
-            "BestTimeToHike selbst setzt keine Analyse- oder Werbe-Cookies. Wir führen keine Reichweitenmessung durch und erstellen keine Nutzerprofile.",
+          {heading: "Reichweitenmessung und externe Inhalte", paragraphs: [
+            "Ohne Ihre Einwilligung setzt BestTimeToHike selbst keine Analyse- oder Werbe-Cookies und führt keine Reichweitenmessung durch. Google Analytics läuft erst, nachdem Sie im Cookie-Banner auf „Akzeptieren“ geklickt haben (siehe nächster Abschnitt). Nutzerprofile erstellen wir nicht.",
             "Schriftarten und Zielfotografien werden von unserer eigenen Domain ausgeliefert. Der GetYourGuide-Integrations-Analyzer wird auf jeder Seite geladen; auf freigegebenen Ziel- und Monatsseiten liefern GetYourGuide und Viator eingebettete Aktivitätskarten aus. Ihr Browser verbindet sich deshalb mit widget.getyourguide.com und www.viator.com und übermittelt technisch notwendige Verbindungsdaten wie IP-Adresse, aufgerufene Seite, Browserinformationen und Zugriffszeit. Diese Anbieter können die Daten und Browserspeicher nach Maßgabe ihrer eigenen Datenschutzerklärungen verarbeiten.",
+          ]},
+          {heading: "Reichweitenmessung mit Google Analytics 4", paragraphs: [
+            "Mit Ihrer Einwilligung nutzen wir Google Analytics 4, einen Webanalysedienst der Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland („Google“). Zweck ist die Reichweitenmessung: Wir möchten wissen, wie viele Menschen die Website besuchen, welche Seiten gelesen werden und wie Besucher zu uns finden, um die Inhalte zu verbessern.",
+            "Google Analytics wird erst geladen, nachdem Sie im Cookie-Banner auf „Akzeptieren“ geklickt haben. Bis dahin und wenn Sie ablehnen, wird kein Skript von Google geladen und es werden keine Daten an Google übermittelt. Wir verwenden den Google Consent Mode v2: Alle Speicher- und Werbesignale stehen zunächst auf „abgelehnt“, Ihre Einwilligung gibt nur die Analysespeicherung frei. Werbefunktionen, Google-Signale und die Personalisierung von Anzeigen sind deaktiviert.",
+            "Beim Einsatz von Google Analytics werden Nutzungsdaten verarbeitet, etwa die aufgerufenen Seiten, Zeitpunkt und Dauer des Besuchs, die verweisende Seite, Ihr aus der IP-Adresse abgeleiteter ungefährer Standort sowie technische Angaben zu Browser und Gerät. Google kürzt IP-Adressen innerhalb der EU und speichert sie nicht vollständig. Eine Zusammenführung mit anderen Daten findet nicht statt.",
+            "Gesetzte Cookies: „_ga“ zur Unterscheidung von Besuchern und „_ga_<ID>“ zur Speicherung des Sitzungsstatus. Beide laufen nach 2 Jahren ab, sofern Sie sie nicht vorher löschen oder Ihre Einwilligung widerrufen.",
+            "Die Daten in Google Analytics werden 14 Monate aufbewahrt und danach automatisch gelöscht.",
+            "Rechtsgrundlage ist Ihre Einwilligung nach Art. 6 Abs. 1 lit. a DSGVO und § 25 Abs. 1 TDDDG (vormals TTDSG).",
+            "Dabei können Daten an die Google LLC in den USA übermittelt werden. Die Google LLC ist unter dem EU-US Data Privacy Framework zertifiziert; Grundlage ist der Angemessenheitsbeschluss der Europäischen Kommission vom 10. Juli 2023. Mit Google besteht ein Auftragsverarbeitungsvertrag nach Art. 28 DSGVO.",
+            "Sie können Ihre Einwilligung jederzeit mit Wirkung für die Zukunft widerrufen, über den Link „Cookie-Einstellungen“ im Footer jeder Seite. Beim Widerruf wird Google Analytics für Ihren Browser abgeschaltet und die Google-Analytics-Cookies werden gelöscht. Die Rechtmäßigkeit der bis zum Widerruf erfolgten Verarbeitung bleibt unberührt.",
+            "Ihre Auswahl im Cookie-Banner wird unter dem Schlüssel „bth.consent.v1“ im lokalen Speicher (localStorage) Ihres Browsers abgelegt, damit das Banner nicht auf jeder Seite erneut erscheint. Diese Speicherung ist unbedingt erforderlich, um Ihre Entscheidung zu beachten, und nach § 25 Abs. 2 Nr. 2 TDDDG einwilligungsfrei.",
           ]},
           {heading: "Lokale Speicherung Ihrer Merkliste", paragraphs: [
             "Wenn Sie ein Ziel mit dem Stern merken, wird diese Liste unter dem Schlüssel „bth.saved.v1“ im lokalen Speicher (localStorage) Ihres Browsers abgelegt. Das ist keine Cookie-Technologie, fällt aber ebenfalls unter § 25 TDDDG.",

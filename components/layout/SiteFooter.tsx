@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Locale } from "@/lib/data/types";
 import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
+import { CookieSettingsButton } from "./CookieConsent";
 
 export function SiteFooter({locale}:{locale:Locale}) {
   const copy = t(locale).footer;
@@ -26,7 +27,7 @@ export function SiteFooter({locale}:{locale:Locale}) {
     ]},
   ];
   return <footer className="site-footer">
-    <div className="footer-grid"><div className="footer-brand"><span><i className="brand-mark">▲</i><strong>BestTimeToHike</strong></span><p>{copy.tagline}</p></div>{columns.map((column)=><div className="footer-column" key={column.title}><strong>{column.title}</strong>{column.links.map(([href,label])=><Link key={href} href={href}>{label}</Link>)}</div>)}</div>
+    <div className="footer-grid"><div className="footer-brand"><span><i className="brand-mark">▲</i><strong>BestTimeToHike</strong></span><p>{copy.tagline}</p></div>{columns.map((column)=><div className="footer-column" key={column.title}><strong>{column.title}</strong>{column.links.map(([href,label])=><Link key={href} href={href}>{label}</Link>)}{column.title===copy.about ? <CookieSettingsButton label={copy.cookieSettings}/> : null}</div>)}</div>
     <div className="footer-bottom"><span>{copy.copyright}</span><span>{copy.disclaimer}</span></div>
   </footer>;
 }
