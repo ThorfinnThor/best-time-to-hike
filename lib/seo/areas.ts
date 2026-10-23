@@ -1,5 +1,6 @@
 import { getAllDestinations } from "@/lib/data/load";
-import type { PublicDestination } from "@/lib/data/types";
+import type { PublicDestination, PublicMonth } from "@/lib/data/types";
+import { CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type CriticalComponentKey } from "@/lib/scoring/recommendations";
 
 /**
  * Area rankings: "where should I hike in the Alps".
@@ -72,6 +73,148 @@ export function areaProfile(area: Area): AreaProfile {
     elevationMinM: Math.round(Math.min(...elevations)),
     elevationMaxM: Math.round(Math.max(...elevations)),
     countries: [...new Set(area.destinations.map((destination) => destination.countryName))].sort(),
+  };
+}
+
+/** The critical component that failed a month, the lowest when several did. */
+function closingComponent(month: PublicMonth): CriticalComponentKey | null {
+  if (month.recommendationEligible || !month.components) return null;
+  const failing = CRITICAL_COMPONENT_KEYS.filter((key) => {
+    const value = month.components![key];
+    return !Number.isFinite(value) || value <= CRITICAL_COMPONENT_FLOOR;
+  });
+  if (!failing.length) return null;
+  return failing.reduce((worst, key) => month.components![key] < month.components![worst] ? key : worst);
+}
+
+const tally = <T extends string>(values: Array<T | null>) => {
+  const counts = new Map<T, number>();
+  for (const value of values) if (value) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+};
+
+const eligibleMonths = (destination: PublicDestination) =>
+  destination.months.filter((month) => month.recommendationEligible).map((month) => month.month);
+
+/** What closes most of a destination's withheld months, or null when none are withheld. */
+function destinationClosingFactor(destination: PublicDestination): CriticalComponentKey | null {
+  return tally(destination.months.map(closingComponent))[0]?.[0] ?? null;
+}
+
+const byElevation = (a: PublicDestination, b: PublicDestination) =>
+  a.representativeCell.modelElevationM - b.representativeCell.modelElevationM || a.slug.localeCompare(b.slug);
+const mean = (values: number[]) => values.reduce((sum, value) => sum + value, 0) / values.length;
+
+/**
+ * Everything the prose says, computed once and locale-free, so the tests can
+ * check the claims rather than parse the sentences.
+ */
+export interface AreaFacts {
+  count: number;
+  withheldCount: number;
+  monthCounts: number[];
+  peakMonths: number[];
+  peakCount: number;
+  quietMonths: number[];
+  quietCount: number;
+  /** Months in which no destination clears the gate. */
+  closedMonths: number[];
+  /** Area mean of the hiking-window temperature per month, warmest and coldest. */
+  warmestMonth: number;
+  coldestMonth: number;
+  warmestMeanC: number;
+  coldestMeanC: number;
+  southernCount: number;
+  lowest: PublicDestination;
+  highest: PublicDestination;
+  medianElevationM: number;
+  longest: {destinations: PublicDestination[]; months: number};
+  shortest: {destinations: PublicDestination[]; months: number};
+  /** Destinations grouped by what closes most of their withheld months. */
+  closingFactors: Array<[CriticalComponentKey, number]>;
+  openAllYear: number;
+  /** In the quietest month, what keeps the closed destinations out. */
+  quietMonth: number;
+  quietMonthFactors: Array<[CriticalComponentKey, number]>;
+  /** The strongest month across the area and the spread of conditions in it. */
+  conditionsMonth: number;
+  conditions: {
+    open: number;
+    coolest: PublicDestination; coolestC: number;
+    warmest: PublicDestination; warmestC: number;
+    driestPct: number; wettestPct: number;
+  };
+}
+
+export function areaFacts(area: Area): AreaFacts {
+  const destinations = area.destinations;
+  const profile = areaProfile(area);
+  const count = destinations.length;
+  const peakCount = Math.max(...profile.monthCounts);
+  const quietCount = Math.min(...profile.monthCounts);
+
+  const areaTemps = Array.from({length: 12}, (_, index) =>
+    mean(destinations.map((destination) => destination.months[index].metrics.temperatureHikingMeanC)));
+  const warmestMonth = areaTemps.indexOf(Math.max(...areaTemps)) + 1;
+  const coldestMonth = areaTemps.indexOf(Math.min(...areaTemps)) + 1;
+
+  const sorted = [...destinations].sort(byElevation);
+  const elevations = sorted.map((destination) => destination.representativeCell.modelElevationM);
+  const middle = Math.floor(elevations.length / 2);
+  const medianElevationM = elevations.length % 2 ? elevations[middle] : (elevations[middle - 1] + elevations[middle]) / 2;
+
+  const seasonLengths = destinations.map((destination) => eligibleMonths(destination).length);
+  const longestMonths = Math.max(...seasonLengths);
+  const shortestMonths = Math.min(...seasonLengths);
+  const withLength = (months: number) => destinations.filter((destination) => eligibleMonths(destination).length === months);
+
+  // The quietest month with any closure at all; the earliest on a tie.
+  const quietMonth = profile.quietMonths[0];
+  const quietMonthFactors = tally(destinations.map((destination) => closingComponent(destination.months[quietMonth - 1])));
+
+  // The month where the open destinations score highest on average, among the
+  // months where the most of the area is open.
+  const strength = (month: number) => mean(destinations
+    .flatMap((destination) => {
+      const entry = destination.months[month - 1];
+      return entry.recommendationEligible && entry.overallScore !== null ? [entry.overallScore] : [];
+    }));
+  const conditionsMonth = [...profile.peakMonths].sort((a, b) => strength(b) - strength(a) || a - b)[0];
+  const open = destinations.filter((destination) => destination.months[conditionsMonth - 1].recommendationEligible);
+  const temp = (destination: PublicDestination) => destination.months[conditionsMonth - 1].metrics.temperatureHikingMeanC;
+  const wet = (destination: PublicDestination) => destination.months[conditionsMonth - 1].metrics.wetDayProbability;
+  const byTemp = [...open].sort((a, b) => temp(a) - temp(b) || a.slug.localeCompare(b.slug));
+
+  return {
+    count,
+    withheldCount: area.withheld.length,
+    monthCounts: profile.monthCounts,
+    peakMonths: profile.peakMonths,
+    peakCount,
+    quietMonths: profile.quietMonths,
+    quietCount,
+    closedMonths: profile.monthCounts.flatMap((value, index) => value === 0 ? [index + 1] : []),
+    warmestMonth, coldestMonth,
+    warmestMeanC: areaTemps[warmestMonth - 1],
+    coldestMeanC: areaTemps[coldestMonth - 1],
+    southernCount: destinations.filter((destination) => destination.coordinates.lat < 0).length,
+    lowest: sorted[0],
+    highest: sorted[sorted.length - 1],
+    medianElevationM,
+    longest: {destinations: withLength(longestMonths), months: longestMonths},
+    shortest: {destinations: withLength(shortestMonths), months: shortestMonths},
+    closingFactors: tally(destinations.map(destinationClosingFactor)),
+    openAllYear: seasonLengths.filter((months) => months === 12).length,
+    quietMonth,
+    quietMonthFactors,
+    conditionsMonth,
+    conditions: {
+      open: open.length,
+      coolest: byTemp[0], coolestC: temp(byTemp[0]),
+      warmest: byTemp[byTemp.length - 1], warmestC: temp(byTemp[byTemp.length - 1]),
+      driestPct: Math.round(Math.min(...open.map(wet)) * 100),
+      wettestPct: Math.round(Math.max(...open.map(wet)) * 100),
+    },
   };
 }
 

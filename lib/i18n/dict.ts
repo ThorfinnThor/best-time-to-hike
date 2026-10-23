@@ -391,6 +391,7 @@ export const DICT = {
       intro: "These places are in the catalogue and their climate record is complete. No month clears every critical component, so we publish no hiking score and no best months for them rather than a weak one.",
       reasonSnow: "snow in all twelve months at the selected cell",
       reasonNoMonth: "no month clears every critical component",
+      reasonReview: "held while its precipitation record is reviewed",
       reasonComponent: (component: string) => `${component.toLowerCase()} falls below the critical floor in all twelve months`,
     },
     explore: {
@@ -418,6 +419,7 @@ export const DICT = {
       withheldHeading: (count: number) => `${count} ${count === 1 ? "destination is" : "destinations are"} not recommended here`,
       reasonSnow: "snow in all twelve months at the selected cell",
       reasonNoMonth: "no month clears every critical component",
+      reasonReview: "held while its precipitation record is reviewed",
       reasonComponent: (component: string) => `${component.toLowerCase()} falls below the critical floor in all twelve months`,
     },
     ranking: {
@@ -959,6 +961,7 @@ export const DICT = {
       intro: "Diese Orte stehen im Katalog und ihre Messreihe ist vollständig. Kein Monat erfüllt alle kritischen Komponenten, deshalb veröffentlichen wir für sie weder einen Wanderwert noch beste Monate statt eines schwachen Werts.",
       reasonSnow: "ganzjährig Schnee an der ausgewählten Zelle",
       reasonNoMonth: "kein Monat erfüllt alle kritischen Komponenten",
+      reasonReview: "zurückgehalten, solange die Niederschlagsdaten geprüft werden",
       reasonComponent: (component: string) => `${component} liegt in allen zwölf Monaten unter der kritischen Schwelle`,
     },
     explore: {
@@ -986,6 +989,7 @@ export const DICT = {
       withheldHeading: (count: number) => `${count} ${count === 1 ? "Ziel wird" : "Ziele werden"} hier nicht empfohlen`,
       reasonSnow: "ganzjährig Schnee an der ausgewählten Zelle",
       reasonNoMonth: "kein Monat erfüllt alle kritischen Komponenten",
+      reasonReview: "zurückgehalten, solange die Niederschlagsdaten geprüft werden",
       reasonComponent: (component: string) => `${component} liegt in allen zwölf Monaten unter der kritischen Schwelle`,
     },
     ranking: {
