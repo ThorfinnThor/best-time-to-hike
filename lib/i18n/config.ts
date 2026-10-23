@@ -21,6 +21,44 @@ export const monthNumber = (slug: string, locale: Locale) => months.find((item)=
 export const monthName = (month: number, locale: Locale) => new Intl.DateTimeFormat(locale === "de" ? "de-DE" : "en-US",{month:"long",timeZone:"UTC"}).format(new Date(Date.UTC(2020,month-1,1)));
 export const monthNameShort = (month: number, locale: Locale) => monthName(month, locale).slice(0, 3);
 
+/**
+ * A set of months as a readable adverbial phrase, for titles, descriptions and
+ * headings: "all year", "all year except July", "from May to September",
+ * "in April and from October to December". Runs wrap around the new year, so
+ * November, December and January read as one span.
+ *
+ * Joining eleven month names with slashes was what a search snippet showed
+ * before this existed, which no reader can take in at a glance.
+ */
+export function monthSpan(input: readonly number[], locale: Locale): string {
+  const de = locale === "de";
+  const set = new Set(input.filter((month) => month >= 1 && month <= 12));
+  const name = (month: number) => monthName(month, locale);
+  const list = (items: string[]) => items.length <= 1 ? items.join("")
+    : `${items.slice(0, -1).join(", ")} ${de ? "und" : "and"} ${items[items.length - 1]}`;
+  if (set.size === 0) return "";
+  if (set.size === 12) return de ? "ganzjährig" : "all year";
+  if (set.size >= 9) {
+    const missing = Array.from({length: 12}, (_, index) => index + 1).filter((month) => !set.has(month));
+    return `${de ? "ganzjährig außer" : "all year except"} ${list(missing.map(name))}`;
+  }
+  // Start the walk just after a gap, so a run across December stays whole.
+  const start = Array.from({length: 12}, (_, index) => index + 1).find((month) => set.has(month) && !set.has(month === 1 ? 12 : month - 1))!;
+  const runs: number[][] = [];
+  for (let offset = 0; offset < 12; offset += 1) {
+    const month = ((start - 1 + offset) % 12) + 1;
+    if (!set.has(month)) continue;
+    const previous = month === 1 ? 12 : month - 1;
+    if (runs.length && set.has(previous) && offset > 0) runs[runs.length - 1].push(month);
+    else runs.push([month]);
+  }
+  return list(runs.map((run) => run.length === 1
+    ? `${de ? "im" : "in"} ${name(run[0])}`
+    : run.length === 2
+      ? `${de ? "im" : "in"} ${name(run[0])} ${de ? "und" : "and"} ${name(run[1])}`
+      : `${de ? "von" : "from"} ${name(run[0])} ${de ? "bis" : "to"} ${name(run[run.length - 1])}`));
+}
+
 /** Route-type path segment per locale. Destination slugs themselves stay canonical. */
 export const routes = {
   finder: {en:"finder",de:"finder"},

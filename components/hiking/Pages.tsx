@@ -3,7 +3,9 @@ import type { Comparison, ComponentScores, Locale, PublicDestination, Ranking } 
 import { monthName, monthNameShort, themeKeys, themes } from "@/lib/i18n/config";
 import { cellLabel, degreesC, metreRange, metres } from "@/lib/format";
 import { t, taxonomyLabel } from "@/lib/i18n/dict";
-import { destinationPath, rankingPath } from "@/lib/i18n/links";
+import { destinationPath, links, rankingPath } from "@/lib/i18n/links";
+import { areasFor, areasOpenIn, type Area } from "@/lib/seo/areas";
+import { ExploreLinks } from "./ExploreLinks";
 import { getDestination } from "@/lib/data/load";
 import { COMPONENT_KEYS, CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type ComponentKey } from "@/lib/scoring/recommendations";
 import { DestinationPlanning, MonthPlanning } from "./DestinationPlanning";
@@ -47,6 +49,11 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
       </li>)}</ul>
     </section> : null}
     <section className="content-section"><div className="section-heading"><div><span className="eyebrow">{c.alternatives}</span><h2>{c.keepExploring}</h2></div></div><div className="card-grid">{destination.alternatives.map((slug)=>{const item=getDestination(slug)!;return <Link className="destination-card" href={destinationPath(locale,slug)} key={slug}><span>{item.countryCode}</span><h3>{item.name}</h3><p>{item.bestMonths.map((month)=>monthName(month,locale)).join(" · ")}</p><strong>{c.exploreDestination}</strong></Link>})}</div></section>
+    <ExploreLinks eyebrow={copy.explore.eyebrow} heading={copy.explore.destinationHeading(destination.name)} groups={[
+      {title: copy.explore.areasGroup, links: areasFor(destination).map((area)=>({href: links.areaRanking(locale, area.id), label: areaLabel(area, locale)}))},
+      // bestMonths is empty for a withheld destination, so it links to no ranking it is absent from.
+      {title: copy.explore.monthsGroup, links: destination.bestMonths.map((month)=>({href: rankingPath(locale, month), label: monthName(month, locale)}))},
+    ]}/>
     <MethodNote locale={locale}/>
   </>;
 }
@@ -101,11 +108,13 @@ function rankingThemeLabel(theme: string, locale: Locale): string {
   return t(locale).ranking.themeAll;
 }
 
+export const areaLabel = (area: Area, locale: Locale) => taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
+
 export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
   const copy = t(locale);
   const theme = themeKeys.find((key) => themes[key] === ranking.theme || key === ranking.theme);
   const entries = ranking.entries.map((entry) => ({ ...entry, continent: getDestination(entry.slug)?.continent ?? "" }));
-  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="content-section"><RankingExplorer locale={locale} theme={theme} selectedMonth={ranking.month} entries={entries}/></section><MethodNote locale={locale}/></>;
+  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="content-section"><RankingExplorer locale={locale} theme={theme} selectedMonth={ranking.month} entries={entries}/></section><ExploreLinks eyebrow={copy.explore.eyebrow} heading={copy.explore.rankingHeading(monthName(ranking.month,locale))} groups={[{title: copy.explore.areasGroup, links: areasOpenIn(ranking.month).map(({area, count})=>({href: links.areaRanking(locale, area.id), label: copy.explore.areaCount(areaLabel(area, locale), count)}))}]}/><MethodNote locale={locale}/></>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {

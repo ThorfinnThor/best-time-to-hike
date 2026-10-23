@@ -74,3 +74,30 @@ export function areaProfile(area: Area): AreaProfile {
     countries: [...new Set(area.destinations.map((destination) => destination.countryName))].sort(),
   };
 }
+
+/** The region and continent pages a destination belongs to, where they exist. */
+export function areasFor(destination: PublicDestination): Area[] {
+  return [areaById(destination.region), areaById(destination.continent)].filter((area): area is Area => area !== null);
+}
+
+/** Areas with at least one destination recommendable in the month, busiest first. */
+export function areasOpenIn(month: number): Array<{area: Area; count: number}> {
+  return areaCatalogue()
+    .map((area) => ({area, count: area.destinations.filter((destination) => destination.months[month - 1]?.recommendationEligible).length}))
+    .filter((item) => item.count > 0)
+    .sort((a, b) => b.count - a.count || a.area.id.localeCompare(b.area.id));
+}
+
+/**
+ * A region's continent, or a continent's regions. Membership is read from the
+ * destinations themselves, so a region spanning two continents links to both.
+ */
+export function relatedAreas(area: Area): {parents: Area[]; children: Area[]} {
+  const members = [...area.destinations, ...area.withheld];
+  if (area.kind === "region") {
+    const continents = [...new Set(members.map((destination) => destination.continent))];
+    return {parents: continents.map(areaById).filter((item): item is Area => item !== null), children: []};
+  }
+  const regions = new Set(members.map((destination) => destination.region));
+  return {parents: [], children: areaCatalogue().filter((item) => item.kind === "region" && regions.has(item.id))};
+}

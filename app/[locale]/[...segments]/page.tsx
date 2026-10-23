@@ -159,7 +159,8 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
     case "destination": { const destination=getDestination(page.slug); if(!destination) notFound();
       const seo=pageSeo(page, locale);
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)},
-                   {name: taxonomyLabel(locale, "continents", destination.continent), path: pathFor({kind:"finder"}, locale)},
+                   // The continent crumb leads to its area page where one exists; the finder is the fallback.
+                   {name: taxonomyLabel(locale, "continents", destination.continent), path: areaById(destination.continent) ? pathFor({kind:"areaRanking", area: destination.continent}, locale) : pathFor({kind:"finder"}, locale)},
                    {name: destination.name, path: pathFor(page, locale)}];
       return <>
       <JsonLd data={breadcrumbLd(trail)}/>
