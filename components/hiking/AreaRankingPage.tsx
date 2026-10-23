@@ -1,9 +1,10 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/data/types";
-import { monthName, monthNameShort } from "@/lib/i18n/config";
+import { monthName, monthNameShort, monthSpan } from "@/lib/i18n/config";
 import { t, taxonomyLabel, withArticle } from "@/lib/i18n/dict";
 import { destinationPath, links } from "@/lib/i18n/links";
-import { areaProfile, type Area } from "@/lib/seo/areas";
+import { areaProfile, relatedAreas, type Area } from "@/lib/seo/areas";
+import { ExploreLinks } from "./ExploreLinks";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { ScoreRing } from "@/components/hiking/ScoreRing";
 import { blockingComponents } from "@/lib/scoring/recommendations";
@@ -24,6 +25,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
   const profile = areaProfile(area);
   const label = taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
   const busiest = Math.max(...profile.monthCounts);
+  const related = relatedAreas(area);
   const peakFor = (slug: string) => {
     const destination = area.destinations.find((item) => item.slug === slug)!;
     return Math.max(0, ...destination.months.flatMap((month) => month.overallScore === null ? [] : [month.overallScore]));
@@ -39,7 +41,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
     <section className="content-section area-season">
       <div className="section-heading"><div>
         <span className="eyebrow">{copy.area.seasonEyebrow}</span>
-        <h2>{copy.area.seasonHeading(profile.peakMonths.map((month) => monthName(month, locale)).join(" / "))}</h2>
+        <h2>{copy.area.seasonHeading(monthSpan(profile.peakMonths, locale))}</h2>
       </div></div>
       <ol className="area-months" aria-label={copy.area.seasonEyebrow}>
         {profile.monthCounts.map((count, index) => <li key={index}>
@@ -92,5 +94,10 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
         </li>)}
       </ul>
     </section> : null}
+
+    <ExploreLinks eyebrow={copy.explore.eyebrow} heading={copy.explore.areaHeading} groups={[
+      {title: copy.explore.parentGroup, links: related.parents.map((item) => ({href: links.areaRanking(locale, item.id), label: taxonomyLabel(locale, "continents", item.id)}))},
+      {title: copy.explore.childrenGroup, links: related.children.map((item) => ({href: links.areaRanking(locale, item.id), label: taxonomyLabel(locale, "regions", item.id)}))},
+    ]}/>
   </>;
 }
