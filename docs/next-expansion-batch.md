@@ -51,3 +51,39 @@ Until then, `pnpm data:catalogue-preflight` reports model elevation and land
 fraction but says nothing about snow, so a candidate high enough to be a
 snowfield has to be caught by reading the elevation. Anything above about
 2,800 m in the Alps or the Andes deserves a second look before the download.
+
+## Corsica GR20: the model cannot see the route
+
+Found 2026-10-23 because `corsica-gr20` publishes all twelve months as
+recommendable, January included. This is not the #23 failure: the coordinate
+(42.2, 9.05) is on the route, between Petra Piana and l'Onda. The problem is the
+grid.
+
+- The resolved cell is 42.2, 9.1 at **1,226 m** model elevation, land 1.00.
+- The **highest ERA5-Land cell on Corsica is 1,426 m** (42.3, 9.0, land 1.00).
+  The GR20's refuges sit at roughly 1,400 to 2,000 m and its passes reach about
+  2,600 m (approximate, to be replaced by a GPX-derived profile). No cell on the
+  island is at route height.
+- The catalogue path sets `targetElevationM` to the model elevation, so
+  `elevationMismatchM` is 0 by construction and the 600 m orography gate cannot
+  fire here (mistakes.md #3: an identity is not evidence).
+- At the cell, January has snow on 32% of days with 5 cm mean depth, and the
+  deepest snow in 35 years is 0.35 m. January and February score snow 45 and 47,
+  temperature 59 and 63, so every critical component clears 20 with room.
+
+Re-picking alone will not change the answer. The best cell gains 200 m. A lapse
+correction to ridge height still leaves a January hiking-hours mean around 0 °C
+(temperature ≈ 30, the correction is capped at 5 °C), and snow cannot be
+corrected at all. So the candidate below is worth a download in a queued batch,
+but the winter months stay eligible unless Sol decides otherwise.
+
+| destination | current cell | candidate | shift |
+| --- | --- | --- | --- |
+| `corsica-gr20` | 42.2, 9.1 · 1,226 m | 42.3, 9.0 · 1,426 m, land 1.00 | +200 m, 1 cell |
+
+**For Sol.** Whether a destination whose route lies above the highest model
+cell in reach can carry a recommendation at all, and if so in which months. The
+same pattern is worth a look across the twelve-month destinations at mid
+latitudes: `sierra-nevada-espana` (2,052 m), `sierra-de-guadarrama` (1,522 m),
+`sierra-de-gredos`, `tongariro` and `cradle-mountain` also clear every month,
+with snow on 32 to 47% of days in their worst month.
