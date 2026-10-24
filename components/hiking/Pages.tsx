@@ -12,6 +12,7 @@ import { DestinationPlanning, MonthPlanning } from "./DestinationPlanning";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { RankingExplorer } from "./RankingMonths";
 import { AffiliateDestinationModules } from "@/components/affiliate/AffiliateDestinationModules";
+import { routeAboveModel } from "@/lib/hiking/route-above-model";
 
 
 function RecommendationReviewNotice({locale, destination}:{locale:Locale; destination:PublicDestination}) {
@@ -19,6 +20,15 @@ function RecommendationReviewNotice({locale, destination}:{locale:Locale; destin
   if (!destination.recommendationHoldReason) return null;
   const cell = destination.representativeCell;
   return <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.holdTitle}</strong><p>{copy.holdBody}</p><p>{copy.selectedCell(cellLabel(cell.lat, cell.lon), metres(cell.modelElevationM, locale))}</p></div></aside>;
+}
+
+/** A route walked clearly above the selected cell; says so without touching the score. */
+function RouteAboveModelNotice({locale, destination}:{locale:Locale; destination:PublicDestination}) {
+  const entry = routeAboveModel(destination.id);
+  if (!entry) return null;
+  const copy = t(locale).notices;
+  const heights = entry.routePoints.map((point)=>point.elevationM);
+  return <aside className="method-note recommendation-review route-above-model" role="note"><span>⚠</span><div><strong>{copy.routeAboveModelTitle}</strong><p>{copy.routeAboveModelBody(entry.route, metres(entry.routeElevationM, locale), metres(destination.representativeCell.modelElevationM, locale))}</p><p>{copy.routeAboveModelRange(metreRange(Math.min(...heights), Math.max(...heights), locale))}</p></div></aside>;
 }
 
 /** Which critical components closed a month, for the summary on the detail page. */
@@ -37,6 +47,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
     
     <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div></div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
+    <RouteAboveModelNotice locale={locale} destination={destination}/>
     <DestinationPlanning destination={destination} locale={locale}/>
     {unavailable && !hasEligibleMonth && !held ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.noEligibleMonthTitle}</strong><p>{copy.notices.noEligibleMonthBody}</p></div></aside> : null}
     <section className="content-section split"><div><span className="eyebrow">{unavailable ? c.provenanceEyebrow : c.elevation}</span><h2>{unavailable ? c.selectedCellHeading : c.referencePointHeading}</h2><p>{held ? c.heldBody : unavailable ? c.unavailableBody : c.scopeBody}</p><p>{cellLabel(cell.lat, cell.lon)} · {metres(cell.modelElevationM, locale)}</p></div><div className="elevation-list">{destination.elevationBands.map((band)=><div key={band.id}><span>{band.id.replaceAll("-"," ")}</span><strong>{metreRange(band.minM, band.maxM, locale)}</strong><small>{Math.round(band.weight*100)}% {copy.common.weight}</small></div>)}</div></section>
@@ -88,6 +99,7 @@ export function MonthPage({destination,month,locale}:{destination:PublicDestinat
   return <>
     
     {!data.recommendationEligible ? <aside className="method-note recommendation-review" role="status"><span>⚠</span><div><strong>{copy.notices.ineligibleMonthTitle}</strong><p>{copy.notices.ineligibleMonthBody}</p></div></aside> : null}
+    <RouteAboveModelNotice locale={locale} destination={destination}/>
     {data.recommendationEligible && data.caveats.includes("non-critical-component-floor")
       ? <aside className="method-note below-floor" role="status"><span>ⓘ</span><div><strong>{copy.notices.belowFloorTitle}</strong><p>{copy.notices.belowFloorBody(belowFloor(data.components).map((key)=>copy.components[key]).join(", "))}</p></div></aside>
       : null}
