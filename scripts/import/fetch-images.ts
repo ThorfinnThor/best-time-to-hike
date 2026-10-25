@@ -91,6 +91,7 @@ const NO_IMAGE = new Set<string>([
 ]);
 
 const QUERY_OVERRIDE: Record<string, string[]> = {
+  "banff": ["File:Banff National Park (AB, Canada), Lake Louise -- 2022 -- 2197.jpg", "Banff National Park Alberta mountain hiking", "Lake Louise Banff National Park Alberta"],
   "arches": ["Delicate Arch Arches National Park Utah", "Arches National Park Utah red rock fins", "Landscape Arch Devils Garden Utah"],
   "cordillera-real": ["Illimani Cordillera Real Bolivia", "Huayna Potosi Bolivia mountain", "Cordillera Real Bolivia andes peaks"],
   "kitzbuhel": ["Kitzbuheler Horn Tyrol Austria", "Kitzbuheler Alpen summer meadows Austria", "Kitzbuhel Austria alpine pasture"],
