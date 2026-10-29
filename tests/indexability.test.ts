@@ -69,6 +69,6 @@ test("the approved index stays at its editorial target, not thousands of templat
     `${total} pages are indexable; the version-controlled editorial target is ${publicIndexTargetUrlCount()}.`);
   assert.equal(byKind.destination ?? 0, editorialDestinationSlugs().length * 2,
     "every selected destination article should be indexable in both languages");
-  assert.ok((byKind.ranking ?? 0) + (byKind.themeRanking ?? 0) + (byKind.areaRanking ?? 0) > total * 0.4,
-    "at least 40 percent of the public index should remain substantive ranking and area pages");
+  assert.ok((byKind.ranking ?? 0) + (byKind.themeRanking ?? 0) + (byKind.areaRanking ?? 0) + (byKind.blogPost ?? 0) > total * 0.4,
+    "at least 40 percent of the public index should remain substantive ranking, area and long-form editorial pages");
 });

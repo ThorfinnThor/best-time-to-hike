@@ -23,6 +23,8 @@ import { bestTimeToHikeBanffJasperYohoKananaskis } from "./best-time-to-hike-ban
 import { bestTimeToHikeGreeceCreteOlympusPindus } from "./best-time-to-hike-greece-crete-olympus-pindus";
 import { bestTimeToHikeSouthAfricaCapeDrakensberg } from "./best-time-to-hike-south-africa-cape-drakensberg";
 import { bestTimeToHikeMoroccoAtlasRifAntiAtlas } from "./best-time-to-hike-morocco-atlas-rif-anti-atlas";
+import { bestTimeToHikeAustraliaRegions } from "./best-time-to-hike-australia-regions";
+import { bestTimeToHikeSoutheastAsiaMountains } from "./best-time-to-hike-southeast-asia-mountains";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -49,4 +51,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   bestTimeToHikeGreeceCreteOlympusPindus,
   bestTimeToHikeSouthAfricaCapeDrakensberg,
   bestTimeToHikeMoroccoAtlasRifAntiAtlas,
+  bestTimeToHikeAustraliaRegions,
+  bestTimeToHikeSoutheastAsiaMountains,
 ];
