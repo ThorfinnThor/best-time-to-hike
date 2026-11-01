@@ -1,8 +1,3 @@
-"use client";
-
-import { Suspense, useSyncExternalStore } from "react";
-import Link from "next/link";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { Locale, RankingEntry } from "@/lib/data/types";
 import { monthName, type ThemeKey } from "@/lib/i18n/config";
 import { t } from "@/lib/i18n/dict";
@@ -10,76 +5,65 @@ import { links } from "@/lib/i18n/links";
 import { degreesC } from "@/lib/format";
 import { ScoreRing } from "./ScoreRing";
 import { DestinationImage } from "@/components/media/DestinationImage";
-import { filterRankingRegion, parseRankingRegion, rankingRegionHref, rankingRegions, type RankingRegion } from "@/lib/hiking/ranking-region";
+import { filterRankingRegion, rankingRegions } from "@/lib/hiking/ranking-region";
+import { RankingRegionFilter } from "./RankingRegionFilter";
 
-/** Plain links keep month selection usable without JavaScript. */
-export function RankingMonths({ locale, theme, selectedMonth, region = "worldwide" }: { locale: Locale; theme?: ThemeKey; selectedMonth?: number; region?: RankingRegion }) {
+/**
+ * Plain anchors, so month selection works without JavaScript. `data-base` is the
+ * region-free URL; RankingRegionFilter appends the region to it after hydration.
+ */
+export function RankingMonths({ locale, theme, selectedMonth }: { locale: Locale; theme?: ThemeKey; selectedMonth?: number }) {
   return <nav className="ranking-months" aria-label={t(locale).ranking.chooseMonth}>
     {Array.from({ length: 12 }, (_, index) => {
       const month = index + 1;
-      return <Link key={month} href={rankingRegionHref(theme ? links.themeRanking(locale, theme, month) : links.ranking(locale, month), region)}
-        aria-current={month === selectedMonth ? "page" : undefined}>
+      const href = `${theme ? links.themeRanking(locale, theme, month) : links.ranking(locale, month)}/`;
+      return <a key={month} href={href} data-base={href} aria-current={month === selectedMonth ? "page" : undefined}>
         {monthName(month, locale)}
-      </Link>;
+      </a>;
     })}
   </nav>;
 }
 
 type ExplorerProps = { locale: Locale; theme?: ThemeKey; selectedMonth?: number; entries?: Array<RankingEntry & { continent: string }> };
 
-function ExplorerView({ locale, theme, selectedMonth, entries = [], region, onRegionChange }: ExplorerProps & { region: RankingRegion; onRegionChange?: (region: RankingRegion) => void }) {
+/**
+ * A ranking, rendered on the server in full.
+ *
+ * Every card is static HTML with its continent in `data-continent`; the region
+ * filter is a small client island that only flips a data attribute. Card links
+ * are plain anchors rather than next/link: a destination-month page is a full
+ * document either way, and 336 client links were most of the hydration cost.
+ */
+export function RankingExplorer({ locale, theme, selectedMonth, entries = [] }: ExplorerProps) {
   const copy = t(locale);
-  const filtered = filterRankingRegion(entries, region);
-  return <>
-    <div className="ranking-filter">
-      <label><span>{copy.ranking.region}</span><select value={region} disabled={!onRegionChange}
-        onChange={(event) => onRegionChange?.(parseRankingRegion(event.target.value))}>
-        {rankingRegions.map((value) => <option key={value} value={value}>{copy.ranking.regions[value]}</option>)}
-      </select></label>
-      {selectedMonth ? <p role="status">{copy.ranking.resultCount(filtered.length)}</p> : null}
-    </div>
-    <RankingMonths locale={locale} theme={theme} selectedMonth={selectedMonth} region={region}/>
+  const options = rankingRegions.map((value) => ({value, label: copy.ranking.regions[value]}));
+  const counts = selectedMonth ? Object.fromEntries(rankingRegions.map((region) => {
+    const count = filterRankingRegion(entries, region).length;
+    return [region, {text: copy.ranking.resultCount(count), empty: count === 0}];
+  })) : undefined;
+  return <div className="ranking-explorer">
+    <RankingRegionFilter label={copy.ranking.region} options={options} counts={counts} initialCount={counts?.worldwide.text}/>
+    <RankingMonths locale={locale} theme={theme} selectedMonth={selectedMonth}/>
     {selectedMonth ? <section className="ranking-results" aria-label={copy.ranking.heading}>
-      {filtered.map((entry, index) => <article className="ranking-result-card" key={entry.slug}>
-        <Link className="ranking-result-art" href={links.destinationMonth(locale, entry.slug, selectedMonth)} aria-label={`${entry.name} · ${monthName(selectedMonth, locale)}`}>
-          <DestinationImage slug={entry.slug} name={entry.name} region={entry.countryCode} priority={index < 2}/>
-          <span className="ranking-result-number">{String(index + 1).padStart(2, "0")}</span>
-          <span className="ranking-result-score"><ScoreRing score={entry.score} size="small" locale={locale}/></span>
-        </Link>
-        <div className="ranking-result-body">
-          <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2>{entry.name}</h2></div></div>
-          <p>{degreesC(entry.tempC, locale)} · {Math.round(entry.wet * 100)}% {copy.common.wetDays}</p>
-          <Link className="ranking-result-link" href={links.destinationMonth(locale, entry.slug, selectedMonth)}>{copy.destination.exploreDestination} <span aria-hidden="true">→</span></Link>
-        </div>
-      </article>)}
-      {!filtered.length ? <p className="ranking-empty">{copy.ranking.emptyRegion}</p> : null}
+      {entries.map((entry, index) => {
+        const href = `${links.destinationMonth(locale, entry.slug, selectedMonth)}/`;
+        return <article className="ranking-result-card" key={entry.slug} data-continent={entry.continent}>
+          <a className="ranking-result-art" href={href} aria-label={`${entry.name} · ${monthName(selectedMonth, locale)}`}>
+            <DestinationImage slug={entry.slug} name={entry.name} region={entry.countryCode} priority={index < 2}/>
+            {/* The number comes from a CSS counter, so it follows the region filter. */}
+            <span className="ranking-result-number" aria-hidden="true"/>
+            <span className="ranking-result-score"><ScoreRing score={entry.score} size="small" locale={locale}/></span>
+          </a>
+          <div className="ranking-result-body">
+            <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2>{entry.name}</h2></div></div>
+            <p>{degreesC(entry.tempC, locale)} · {Math.round(entry.wet * 100)}% {copy.common.wetDays}</p>
+            <a className="ranking-result-link" href={href}>{copy.destination.exploreDestination}</a>
+          </div>
+        </article>;
+      })}
+      <p className="ranking-empty" hidden={entries.length > 0}>{copy.ranking.emptyRegion}</p>
     </section> : null}
-  </>;
-}
-
-const subscribeHydration = () => () => {};
-const clientHydrated = () => true;
-const serverHydrated = () => false;
-
-function QueryExplorer(props: ExplorerProps) {
-  const search = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
-  // Static HTML is worldwide. Match it on the first client render before
-  // applying the browser-only query, including on shared links and reloads.
-  const hydrated = useSyncExternalStore(subscribeHydration, clientHydrated, serverHydrated);
-  const region = hydrated ? parseRankingRegion(search.get("region")) : "worldwide";
-  return <ExplorerView {...props} region={region} onRegionChange={(value) => {
-    const query = new URLSearchParams(search.toString());
-    if (value === "worldwide") query.delete("region"); else query.set("region", value);
-    router.replace(query.size ? `${pathname}?${query}` : pathname, { scroll: false });
-  }}/>;
-}
-
-export function RankingExplorer(props: ExplorerProps) {
-  return <div className="ranking-explorer"><Suspense fallback={<ExplorerView {...props} region="worldwide"/>}>
-    <QueryExplorer {...props}/>
-  </Suspense></div>;
+  </div>;
 }
 
 export function RankingMonthSelectionPage({ locale, theme }: { locale: Locale; theme?: ThemeKey }) {

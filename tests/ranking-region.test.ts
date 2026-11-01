@@ -36,3 +36,13 @@ test("published rankings have continent metadata for every filterable entry", ()
     }
   }
 });
+
+test("every region has the CSS rule that hides cards outside it", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync("app/globals.css", "utf8");
+  for (const region of rankingRegions.filter((value) => value !== "worldwide")) {
+    assert.ok(css.includes(`.ranking-explorer[data-region="${region}"] .ranking-result-card:not(`), `no hide rule for ${region}`);
+  }
+  // The rule must agree with filterRankingRegion: americas spans both continents.
+  assert.ok(css.includes(`[data-region="americas"] .ranking-result-card:not([data-continent="north-america"]):not([data-continent="south-america"])`));
+});
