@@ -51,3 +51,18 @@ test("a destination without an acceptable photograph is simply absent", () => {
   // entry pointing at a photograph of somewhere else, so absence is correct.
   assert.ok(images.length <= destinations.length);
 });
+
+test("every usable photograph has a small card copy, and cards never load the 2400px source", async () => {
+  const { statSync } = await import("node:fs");
+  const { cardFileFor } = await import("../lib/media/images");
+  for (const image of allImages()) {
+    const card = `public${cardFileFor(image.file)}`;
+    assert.ok(existsSync(card), `${card} missing: run pnpm data:card-images`);
+    // A card is drawn at most about 480px wide; 300 KiB leaves room for busy photographs.
+    assert.ok(statSync(card).size < 300 * 1024, `${card} is ${Math.round(statSync(card).size / 1024)} KiB`);
+  }
+  const component = readFileSync("components/media/DestinationImage.tsx", "utf8");
+  assert.match(component, /size === "hero" \? image\.file : cardFileFor\(image\.file\)/);
+  const heroes = readFileSync("components/hiking/Pages.tsx", "utf8").match(/<DestinationImage[^>]*size="hero"/g) ?? [];
+  assert.equal(heroes.length, 1, "only the destination hero loads the full source");
+});

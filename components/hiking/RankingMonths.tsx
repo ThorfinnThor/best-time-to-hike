@@ -42,7 +42,7 @@ function ExplorerView({ locale, theme, selectedMonth, entries = [], region, onRe
     {selectedMonth ? <section className="ranking-results" aria-label={copy.ranking.heading}>
       {filtered.map((entry, index) => <article className="ranking-result-card" key={entry.slug}>
         <Link className="ranking-result-art" href={links.destinationMonth(locale, entry.slug, selectedMonth)} aria-label={`${entry.name} · ${monthName(selectedMonth, locale)}`}>
-          <DestinationImage slug={entry.slug} name={entry.name} region={entry.countryCode}/>
+          <DestinationImage slug={entry.slug} name={entry.name} region={entry.countryCode} priority={index < 2}/>
           <span className="ranking-result-number">{String(index + 1).padStart(2, "0")}</span>
           <span className="ranking-result-score"><ScoreRing score={entry.score} size="small" locale={locale}/></span>
         </Link>

@@ -38,7 +38,10 @@ export function datasetLd(locale: Locale) {
       : "Monthly historical climate indicators and reproducible suitability rules for hiking destinations worldwide, derived from the ERA5-Land 1991-2025 historical period.",
     url: pageUrl(links.methodology(locale)),
     inLanguage: locale,
-    creator: {"@id": absoluteUrl("/#organization")},
+    // Inline, not a bare @id: the Organization node is only emitted on the home
+    // page, so on Methodology Google could not resolve the reference and flagged
+    // creator as an invalid object type.
+    creator: {"@type": "Organization", "@id": absoluteUrl("/#organization"), name: SITE.name, url: SITE.url},
     isPartOf: {"@id": absoluteUrl("/#website")},
     isBasedOn: "https://doi.org/10.24381/ee82e357",
     citation: "ERA5-Land hourly time-series data, DOI 10.24381/ee82e357",
