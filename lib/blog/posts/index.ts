@@ -25,6 +25,8 @@ import { bestTimeToHikeSouthAfricaCapeDrakensberg } from "./best-time-to-hike-so
 import { bestTimeToHikeMoroccoAtlasRifAntiAtlas } from "./best-time-to-hike-morocco-atlas-rif-anti-atlas";
 import { bestTimeToHikeAustraliaRegions } from "./best-time-to-hike-australia-regions";
 import { bestTimeToHikeSoutheastAsiaMountains } from "./best-time-to-hike-southeast-asia-mountains";
+import { winterHikingSpainIslandsMainland } from "./winter-hiking-spain-islands-mainland";
+import { salkantayVsAusangateTrekkingMonthsPeru } from "./salkantay-vs-ausangate-trekking-months-peru";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -53,4 +55,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   bestTimeToHikeMoroccoAtlasRifAntiAtlas,
   bestTimeToHikeAustraliaRegions,
   bestTimeToHikeSoutheastAsiaMountains,
+  winterHikingSpainIslandsMainland,
+  salkantayVsAusangateTrekkingMonthsPeru,
 ];
