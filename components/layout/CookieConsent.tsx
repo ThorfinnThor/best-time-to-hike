@@ -2,23 +2,30 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { Locale } from "@/lib/data/types";
-import { disableAnalytics, enableAnalytics, OPEN_CONSENT_EVENT, readConsent, storeConsent, type ConsentChoice } from "@/lib/client/consent";
+import { CONSENT_DECIDED_ATTRIBUTE, disableAnalytics, enableAnalytics, OPEN_CONSENT_EVENT, readConsent, storeConsent, type ConsentChoice } from "@/lib/client/consent";
 import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
 
 /**
  * Opt-in banner for Google Analytics. Nothing is preselected: until the reader
  * presses Accept, analytics is not loaded. Both buttons carry the same weight.
+ *
+ * It is rendered open in the static HTML, so it paints with the page; the head
+ * script in app/layout.tsx hides it before paint for a reader who already chose,
+ * and this effect then removes it.
  */
 export function CookieConsent({locale}:{locale:Locale}) {
   const copy = t(locale).consent;
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
   useEffect(() => {
     const stored = readConsent();
     if (stored === "granted") enableAnalytics();
-    else if (stored === null) setOpen(true);
-    const reopen = () => setOpen(true);
+    if (stored !== null) setOpen(false);
+    const reopen = () => {
+      document.documentElement.removeAttribute(CONSENT_DECIDED_ATTRIBUTE);
+      setOpen(true);
+    };
     window.addEventListener(OPEN_CONSENT_EVENT, reopen);
     return () => window.removeEventListener(OPEN_CONSENT_EVENT, reopen);
   }, []);
