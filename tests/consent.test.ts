@@ -71,3 +71,16 @@ test("the CSP admits the Cloudflare Web Analytics beacon the privacy notice disc
   const csp = /Content-Security-Policy: (.*)/.exec(readFileSync("public/_headers", "utf8"))?.[1] ?? "";
   assert.match(/script-src [^;]*/.exec(csp)?.[0] ?? "", /https:\/\/static\.cloudflareinsights\.com/);
 });
+
+test("the consent banner ships in the static HTML and is hidden before paint once a choice exists", {skip: !existsSync("out/en/index.html")}, () => {
+  const { consentHeadScript } = require("../lib/client/consent") as typeof import("../lib/client/consent");
+  const css = readFileSync("app/globals.css", "utf8");
+  assert.ok(css.includes("html[data-consent-set] .cookie-consent{display:none}"));
+  for (const path of ["out/en/index.html", "out/de/index.html", "out/en/best-hiking-destinations/november/index.html"]) {
+    const html = readFileSync(path, "utf8");
+    assert.match(html, /<section class="cookie-consent"/, `${path} has no server-rendered banner`);
+    assert.ok(html.includes(consentHeadScript.replaceAll('"', "&quot;")) || html.includes(consentHeadScript), `${path} lacks the head script`);
+    // Still no request to Google before consent.
+    assert.doesNotMatch(html, /<script[^>]+googletagmanager\.com/);
+  }
+});

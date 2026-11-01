@@ -13,6 +13,16 @@ export const GA_MEASUREMENT_ID = "G-8JZ4DZKHX1";
 const KEY = "bth.consent.v1";
 export const OPEN_CONSENT_EVENT = "bth:open-cookie-settings";
 
+/**
+ * Runs in <head> before first paint. The banner ships in the static HTML so it
+ * paints with the page instead of after hydration (on a phone it is the largest
+ * element, and appearing late made it the LCP at about four seconds); a reader
+ * who already chose gets this attribute first and never sees it flash.
+ */
+export const CONSENT_DECIDED_ATTRIBUTE = "data-consent-set";
+export const consentHeadScript =
+  `try{if(localStorage.getItem(${JSON.stringify(KEY)}))document.documentElement.setAttribute(${JSON.stringify(CONSENT_DECIDED_ATTRIBUTE)},"")}catch(e){}`;
+
 export type ConsentChoice = "granted" | "denied";
 
 type GtagWindow = Window & {dataLayer?: unknown[]; gtag?: (...args: unknown[]) => void} & Record<string, unknown>;

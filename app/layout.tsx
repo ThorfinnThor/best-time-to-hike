@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { SITE } from "@/lib/site";
+import { consentHeadScript } from "@/lib/client/consent";
 
 export const metadata: Metadata = {
   metadataBase:new URL(SITE.url),
@@ -10,4 +11,4 @@ export const metadata: Metadata = {
   category:"travel",
   referrer:"origin-when-cross-origin",
 };
-export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning><head><script async defer src="https://widget.getyourguide.com/dist/pa.umd.production.min.js" data-gyg-partner-id="BKWM9K1" /></head><body>{children}</body></html>; }
+export default function RootLayout({children}:{children:React.ReactNode}) { return <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning><head><script dangerouslySetInnerHTML={{__html: consentHeadScript}} /><script async defer src="https://widget.getyourguide.com/dist/pa.umd.production.min.js" data-gyg-partner-id="BKWM9K1" /></head><body>{children}</body></html>; }
