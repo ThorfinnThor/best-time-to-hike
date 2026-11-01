@@ -28,3 +28,9 @@ const BY_SLUG = new Map(usable.map((image) => [image.slug, image]));
 
 export const imageFor = (slug: string): DestinationImage | null => BY_SLUG.get(slug) ?? null;
 export const allImages = (): DestinationImage[] => [...usable].sort((a, b) => a.slug.localeCompare(b.slug));
+
+/**
+ * The card-sized sibling of a photograph, written offline by `pnpm data:card-images`.
+ * Cards load this; only article heroes load the 2400px source.
+ */
+export const cardFileFor = (file: string): string => file.replace(/\.webp$/, "-card.webp");

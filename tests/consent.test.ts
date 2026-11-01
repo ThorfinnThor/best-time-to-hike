@@ -66,3 +66,8 @@ test("legal and credits pages carry their own title, not the about page's", () =
     }
   }
 });
+
+test("the CSP admits the Cloudflare Web Analytics beacon the privacy notice discloses", () => {
+  const csp = /Content-Security-Policy: (.*)/.exec(readFileSync("public/_headers", "utf8"))?.[1] ?? "";
+  assert.match(/script-src [^;]*/.exec(csp)?.[0] ?? "", /https:\/\/static\.cloudflareinsights\.com/);
+});

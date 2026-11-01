@@ -92,3 +92,12 @@ test("built destination pages link to their area page and their best months", {s
   assert.ok(html.includes(`href="${links.areaRanking("en", areasFor(destination)[0].id)}/"`) || html.includes(`href="${links.areaRanking("en", areasFor(destination)[0].id)}"`));
   assert.ok(html.includes(`href="${links.ranking("en", destination.bestMonths[0])}/"`) || html.includes(`href="${links.ranking("en", destination.bestMonths[0])}"`));
 });
+
+test("the dataset names its creator as an inline Organization", async () => {
+  const { datasetLd } = await import("../lib/seo/jsonld");
+  for (const locale of ["en", "de"] as const) {
+    const creator = datasetLd(locale).creator as Record<string, string>;
+    assert.equal(creator["@type"], "Organization");
+    assert.ok(creator.name && creator.url);
+  }
+});

@@ -45,7 +45,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const closed = destination.months.filter((month)=>!month.recommendationEligible);
   return <>
     
-    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo"/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div></div><div className="topo-lines" aria-hidden="true"/></section>
+    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destination.name} className="destination-hero-photo" size="hero" priority/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{destination.countryName} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destination.name) : unavailable ? c.titleUnavailable(destination.name) : c.title(destination.name)} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div></div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
     <RouteAboveModelNotice locale={locale} destination={destination}/>
     <DestinationPlanning destination={destination} locale={locale}/>
