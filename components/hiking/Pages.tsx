@@ -6,6 +6,7 @@ import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, links, rankingPath } from "@/lib/i18n/links";
 import { areasFor, areasOpenIn, type Area } from "@/lib/seo/areas";
 import { ExploreLinks } from "./ExploreLinks";
+import { blogPostsLinkingTo } from "@/lib/blog/content";
 import { getDestination } from "@/lib/data/load";
 import { COMPONENT_KEYS, CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type ComponentKey } from "@/lib/scoring/recommendations";
 import { DestinationPlanning, MonthPlanning } from "./DestinationPlanning";
@@ -64,6 +65,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
       {title: copy.explore.areasGroup, links: areasFor(destination).map((area)=>({href: links.areaRanking(locale, area.id), label: areaLabel(area, locale)}))},
       // bestMonths is empty for a withheld destination, so it links to no ranking it is absent from.
       {title: copy.explore.monthsGroup, links: destination.bestMonths.map((month)=>({href: rankingPath(locale, month), label: monthName(month, locale)}))},
+      {title: copy.explore.guidesGroup, links: blogPostsLinkingTo(links.destination(locale, destination.slug), locale).map((post)=>({href: links.blogPost(locale, post.slug), label: post.translations[locale].title}))},
     ]}/>
     <MethodNote locale={locale}/>
   </>;
