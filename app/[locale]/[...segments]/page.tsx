@@ -33,6 +33,7 @@ import { routeCatalog } from "@/lib/seo/route-catalog";
 import type { ComponentScores, Locale, PublicDestination } from "@/lib/data/types";
 import { AffiliateDestinationModules } from "@/components/affiliate/AffiliateDestinationModules";
 import { DestinationFaq } from "@/components/seo/DestinationFaq";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 type Params = Promise<{locale:string;segments?:string[]}>;
 export const dynamicParams = false;
@@ -126,8 +127,8 @@ function InformationPage({locale,pageKey}:{locale:Locale;pageKey:"methodology"|"
           <p>{copy.withheld.intro}</p>
         </div></div>
         <ul>{withheld.map((destination) => <li key={destination.slug}>
-          <Link href={pathFor({kind: "destination", slug: destination.slug}, locale)}>{destination.name}</Link>
-          <span>{destination.countryName}</span>
+          <Link href={pathFor({kind: "destination", slug: destination.slug}, locale)}>{destinationName(destination, locale)}</Link>
+          <span>{countryName(destination, locale)}</span>
           <span>{withheldReason(destination, copy)}</span>
         </li>)}</ul>
       </section>;
@@ -161,7 +162,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)},
                    // The continent crumb leads to its area page where one exists; the finder is the fallback.
                    {name: taxonomyLabel(locale, "continents", destination.continent), path: areaById(destination.continent) ? pathFor({kind:"areaRanking", area: destination.continent}, locale) : pathFor({kind:"finder"}, locale)},
-                   {name: destination.name, path: pathFor(page, locale)}];
+                   {name: destinationName(destination, locale), path: pathFor(page, locale)}];
       return <>
       <JsonLd data={breadcrumbLd(trail)}/>
       <Breadcrumbs trail={trail} locale={locale}/>
@@ -177,7 +178,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
     case "areaRanking": { const area=areaById(page.area); if(!area) notFound();
       const label=taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
       const trail=[{name: t(locale).brand, path: pathFor({kind:"home"}, locale)}, {name: label, path: pathFor(page, locale)}];
-      return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={rankingLd(label, area.destinations.slice(0, 20).map((destination) => ({name: destination.name, path: pathFor({kind:"destination", slug: destination.slug}, locale)})))}/>
+      return <><JsonLd data={breadcrumbLd(trail)}/><JsonLd data={rankingLd(label, area.destinations.slice(0, 20).map((destination) => ({name: destinationName(destination, locale), path: pathFor({kind:"destination", slug: destination.slug}, locale)})))}/>
         <Breadcrumbs trail={trail} locale={locale}/><AreaRankingPage area={area} locale={locale}/><MethodNote locale={locale}/></>; }
     case "themeRanking": { const copy=t(locale); const title=copy.ranking.themeTitle(copy.ranking.themes[page.theme], monthName(page.month,locale)); return <RankingPage ranking={getRanking(page.month,themes[page.theme])} locale={locale} title={title}/>; }
     case "blogIndex": {

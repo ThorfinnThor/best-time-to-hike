@@ -1,6 +1,7 @@
 import type { Locale, PublicDestination } from "@/lib/data/types";
 import { monthName } from "@/lib/i18n/config";
 import { profileFor, type DestinationProfile, type LimitingFactor } from "@/lib/seo/profile";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /**
  * Data-derived destination prose.
@@ -70,7 +71,7 @@ const wetAt = (destination: PublicDestination, index: number) => Math.round(mont
 const dayAt = (destination: PublicDestination, index: number) => Math.round(month(destination, index).metrics.daylightHoursMean);
 
 function opening(destination: PublicDestination, p: DestinationProfile, locale: Locale): Section {
-  const name = destination.name;
+  const name = destinationName(destination, locale);
   const elevation = destination.representativeCell.modelElevationM;
   const de = locale === "de";
   const season = seasonPhrase(p.eligibleMonths, locale);
@@ -188,11 +189,11 @@ function withheldArticle(destination: PublicDestination, p: DestinationProfile, 
     {heading: de ? `Warum hier keine Empfehlung steht` : `Why there is no recommendation here`,
      paragraphs: [held
        ? (de
-         ? `An der für ${destination.name} ausgewählten ERA5-Land-Gitterzelle liegt in allen zwölf Monaten des Klimanormals Schnee. Eine Zelle mit ganzjähriger Schneedecke beschreibt kein Wandergelände, deshalb veröffentlichen wir für dieses Ziel weder einen Wanderwert noch beste Monate.`
-         : `At the ERA5-Land grid cell selected for ${destination.name}, snow lies in all twelve months of the climate normal. A cell under year-round snow does not describe hiking terrain, so we publish no hiking score and no best months for this destination.`)
+         ? `An der für ${destinationName(destination, locale)} ausgewählten ERA5-Land-Gitterzelle liegt in allen zwölf Monaten des Klimanormals Schnee. Eine Zelle mit ganzjähriger Schneedecke beschreibt kein Wandergelände, deshalb veröffentlichen wir für dieses Ziel weder einen Wanderwert noch beste Monate.`
+         : `At the ERA5-Land grid cell selected for ${destinationName(destination, locale)}, snow lies in all twelve months of the climate normal. A cell under year-round snow does not describe hiking terrain, so we publish no hiking score and no best months for this destination.`)
        : (de
-         ? `Kein Monat in ${destination.name} erfüllt alle kritischen Klimakriterien. ${p.limitingFactor ? `Begrenzend ist vor allem ${factor(p.limitingFactor, locale)}.` : ""} Statt einen schwachen Wert zu veröffentlichen, halten wir die Empfehlung ganz zurück.`.replace(/\s+/g, " ")
-         : `No month at ${destination.name} clears every critical climate criterion. ${p.limitingFactor ? `The binding constraint is ${factor(p.limitingFactor, locale)}.` : ""} Rather than publish a weak score, we withhold the recommendation entirely.`.replace(/\s+/g, " "))]},
+         ? `Kein Monat in ${destinationName(destination, locale)} erfüllt alle kritischen Klimakriterien. ${p.limitingFactor ? `Begrenzend ist vor allem ${factor(p.limitingFactor, locale)}.` : ""} Statt einen schwachen Wert zu veröffentlichen, halten wir die Empfehlung ganz zurück.`.replace(/\s+/g, " ")
+         : `No month at ${destinationName(destination, locale)} clears every critical climate criterion. ${p.limitingFactor ? `The binding constraint is ${factor(p.limitingFactor, locale)}.` : ""} Rather than publish a weak score, we withhold the recommendation entirely.`.replace(/\s+/g, " "))]},
     {heading: de ? `Was die Daten trotzdem zeigen` : `What the data still shows`,
      paragraphs: [de
        ? `Die Messreihe selbst ist vollständig: 306.864 Stundenwerte von 1991 bis 2025 an ${coord(cell.lat)}, ${coord(cell.lon)} auf ${num(cell.modelElevationM, locale)} Metern Modellhöhe. Die Monatsmitteltemperatur reicht von ${tempAt(destination, p.coldestMonth)} bis ${tempAt(destination, p.warmestMonth)} Grad, der nasseste Monat ist ${monthName(p.wettestMonth, locale)} mit ${wetAt(destination, p.wettestMonth)} Prozent Regentagen. Diese Seite bleibt als Provenienzseite erreichbar, damit die Zurückhaltung nachvollziehbar ist.`

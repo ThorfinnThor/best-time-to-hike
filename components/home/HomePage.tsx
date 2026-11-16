@@ -10,6 +10,7 @@ import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { areaCatalogue } from "@/lib/seo/areas";
 import { destinationPath, links } from "@/lib/i18n/links";
 import type { Locale } from "@/lib/data/types";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 export function HomePage({ locale }: { locale: Locale }) {
   const content = t(locale).home;
@@ -59,12 +60,12 @@ export function HomePage({ locale }: { locale: Locale }) {
             const month = destination.months[bestMonth - 1];
             return (
               <article className="destination-summary-card" key={destination.slug}>
-                <DestinationImage slug={destination.slug} name={destination.name} region={taxonomyLabel(locale, "regions", destination.region)} />
+                <DestinationImage slug={destination.slug} name={destinationName(destination, locale)} region={taxonomyLabel(locale, "regions", destination.region)} />
                 <div className="destination-card-body">
                   <div className="destination-card-heading">
                     <div>
-                      <span>{destination.countryName}</span>
-                      <h3>{destination.name}</h3>
+                      <span>{countryName(destination, locale)}</span>
+                      <h3>{destinationName(destination, locale)}</h3>
                     </div>
                     <div className="score-pill"><strong>{month.overallScore}</strong><span>/100</span></div>
                   </div>

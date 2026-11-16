@@ -5,6 +5,7 @@ import { links } from "@/lib/i18n/links";
 import { planningCopy } from "@/lib/i18n/planning";
 import { cellLabel, degreesC, metres } from "@/lib/format";
 import { daylightDuration, planningNumber as number, hikingSources, planningRules as rules, typicalWetDays } from "@/lib/presentation/destination-planning";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 export function PlanningContext({ destination, locale }: { destination: PublicDestination; locale: Locale }) {
   const c = planningCopy[locale];
@@ -35,7 +36,7 @@ export function MonthPlanning({ destination, data, locale }: { destination: Publ
     { label: `${c.heat} ${rules.hotThresholdC}°C`, value: `${number(m.hotDayProbability * 100, locale)}%`, detail: c.percentDays, note: c.heatNote, secondary: true },
   ];
   return <section className="content-section planning-panel">
-    <div className="section-heading"><div><span className="eyebrow">{c.eyebrow}</span><h2>{c.glance}</h2><p>{monthName(data.month, locale)} · {destination.name} · {metres(destination.representativeCell.modelElevationM, locale)}</p></div></div>
+    <div className="section-heading"><div><span className="eyebrow">{c.eyebrow}</span><h2>{c.glance}</h2><p>{monthName(data.month, locale)} · {destinationName(destination, locale)} · {metres(destination.representativeCell.modelElevationM, locale)}</p></div></div>
     <div className="planning-metrics">{cards.map((card) => <article className={card.secondary ? "planning-secondary" : "planning-primary"} key={card.label}><h3>{card.label}</h3><strong>{card.value}</strong><p>{card.detail}</p>{card.note ? <small>{card.note}</small> : null}</article>)}</div>
     <PlanningContext destination={destination} locale={locale}/>
   </section>;

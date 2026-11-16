@@ -2,10 +2,16 @@ import Link from "next/link";
 import type { Locale } from "@/lib/data/types";
 import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
+import { destinationName } from "@/lib/i18n/names";
+import { getDestination } from "@/lib/data/load";
 import { CookieSettingsButton } from "./CookieConsent";
 
 export function SiteFooter({locale}:{locale:Locale}) {
   const copy = t(locale).footer;
+  const pair = (first: string, second: string) => [first, second].map((slug) => {
+    const destination = getDestination(slug);
+    return destination ? destinationName(destination, locale) : slug;
+  }).join(" vs ");
   const columns = [
     {title:copy.discover,links:[
       [links.finder(locale),copy.finder],
@@ -15,9 +21,9 @@ export function SiteFooter({locale}:{locale:Locale}) {
     ]},
     {title:copy.comparisons,links:[
       [links.compareIndex(locale),copy.compareTool],
-      [links.compare(locale,"mallorca-vs-madeira"),"Mallorca vs Madeira"],
-      [links.compare(locale,"madeira-vs-tenerife"),"Madeira vs Tenerife"],
-      [links.compare(locale,"dolomites-vs-chamonix"),"Dolomites vs Chamonix"],
+      [links.compare(locale,"mallorca-vs-madeira"),pair("mallorca","madeira")],
+      [links.compare(locale,"madeira-vs-tenerife"),pair("madeira","tenerife")],
+      [links.compare(locale,"dolomites-vs-chamonix"),pair("dolomites","chamonix")],
     ]},
     {title:copy.about,links:[
       [links.methodology(locale),copy.methodologyAndData],
