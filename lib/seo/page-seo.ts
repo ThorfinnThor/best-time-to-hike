@@ -10,6 +10,7 @@ import type { PageId } from "@/lib/i18n/resolve";
 import { siteMayBeIndexed } from "@/lib/seo/crawl-policy";
 import { editorialDestinationApproved } from "@/lib/seo/editorial-index";
 import { blogIndexMayBeIndexed, blogPostMayBeIndexed, getBlogPost } from "@/lib/blog/content";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /**
  * Title, description and index decision per page.
@@ -45,25 +46,26 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
   const words = sections.reduce((sum, section) => sum + section.paragraphs.join(" ").split(/\s+/).length, 0);
 
   const season = seasonRange(p.eligibleMonths, locale);
+  const name = destinationName(destination, locale);
   const title = p.seasonShape === "withheld"
-    ? (de ? `${destination.name}: warum wir keine Wanderzeit empfehlen` : `${destination.name}: why we recommend no hiking season`)
+    ? (de ? `${name}: warum wir keine Wanderzeit empfehlen` : `${name}: why we recommend no hiking season`)
     : p.seasonShape === "year-round"
       // Searchers ask for "the best time" to hike a place, so every recommendable
       // destination leads with that phrase, year-round ones included.
       ? (p.peakMonth
-          ? (de ? `Beste Wanderzeit für ${destination.name}: ganzjährig, am besten ${monthName(p.peakMonth, locale)}` : `Best time to hike ${destination.name}: year-round, best in ${monthName(p.peakMonth, locale)}`)
-          : (de ? `Beste Wanderzeit für ${destination.name}: ganzjährig` : `Best time to hike ${destination.name}: year-round`))
+          ? (de ? `Beste Wanderzeit für ${name}: ganzjährig, am besten ${monthName(p.peakMonth, locale)}` : `Best time to hike ${name}: year-round, best in ${monthName(p.peakMonth, locale)}`)
+          : (de ? `Beste Wanderzeit für ${name}: ganzjährig` : `Best time to hike ${name}: year-round`))
       // "Best time to hike X" asks for a season, so name the recommendable span
       // when it is one consecutive run; otherwise fall back to the peak month.
       : season
-        ? (de ? `Beste Wanderzeit für ${destination.name}: ${season}` : `Best time to hike ${destination.name}: ${season}`)
+        ? (de ? `Beste Wanderzeit für ${name}: ${season}` : `Best time to hike ${name}: ${season}`)
         : p.peakMonth
-          ? (de ? `Beste Wanderzeit für ${destination.name}: ${monthName(p.peakMonth, locale)}` : `Best time to hike ${destination.name}: ${monthName(p.peakMonth, locale)}`)
-          : (de ? `Beste Wanderzeit für ${destination.name}` : `Best time to hike ${destination.name}`);
+          ? (de ? `Beste Wanderzeit für ${name}: ${monthName(p.peakMonth, locale)}` : `Best time to hike ${name}: ${monthName(p.peakMonth, locale)}`)
+          : (de ? `Beste Wanderzeit für ${name}` : `Best time to hike ${name}`);
 
   const description = clamp(p.seasonShape === "withheld"
-    ? (de ? `Kein Monat in ${destination.name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten von 1991 bis 2025 zeigen und warum wir die Empfehlung zurückhalten.`
-          : `No month at ${destination.name} clears our climate criteria. What the 1991-2025 ERA5-Land record shows, and why we withhold the recommendation.`)
+    ? (de ? `Kein Monat in ${name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten von 1991 bis 2025 zeigen und warum wir die Empfehlung zurückhalten.`
+          : `No month at ${name} clears our climate criteria. What the 1991-2025 ERA5-Land record shows, and why we withhold the recommendation.`)
     : (de ? `${p.eligibleMonths.length} von zwölf Monaten ${p.eligibleMonths.length === 1 ? "ist" : "sind"} empfehlenswert${p.peakMonth ? `, am besten ${monthName(p.peakMonth, locale)}` : ""}. Temperatur, Regen, Schnee und Tageslicht aus dem historischen Zeitraum 1991 bis 2025.`
           : `${p.eligibleMonths.length} of twelve months ${p.eligibleMonths.length === 1 ? "is" : "are"} recommendable${p.peakMonth ? `, ${monthName(p.peakMonth, locale)} most of all`: ""}. Temperature, rain, snow and daylight from the 1991-2025 historical period.`));
 
@@ -92,11 +94,12 @@ function monthSeo(destination: PublicDestination, monthNumber: number, locale: L
   const data = destination.months[monthNumber - 1];
   const label = monthName(monthNumber, locale);
   const isBest = destination.bestMonths.includes(monthNumber);
+  const name = destinationName(destination, locale);
   const eligible = Boolean(data?.recommendationEligible);
 
   const title = eligible
-    ? (de ? `${destination.name} im ${label} erwandern` : `Hiking ${destination.name} in ${label}`)
-    : (de ? `${destination.name} im ${label}: nicht empfohlen` : `${destination.name} in ${label}: not recommended`);
+    ? (de ? `${name} im ${label} erwandern` : `Hiking ${name} in ${label}`)
+    : (de ? `${name} im ${label}: nicht empfohlen` : `${name} in ${label}: not recommended`);
 
   const description = clamp(eligible && data
     ? (de ? `Rund ${Math.round(data.metrics.temperatureHikingMeanC)} Grad, Regen an ${Math.round(data.metrics.wetDayProbability * 100)} Prozent der Tage und ${Math.round(data.metrics.daylightHoursMean)} Stunden Tageslicht im historischen Zeitraum 1991 bis 2025.`
@@ -143,7 +146,7 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       // These pages already sit on page one for "where to hike in <month>"; a
       // snippet that names the count and the leaders is what earns the click.
       const entries = getRanking(page.month).entries;
-      const leaders = entries.slice(0, 3).map((entry) => entry.name).join(", ");
+      const leaders = entries.slice(0, 3).map((entry) => destinationName(entry, locale)).join(", ");
       return {
         title: de ? `Beste Wanderziele im ${monthName(page.month, locale)}` : `The best hiking destinations in ${monthName(page.month, locale)}`,
         description: clamp(de
@@ -158,7 +161,7 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
       const profile = areaProfile(area);
       const label = taxonomyLabel(locale, area.kind === "continent" ? "continents" : "regions", area.id);
       const peak = monthSpan(profile.peakMonths, locale);
-      const leaders = area.destinations.slice(0, 3).map((destination) => destination.name).join(", ");
+      const leaders = area.destinations.slice(0, 3).map((destination) => destinationName(destination, locale)).join(", ");
       return {
         title: de ? `${label}: beste Wanderzeit und Ziele` : `Hiking ${withArticle(area.id, label)}: when to go and where`,
         description: clamp(de
@@ -211,10 +214,10 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         ...(!comparison.indexable ? ["comparison-not-approved-for-indexing"] : []),
       ];
       return {
-        title: de ? `${first.name} vs. ${second.name}: Wanderzeiten im Vergleich` : `${first.name} vs ${second.name}: hiking seasons compared`,
+        title: de ? `${destinationName(first, locale)} vs. ${destinationName(second, locale)}: Wanderzeiten im Vergleich` : `${destinationName(first, locale)} vs ${destinationName(second, locale)}: hiking seasons compared`,
         description: clamp(de
-          ? `${first.name} und ${second.name} Monat für Monat vergleichen: Temperatur, Regen, Schnee und Wandereignung aus dem historischen Zeitraum 1991 bis 2025.`
-          : `Compare ${first.name} and ${second.name} month by month: temperature, rain, snow and hiking suitability from the 1991-2025 historical period.`),
+          ? `${destinationName(first, locale)} und ${destinationName(second, locale)} Monat für Monat vergleichen: Temperatur, Regen, Schnee und Wandereignung aus dem historischen Zeitraum 1991 bis 2025.`
+          : `Compare ${destinationName(first, locale)} and ${destinationName(second, locale)} month by month: temperature, rain, snow and hiking suitability from the 1991-2025 historical period.`),
         index: reasons.length === 0,
         reasons,
       };

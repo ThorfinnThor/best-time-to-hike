@@ -7,6 +7,7 @@ import { ScoreRing } from "./ScoreRing";
 import { DestinationImage } from "@/components/media/DestinationImage";
 import { filterRankingRegion, rankingRegions } from "@/lib/hiking/ranking-region";
 import { RankingRegionFilter } from "./RankingRegionFilter";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /**
  * Plain anchors, so month selection works without JavaScript. `data-base` is the
@@ -48,14 +49,14 @@ export function RankingExplorer({ locale, theme, selectedMonth, entries = [] }: 
       {entries.map((entry, index) => {
         const href = `${links.destinationMonth(locale, entry.slug, selectedMonth)}/`;
         return <article className="ranking-result-card" key={entry.slug} data-continent={entry.continent}>
-          <a className="ranking-result-art" href={href} aria-label={`${entry.name} · ${monthName(selectedMonth, locale)}`}>
-            <DestinationImage slug={entry.slug} name={entry.name} region={entry.countryCode} priority={index < 2}/>
+          <a className="ranking-result-art" href={href} aria-label={`${destinationName(entry, locale)} · ${monthName(selectedMonth, locale)}`}>
+            <DestinationImage slug={entry.slug} name={destinationName(entry, locale)} region={entry.countryCode} priority={index < 2}/>
             {/* The number comes from a CSS counter, so it follows the region filter. */}
             <span className="ranking-result-number" aria-hidden="true"/>
             <span className="ranking-result-score"><ScoreRing score={entry.score} size="small" locale={locale}/></span>
           </a>
           <div className="ranking-result-body">
-            <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2>{entry.name}</h2></div></div>
+            <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2>{destinationName(entry, locale)}</h2></div></div>
             <p>{degreesC(entry.tempC, locale)} · {Math.round(entry.wet * 100)}% {copy.common.wetDays}</p>
             <a className="ranking-result-link" href={href}>{copy.destination.exploreDestination}</a>
           </div>

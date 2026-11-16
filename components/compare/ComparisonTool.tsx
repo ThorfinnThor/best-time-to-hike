@@ -9,6 +9,7 @@ import { destinationPath } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
 import { COMPONENT_KEYS } from "@/lib/scoring/recommendations";
 import { comparisonSelection, MAX_COMPARISON_DESTINATIONS as MAX } from "@/lib/compare/selection";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /**
  * Compare destinations the reader chooses.
@@ -58,7 +59,7 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
     const needle = query.trim().toLowerCase();
     if (!needle) return [];
     return destinations
-      .filter((destination) => !chosen.includes(destination.slug) && destination.name.toLowerCase().includes(needle))
+      .filter((destination) => !chosen.includes(destination.slug) && (destinationName(destination, locale).toLowerCase().includes(needle) || destination.name.toLowerCase().includes(needle)))
       .slice(0, 6);
   }, [query, destinations, chosen]);
 
@@ -78,7 +79,7 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
       {suggestions.length ? <ul className="compare-suggestions">
         {suggestions.map((destination) => <li key={destination.slug}>
           <button type="button" onClick={() => add(destination.slug)}>
-            {destination.name} <small>{taxonomyLabel(locale, "regions", destination.region)}</small>
+            {destinationName(destination, locale)} <small>{taxonomyLabel(locale, "regions", destination.region)}</small>
           </button>
         </li>)}
       </ul> : null}
@@ -97,9 +98,9 @@ export function ComparisonTool({destinations, locale}: {destinations: CompactSea
             <tr>
               <th scope="col">{copy.common.month}</th>
               {picked.map((destination) => <th scope="col" key={destination.slug}>
-                <Link href={destinationPath(locale, destination.slug)}>{destination.name}</Link>
+                <Link href={destinationPath(locale, destination.slug)}>{destinationName(destination, locale)}</Link>
                 <small>{destination.countryCode} · {destination.elevationM} m</small>
-                <button type="button" onClick={() => remove(destination.slug)} aria-label={copy.compare.removeLabel(destination.name)}>×</button>
+                <button type="button" onClick={() => remove(destination.slug)} aria-label={copy.compare.removeLabel(destinationName(destination, locale))}>×</button>
               </th>)}
             </tr>
           </thead>

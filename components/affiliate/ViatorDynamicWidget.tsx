@@ -4,10 +4,11 @@ import type { Locale } from "@/lib/data/types";
 const PARTNER_ID = "P00314274";
 const WIDGET_REF = "W-ff238d78-a000-4397-b348-01c27d795c82";
 
-export function ViatorDynamicWidget({locale, destinationName}: {locale: Locale; destinationName: string}) {
+/** destinationName is the partner search term and stays as catalogued; displayName only labels the block. */
+export function ViatorDynamicWidget({locale, destinationName, displayName = destinationName}: {locale: Locale; destinationName: string; displayName?: string}) {
   const label = locale === "de"
-    ? `Aktivitäten von Viator rund um ${destinationName}`
-    : `Viator activities around ${destinationName}`;
+    ? `Aktivitäten von Viator rund um ${displayName}`
+    : `Viator activities around ${displayName}`;
 
   return <>
     <section className="affiliate-viator" aria-label={label}>

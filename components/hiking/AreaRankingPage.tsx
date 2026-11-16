@@ -10,6 +10,7 @@ import { ScoreRing } from "@/components/hiking/ScoreRing";
 import { blockingComponents } from "@/lib/scoring/recommendations";
 import { metres } from "@/lib/format";
 import { areaSections } from "@/lib/seo/area-longform";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /** The area's season in prose, derived from the destinations ranked above it. */
 function AreaArticle({area, locale}: {area: Area; locale: Locale}) {
@@ -75,10 +76,10 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
       </div></div>
       <div className="destination-summary-grid">
         {area.destinations.map((destination) => <article className="destination-summary-card" key={destination.slug}>
-          <DestinationImage slug={destination.slug} name={destination.name} region={destination.countryName}/>
+          <DestinationImage slug={destination.slug} name={destinationName(destination, locale)} region={countryName(destination, locale)}/>
           <div className="destination-card-body">
             <div className="destination-card-heading">
-              <div><span>{destination.countryName}</span><h3>{destination.name}</h3></div>
+              <div><span>{countryName(destination, locale)}</span><h3>{destinationName(destination, locale)}</h3></div>
               <ScoreRing score={peakFor(destination.slug)} size="small" locale={locale}/>
             </div>
             <p className="card-caption">{destination.bestMonths.map((month) => monthName(month, locale)).join(" · ")}</p>
@@ -101,7 +102,7 @@ export function AreaRankingPage({area, locale}: {area: Area; locale: Locale}) {
       </div></div>
       <ul>
         {area.withheld.map((destination) => <li key={destination.slug}>
-          <Link href={destinationPath(locale, destination.slug)}>{destination.name}</Link>
+          <Link href={destinationPath(locale, destination.slug)}>{destinationName(destination, locale)}</Link>
           <span>{destination.recommendationHoldReason === "persistent-snow" ? copy.area.reasonSnow
             : destination.recommendationHoldReason === "precipitation-validation" ? copy.area.reasonReview
             : blockingComponents(destination.months).length

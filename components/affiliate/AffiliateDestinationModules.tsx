@@ -4,6 +4,7 @@ import { ViatorDynamicWidget } from "@/components/affiliate/ViatorDynamicWidget"
 import { affiliateRel } from "@/lib/affiliate/affiliate";
 import { publishedAffiliateDestinationSearches } from "@/lib/affiliate/load-published";
 import type { Locale } from "@/lib/data/types";
+import { destinationName as localDestinationName } from "@/lib/i18n/names";
 
 const COPY = {
   en: {
@@ -45,22 +46,24 @@ export function AffiliateDestinationModules({destinationId, destinationName, loc
 
   const copy = COPY[locale];
   const slug = searches[0]?.destinationSlug ?? destinationId;
-  const area = stay?.areaName[locale] ?? activitySearches[0]?.areaName[locale] ?? destinationName;
+  // Shown in the reader's language; the catalogued name stays the partner search term.
+  const displayName = localDestinationName({slug: destinationId, name: destinationName}, locale);
+  const area = stay?.areaName[locale] ?? activitySearches[0]?.areaName[locale] ?? displayName;
   const disclosureId = `affiliate-disclosure-${destinationId}${compact ? "-month" : ""}`;
 
   return <section className={`content-section affiliate-module${compact ? " affiliate-module-compact" : ""}`} aria-label={locale === "de" ? "Reiseangebote" : "Travel options"}>
-    {activitySearches.length > 0 ? <section className="affiliate-experiences" aria-label={copy.experiencesHeading(destinationName)}>
+    {activitySearches.length > 0 ? <section className="affiliate-experiences" aria-label={copy.experiencesHeading(displayName)}>
       <header className="affiliate-experiences-header">
         <span className="eyebrow">{copy.experiencesTag}</span>
-        <h3>{copy.experiencesHeading(destinationName)}</h3>
+        <h3>{copy.experiencesHeading(displayName)}</h3>
         <p>{copy.experiencesBody}</p>
       </header>
-      <GetYourGuideAutoWidget locale={locale} destinationName={destinationName} />
-      <ViatorDynamicWidget locale={locale} destinationName={destinationName} />
+      <GetYourGuideAutoWidget locale={locale} destinationName={displayName} />
+      <ViatorDynamicWidget locale={locale} destinationName={destinationName} displayName={displayName} />
     </section> : null}
 
     {stay ? <article className="affiliate-plan-card affiliate-booking-card" aria-describedby={disclosureId}>
-      <DestinationImage slug={slug} name={destinationName} region={copy.bookingTag} className="affiliate-plan-image" />
+      <DestinationImage slug={slug} name={displayName} region={copy.bookingTag} className="affiliate-plan-image" />
       <div className="affiliate-plan-body">
         <span>{copy.bookingTag}</span>
         <h3>{copy.bookingHeading(area)}</h3>

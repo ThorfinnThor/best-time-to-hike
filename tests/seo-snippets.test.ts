@@ -5,6 +5,7 @@ import { getAllDestinations, getRanking } from "../lib/data/load";
 import { monthSpan } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
 import { pageSeo } from "../lib/seo/page-seo";
+import { destinationName } from "../lib/i18n/names";
 import { areaById, areaCatalogue, areasFor, areasOpenIn, relatedAreas } from "../lib/seo/areas";
 
 /**
@@ -46,14 +47,14 @@ test("area and month-ranking descriptions are concrete and readable", () => {
     for (const locale of ["en", "de"] as const) {
       const {description} = pageSeo({kind: "areaRanking", area: area.id}, locale);
       assert.doesNotMatch(description, / \/ /, `${area.id} ${locale}`);
-      assert.ok(description.includes(area.destinations[0].name) || description.endsWith("…"), `${area.id} ${locale} names no destination`);
+      assert.ok(description.includes(destinationName(area.destinations[0], locale)) || description.endsWith("…"), `${area.id} ${locale} names no destination`);
     }
   }
   for (let month = 1; month <= 12; month += 1) {
     const ranking = getRanking(month);
     const {description} = pageSeo({kind: "ranking", month}, "en");
     assert.ok(description.startsWith(`${ranking.entries.length} destinations`), description);
-    if (ranking.entries.length) assert.ok(description.includes(ranking.entries[0].name) || description.endsWith("…"), description);
+    if (ranking.entries.length) assert.ok(description.includes(destinationName(ranking.entries[0], "en")) || description.endsWith("…"), description);
   }
 });
 

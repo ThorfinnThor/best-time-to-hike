@@ -11,6 +11,7 @@ import { destinationPath, links } from "@/lib/i18n/links";
 import { useSaved } from "@/lib/client/saved";
 import { SaveButton } from "@/components/finder/SaveButton";
 import { DestinationImage } from "@/components/media/DestinationImage";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /**
  * A preset must actually do what its label says. "Low rain in September" used
@@ -104,7 +105,7 @@ export function Finder({destinations, locale, compact = false}: {destinations?: 
   const catalogue = useMemo<SearchDestination[]>(() => (destinations ?? []).map((destination) => ({
     id: destination.slug,
     slug: destination.slug,
-    name: destination.name,
+    name: destinationName(destination, locale),
     countryCode: destination.countryCode,
     continent: destination.continent,
     region: destination.region,

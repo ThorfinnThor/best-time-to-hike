@@ -3,6 +3,7 @@ import { monthName, monthSpan } from "@/lib/i18n/config";
 import { taxonomyLabel, withArticle } from "@/lib/i18n/dict";
 import { areaFacts, type Area, type AreaFacts } from "@/lib/seo/areas";
 import { factor, type Section } from "@/lib/seo/longform";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 /**
  * Data-derived area prose: the season of a region or continent, read from the
@@ -33,8 +34,8 @@ const joinAnd = (values: string[], locale: Locale) => values.length <= 1 ? value
 /** Up to three names; past that, a count keeps the sentence readable. */
 const names = (destinations: PublicDestination[], locale: Locale) => {
   const de = locale === "de";
-  if (destinations.length <= 3) return joinAnd(destinations.map((destination) => destination.name), locale);
-  const shown2 = joinAnd(destinations.slice(0, 2).map((destination) => destination.name), locale);
+  if (destinations.length <= 3) return joinAnd(destinations.map((destination) => destinationName(destination, locale)), locale);
+  const shown2 = joinAnd(destinations.slice(0, 2).map((destination) => destinationName(destination, locale)), locale);
   return de ? `${destinations.length} Zielen, darunter ${shown2}` : `${destinations.length} destinations, including ${shown2}`;
 };
 const capitalise = (text: string) => text.charAt(0).toUpperCase() + text.slice(1);

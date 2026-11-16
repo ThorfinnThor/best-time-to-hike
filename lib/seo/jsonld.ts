@@ -5,6 +5,7 @@ import { profileFor } from "@/lib/seo/profile";
 import { links } from "@/lib/i18n/links";
 import { getManifest } from "@/lib/data/load";
 import { blogPostsForLocale, type BlogPost } from "@/lib/blog/content";
+import { countryName, destinationName } from "@/lib/i18n/names";
 
 const pageUrl = (path: string) => absoluteUrl(path.endsWith("/") ? path : `${path}/`);
 
@@ -75,12 +76,12 @@ export function destinationFaqEntries(destination: PublicDestination, locale: Lo
 
   if (p.seasonShape === "withheld") {
     entries.push({
-      q: de ? `Wann sollte man in ${destination.name} wandern?` : `When should you hike ${destination.name}?`,
-      a: de ? `Wir empfehlen für ${destination.name} keinen Monat. Kein Monat erfüllt alle kritischen Klimakriterien des Modells.`
-            : `We recommend no month for ${destination.name}. No month clears every critical climate criterion in the model.`});
+      q: de ? `Wann sollte man in ${destinationName(destination, locale)} wandern?` : `When should you hike ${destinationName(destination, locale)}?`,
+      a: de ? `Wir empfehlen für ${destinationName(destination, locale)} keinen Monat. Kein Monat erfüllt alle kritischen Klimakriterien des Modells.`
+            : `We recommend no month for ${destinationName(destination, locale)}. No month clears every critical climate criterion in the model.`});
   } else {
     entries.push({
-      q: de ? `Wann sollte man in ${destination.name} wandern?` : `When should you hike ${destination.name}?`,
+      q: de ? `Wann sollte man in ${destinationName(destination, locale)} wandern?` : `When should you hike ${destinationName(destination, locale)}?`,
       a: de ? `${p.eligibleMonths.length} von zwölf Monaten erfüllen unsere Kriterien${p.peakMonth ? `; am besten bewertet ist ${monthName(p.peakMonth, locale)}` : ""}.`
             : `${p.eligibleMonths.length} of twelve months clear our criteria${p.peakMonth ? `, and ${monthName(p.peakMonth, locale)} scores highest` : ""}.`});
     if (p.closedMonths.length && p.limitingFactor) {
@@ -109,8 +110,8 @@ export function destinationPageLd(destination: PublicDestination, locale: Locale
   return {"@context": "https://schema.org", "@type": "WebPage", "@id": `${url}#webpage`,
     url, name: title, description, inLanguage: locale,
     isPartOf: {"@id": absoluteUrl("/#website")},
-    about: {"@type": "TouristDestination", name: destination.name,
-      containedInPlace: {"@type": "Country", name: destination.countryName}},
+    about: {"@type": "TouristDestination", name: destinationName(destination, locale),
+      containedInPlace: {"@type": "Country", name: countryName(destination, locale)}},
     isBasedOn: "https://doi.org/10.24381/ee82e357"};
 }
 
