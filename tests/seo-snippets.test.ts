@@ -101,3 +101,38 @@ test("the dataset names its creator as an inline Organization", async () => {
     assert.ok(creator.name && creator.url);
   }
 });
+
+test("seasonRange names one consecutive run and refuses anything else", async () => {
+  const { seasonRange } = await import("../lib/i18n/config");
+  assert.equal(seasonRange([6, 7, 8, 9, 10], "en"), "June to October");
+  assert.equal(seasonRange([11, 12, 1, 2], "de"), "November bis Februar");
+  assert.equal(seasonRange([6, 7], "en"), "June to July");
+  assert.equal(seasonRange([7], "en"), null);
+  assert.equal(seasonRange([3, 4, 9, 10], "en"), null);
+  assert.equal(seasonRange(Array.from({length: 12}, (_, i) => i + 1), "en"), null);
+  assert.equal(seasonRange([], "en"), null);
+});
+
+test("destination titles name the recommendable season only when it is one run", async () => {
+  const { seasonRange } = await import("../lib/i18n/config");
+  const { profileFor } = await import("../lib/seo/profile");
+  for (const destination of getAllDestinations()) {
+    const profile = profileFor(destination);
+    if (profile.seasonShape === "withheld" || profile.seasonShape === "year-round") continue;
+    for (const locale of ["en", "de"] as const) {
+      const title = pageSeo({kind: "destination", slug: destination.slug}, locale).title;
+      const season = seasonRange(profile.eligibleMonths, locale);
+      if (season) assert.ok(title.endsWith(`: ${season}`), `${destination.slug} ${locale}: ${title}`);
+      else assert.doesNotMatch(title.split(": ").pop() ?? "", / (to|bis) /, `${destination.slug} ${locale} claims a span: ${title}`);
+    }
+  }
+});
+
+test("destination pages link back to the blog guides that link to them", async () => {
+  const { blogPostsLinkingTo } = await import("../lib/blog/content");
+  const guides = blogPostsLinkingTo(links.destination("en", "dolomites"), "en");
+  assert.ok(guides.some((post) => post.slug === "best-time-to-hike-dolomites-by-month"));
+  if (!existsSync("out/en/index.html")) return;
+  const html = readFileSync(`out${links.destination("en", "dolomites")}/index.html`, "utf8");
+  assert.ok(html.includes(`href="${links.blogPost("en", "best-time-to-hike-dolomites-by-month")}/"`), "dolomites page lacks its guide link");
+});

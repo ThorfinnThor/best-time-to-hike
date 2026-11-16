@@ -42,8 +42,18 @@ export function monthSpan(input: readonly number[], locale: Locale): string {
     const missing = Array.from({length: 12}, (_, index) => index + 1).filter((month) => !set.has(month));
     return `${de ? "ganzjährig außer" : "all year except"} ${list(missing.map(name))}`;
   }
+  return list(monthRuns(set).map((run) => run.length === 1
+    ? `${de ? "im" : "in"} ${name(run[0])}`
+    : run.length === 2
+      ? `${de ? "im" : "in"} ${name(run[0])} ${de ? "und" : "and"} ${name(run[1])}`
+      : `${de ? "von" : "from"} ${name(run[0])} ${de ? "bis" : "to"} ${name(run[run.length - 1])}`));
+}
+
+/** Consecutive runs of a month set, wrapping across the new year. */
+function monthRuns(set: ReadonlySet<number>): number[][] {
   // Start the walk just after a gap, so a run across December stays whole.
-  const start = Array.from({length: 12}, (_, index) => index + 1).find((month) => set.has(month) && !set.has(month === 1 ? 12 : month - 1))!;
+  const start = Array.from({length: 12}, (_, index) => index + 1).find((month) => set.has(month) && !set.has(month === 1 ? 12 : month - 1));
+  if (start === undefined) return set.size ? [Array.from({length: 12}, (_, index) => index + 1)] : [];
   const runs: number[][] = [];
   for (let offset = 0; offset < 12; offset += 1) {
     const month = ((start - 1 + offset) % 12) + 1;
@@ -52,11 +62,22 @@ export function monthSpan(input: readonly number[], locale: Locale): string {
     if (runs.length && set.has(previous) && offset > 0) runs[runs.length - 1].push(month);
     else runs.push([month]);
   }
-  return list(runs.map((run) => run.length === 1
-    ? `${de ? "im" : "in"} ${name(run[0])}`
-    : run.length === 2
-      ? `${de ? "im" : "in"} ${name(run[0])} ${de ? "und" : "and"} ${name(run[1])}`
-      : `${de ? "von" : "from"} ${name(run[0])} ${de ? "bis" : "to"} ${name(run[run.length - 1])}`));
+  return runs;
+}
+
+/**
+ * A season as a bare range for a page title, "June to October" or "Juni bis
+ * Oktober", or null when the months are not one consecutive run of at least two
+ * (a single month, a split season, or the whole year). The title then falls back
+ * to naming the peak month, so it never claims a span the data does not have.
+ */
+export function seasonRange(input: readonly number[], locale: Locale): string | null {
+  const set = new Set(input.filter((month) => month >= 1 && month <= 12));
+  if (set.size < 2 || set.size === 12) return null;
+  const runs = monthRuns(set);
+  if (runs.length !== 1) return null;
+  const run = runs[0];
+  return `${monthName(run[0], locale)} ${locale === "de" ? "bis" : "to"} ${monthName(run[run.length - 1], locale)}`;
 }
 
 /** Route-type path segment per locale. Destination slugs themselves stay canonical. */

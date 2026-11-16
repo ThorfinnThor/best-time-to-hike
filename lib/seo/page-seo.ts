@@ -1,5 +1,5 @@
 import type { Locale, PublicDestination } from "@/lib/data/types";
-import { monthName, monthSpan } from "@/lib/i18n/config";
+import { monthName, monthSpan, seasonRange } from "@/lib/i18n/config";
 import { getComparison, getDestination, getManifest, getRanking } from "@/lib/data/load";
 import { profileFor } from "@/lib/seo/profile";
 import { areaById, areaProfile } from "@/lib/seo/areas";
@@ -44,6 +44,7 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
   const sections = longformSections(destination, locale);
   const words = sections.reduce((sum, section) => sum + section.paragraphs.join(" ").split(/\s+/).length, 0);
 
+  const season = seasonRange(p.eligibleMonths, locale);
   const title = p.seasonShape === "withheld"
     ? (de ? `${destination.name}: warum wir keine Wanderzeit empfehlen` : `${destination.name}: why we recommend no hiking season`)
     : p.seasonShape === "year-round"
@@ -52,9 +53,13 @@ function destinationSeo(destination: PublicDestination, locale: Locale): PageSeo
       ? (p.peakMonth
           ? (de ? `Beste Wanderzeit für ${destination.name}: ganzjährig, am besten ${monthName(p.peakMonth, locale)}` : `Best time to hike ${destination.name}: year-round, best in ${monthName(p.peakMonth, locale)}`)
           : (de ? `Beste Wanderzeit für ${destination.name}: ganzjährig` : `Best time to hike ${destination.name}: year-round`))
-      : p.peakMonth
-        ? (de ? `Beste Wanderzeit für ${destination.name}: ${monthName(p.peakMonth, locale)}` : `Best time to hike ${destination.name}: ${monthName(p.peakMonth, locale)}`)
-        : (de ? `Beste Wanderzeit für ${destination.name}` : `Best time to hike ${destination.name}`);
+      // "Best time to hike X" asks for a season, so name the recommendable span
+      // when it is one consecutive run; otherwise fall back to the peak month.
+      : season
+        ? (de ? `Beste Wanderzeit für ${destination.name}: ${season}` : `Best time to hike ${destination.name}: ${season}`)
+        : p.peakMonth
+          ? (de ? `Beste Wanderzeit für ${destination.name}: ${monthName(p.peakMonth, locale)}` : `Best time to hike ${destination.name}: ${monthName(p.peakMonth, locale)}`)
+          : (de ? `Beste Wanderzeit für ${destination.name}` : `Best time to hike ${destination.name}`);
 
   const description = clamp(p.seasonShape === "withheld"
     ? (de ? `Kein Monat in ${destination.name} erfüllt unsere Klimakriterien. Was die ERA5-Land-Daten von 1991 bis 2025 zeigen und warum wir die Empfehlung zurückhalten.`

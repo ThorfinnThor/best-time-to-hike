@@ -83,3 +83,14 @@ export function blogPostMayBeIndexed(post: BlogPost): boolean {
 export function blockSignature(post: BlogPost, locale: Locale): string {
   return post.translations[locale].blocks.map((block) => block.type).join(">");
 }
+
+/**
+ * Published posts that link to a page, read from their destinationLinks blocks.
+ * A destination page lists these so the link runs both ways: the Dolomites
+ * article and the Dolomites page answer the same search, and until now only the
+ * article pointed at the page.
+ */
+export function blogPostsLinkingTo(href: string, locale: Locale): BlogPost[] {
+  return blogPostsForLocale(locale).filter((post) => post.translations[locale].blocks.some((block) =>
+    block.type === "destinationLinks" && block.links.some((link) => link.href === href)));
+}
