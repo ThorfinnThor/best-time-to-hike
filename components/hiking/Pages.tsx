@@ -6,6 +6,7 @@ import { t, taxonomyLabel } from "@/lib/i18n/dict";
 import { destinationPath, links, rankingPath } from "@/lib/i18n/links";
 import { areasFor, areasOpenIn, type Area } from "@/lib/seo/areas";
 import { ExploreLinks } from "./ExploreLinks";
+import { googleEarthUrl } from "@/lib/hiking/earth";
 import { countryName, destinationName } from "@/lib/i18n/names";
 import { blogPostsLinkingTo } from "@/lib/blog/content";
 import { getDestination } from "@/lib/data/load";
@@ -47,7 +48,7 @@ export function DestinationPage({destination,locale}:{destination:PublicDestinat
   const closed = destination.months.filter((month)=>!month.recommendationEligible);
   return <>
     
-    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destinationName(destination, locale)} className="destination-hero-photo" size="hero" priority/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{countryName(destination, locale)} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destinationName(destination, locale)) : unavailable ? c.titleUnavailable(destinationName(destination, locale)) : c.title(destinationName(destination, locale))} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p></div></div><div className="topo-lines" aria-hidden="true"/></section>
+    <section className="destination-hero"><DestinationImage slug={destination.slug} name={destinationName(destination, locale)} className="destination-hero-photo" size="hero" priority/><span className="destination-hero-scrim" aria-hidden="true"/><div className="eyebrow">{countryName(destination, locale)} · {taxonomyLabel(locale, "regions", destination.region)}</div><div className="destination-title"><div><h1>{held ? c.titleHeld(destinationName(destination, locale)) : unavailable ? c.titleUnavailable(destinationName(destination, locale)) : c.title(destinationName(destination, locale))} </h1><p>{c.cellScope(metres(cell.modelElevationM, locale))}</p><a className="button" href={googleEarthUrl(destination)} target="_blank" rel="noopener noreferrer" title={c.explore3dHint}>{c.explore3d}{"\u00a0"}<span aria-hidden="true">↗</span></a></div></div><div className="topo-lines" aria-hidden="true"/></section>
     <RecommendationReviewNotice locale={locale} destination={destination}/>
     <RouteAboveModelNotice locale={locale} destination={destination}/>
     <DestinationPlanning destination={destination} locale={locale}/>
