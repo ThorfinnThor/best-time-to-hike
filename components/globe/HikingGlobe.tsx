@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { GlobeDestination } from "@/lib/globe/data";
+import { readGlobeQuery, writeGlobeQuery } from "@/lib/globe/query";
 
 /**
  * The hiking globe: every destination as a light on a dotted earth, coloured by
@@ -31,6 +32,12 @@ export interface GlobeLabels {
   canvasLabel: string;
   random: string;
   randomTitle: string;
+  share: string;
+  copied: string;
+  /** "{name}" and "{month}" are replaced. */
+  shareText: string;
+  /** Used when no destination is selected; "{month}" is replaced. */
+  shareGlobeText: string;
 }
 
 const COLOR: Record<string, number> = {E: 0x7ee2a2, V: 0x5cc98a, G: 0xf2b84b, F: 0xee7f55, P: 0xee7f55, "-": 0x56635b};
@@ -56,20 +63,30 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
   const recolourRef = useRef<(month: number) => void>(() => {});
   // Turns the camera to a destination and zooms in; set once the scene exists.
   const flyRef = useRef<(index: number) => void>(() => {});
+  // A destination named in a shared link, waiting for the scene to load before the flight starts.
+  const pendingFlightRef = useRef<number | null>(null);
+  const [copied, setCopied] = useState(false);
 
-  // Start on ?month= when shared, otherwise on the current month.
+  // Start on ?month= and ?to= when shared, otherwise on the current month with nothing selected.
   useEffect(() => {
-    const requested = Number(new URLSearchParams(window.location.search).get("month"));
-    setMonth(requested >= 1 && requested <= 12 ? requested : new Date().getMonth() + 1);
-  }, []);
+    const query = readGlobeQuery(window.location.search, destinations.map((destination) => destination.s));
+    setMonth(query.month ?? new Date().getMonth() + 1);
+    if (query.index !== null) {
+      setSelected(destinations[query.index]);
+      pendingFlightRef.current = query.index;
+    }
+  }, [destinations]);
 
   useEffect(() => {
     monthRef.current = month;
     recolourRef.current(month);
-    const url = new URL(window.location.href);
-    url.searchParams.set("month", String(month));
-    window.history.replaceState(window.history.state, "", url);
   }, [month]);
+
+  // Keep the address in step with what is on screen, so copying it from the address bar shares the same view.
+  useEffect(() => {
+    window.history.replaceState(window.history.state, "", writeGlobeQuery(window.location.href, month, selected?.s ?? null));
+    setCopied(false);
+  }, [month, selected]);
 
   useEffect(() => {
     if (!playing) return;
@@ -202,6 +219,10 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
         }
         flight = {from: camera.position.clone().normalize(), to: target, fromLength: camera.position.length(), start: performance.now()};
       };
+      if (pendingFlightRef.current !== null) {
+        flyRef.current(pendingFlightRef.current);
+        pendingFlightRef.current = null;
+      }
 
       // Tap or click picks the nearest front-facing light within a few pixels (more for a finger); a drag does not.
       // Measured on screen rather than in world units, so a light is as easy to hit zoomed out as zoomed in.
@@ -298,6 +319,26 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
     flyRef.current(choice.index);
   };
 
+  const share = async () => {
+    const monthName = labels.months[month - 1];
+    const text = selected ? labels.shareText.replace("{name}", selected.n).replace("{month}", monthName) : labels.shareGlobeText.replace("{month}", monthName);
+    const url = writeGlobeQuery(window.location.href, month, selected?.s ?? null);
+    if (navigator.share) {
+      try {
+        await navigator.share({title: document.title, text, url});
+      } catch {
+        // Closing the share sheet rejects too; there is nothing to report.
+      }
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+    } catch {
+      window.prompt(labels.share, url);
+    }
+  };
+
   const recommended = useMemo(() => destinations.filter((destination) => destination.l[month - 1] !== "-").length, [destinations, month]);
   const selectedScore = selected?.m[month - 1] ?? null;
 
@@ -308,13 +349,17 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
         <span>{selected.c}</span>
         <strong>{selected.n}</strong>
         <p>{selectedScore === null ? labels.notRecommended : labels.score.replace("{n}", String(selectedScore))} · {labels.months[month - 1]}</p>
-        <a href={hrefs[selected.s]}>{labels.open}</a>
-        <button type="button" aria-label={labels.close} onClick={() => setSelected(null)}>×</button>
+        <div className="globe-card-actions">
+          <a href={hrefs[selected.s]}>{labels.open}</a>
+          <button type="button" className="globe-share" onClick={share}>{copied ? labels.copied : labels.share}</button>
+        </div>
+        <button type="button" className="globe-card-close" aria-label={labels.close} onClick={() => setSelected(null)}>×</button>
       </div> : null}
     </div>
     <div className="globe-controls">
       <button type="button" className="button" onClick={() => setPlaying((value) => !value)} aria-pressed={playing}>{playing ? labels.pause : labels.play}</button>
       <button type="button" className="button secondary globe-random" onClick={surprise} title={labels.randomTitle}>{labels.random}</button>
+      <button type="button" className="button secondary globe-random" onClick={share}>{copied && !selected ? labels.copied : labels.share}</button>
       <label className="globe-month">
         <span>{labels.month}: <strong>{labels.months[month - 1]}</strong></span>
         <input type="range" min={1} max={12} step={1} value={month} onChange={(event) => { setPlaying(false); setMonth(Number(event.target.value)); }} aria-valuetext={labels.months[month - 1]}/>

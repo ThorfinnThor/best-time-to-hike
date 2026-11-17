@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { getAllDestinations, getRanking } from "../lib/data/load";
 import { globeDestinations, globeMonthLeaders } from "../lib/globe/data";
+import { readGlobeQuery, writeGlobeQuery } from "../lib/globe/query";
 import { links } from "../lib/i18n/links";
 import { pathFor, resolvePageId } from "../lib/i18n/resolve";
 import { pageSeo } from "../lib/seo/page-seo";
@@ -93,4 +94,27 @@ test("the globe page shares its own preview picture", {skip: !existsSync("out/en
     const html = readFileSync(`out${links.globe(locale)}/index.html`, "utf8");
     assert.match(html, new RegExp(`<meta property="og:image" content="https://besttimetohike\\.com/images/social/hiking-globe-${locale}\\.jpeg"`));
   }
+});
+
+const SHARE_SLUGS = ["pirin", "dolomites", "torres-del-paine"];
+
+test("a shared globe link opens on its month and destination", () => {
+  assert.deepEqual(readGlobeQuery("?month=7&to=dolomites", SHARE_SLUGS), {month: 7, index: 1});
+  assert.deepEqual(readGlobeQuery("?month=13&to=atlantis", SHARE_SLUGS), {month: null, index: null});
+  assert.deepEqual(readGlobeQuery("?month=2.5", SHARE_SLUGS), {month: null, index: null});
+  assert.deepEqual(readGlobeQuery("", SHARE_SLUGS), {month: null, index: null});
+});
+
+test("the globe address keeps other parameters and drops the destination when none is selected", () => {
+  const shared = writeGlobeQuery("https://besttimetohike.com/de/wander-globus/?utm_source=x", 7, "pirin");
+  assert.equal(shared, "https://besttimetohike.com/de/wander-globus/?utm_source=x&month=7&to=pirin");
+  assert.equal(writeGlobeQuery(shared, 8, null), "https://besttimetohike.com/de/wander-globus/?utm_source=x&month=8");
+});
+
+test("every real destination round-trips through a share link", () => {
+  const real = globeDestinations("en").map((destination) => destination.s);
+  real.forEach((slug, index) => {
+    const url = writeGlobeQuery("https://besttimetohike.com/en/hiking-globe/", 5, slug);
+    assert.deepEqual(readGlobeQuery(new URL(url).search, real), {month: 5, index}, slug);
+  });
 });
