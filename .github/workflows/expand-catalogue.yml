@@ -24,6 +24,7 @@ on:
 
 permissions:
   contents: write
+  statuses: write
 
 concurrency:
   group: expand-catalogue
@@ -134,10 +135,12 @@ jobs:
 
       - name: Commit only the verified static dataset
         if: ${{ inputs.publish }}
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "best-time-to-hike-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data-config/sources/destinations.json data-config/geography/destination-areas.geojson data-snapshots public/data/hiking
           count=$(printf '%s' "${BTH_DESTINATIONS}" | awk -F, '{print NF}')
           git diff --cached --quiet || git commit -m "data: activate ${count:-all} candidate destinations"
-          git push
+          bash scripts/ci/push-verified.sh "pnpm verify passed in the Expand catalogue workflow"

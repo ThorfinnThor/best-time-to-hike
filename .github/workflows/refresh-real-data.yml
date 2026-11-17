@@ -23,6 +23,7 @@ on:
 
 permissions:
   contents: write
+  statuses: write
 
 concurrency:
   group: refresh-real-static-data
@@ -110,9 +111,11 @@ jobs:
 
       - name: Commit approved static data
         if: ${{ inputs.publish == true && inputs.candidate_batch == 'none' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           git config user.name "best-time-to-hike-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data-snapshots public/data/hiking
           git diff --cached --quiet || git commit -m "data: refresh approved static climate dataset"
-          git push
+          bash scripts/ci/push-verified.sh "pnpm verify passed in the Refresh real data workflow"
