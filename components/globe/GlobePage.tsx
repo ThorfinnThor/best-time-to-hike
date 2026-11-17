@@ -39,6 +39,10 @@ export function GlobePage({locale}: {locale: Locale}) {
     canvasLabel: copy.canvasLabel,
     random: copy.random,
     randomTitle: copy.randomTitle,
+    share: copy.share,
+    copied: copy.copied,
+    shareText: copy.shareText,
+    shareGlobeText: copy.shareGlobeText,
   };
   const hrefs = Object.fromEntries(destinations.map((destination) => [destination.s, `${links.destination(locale, destination.s)}/`]));
 
