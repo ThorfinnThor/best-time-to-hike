@@ -10,6 +10,7 @@ import { ComparisonPage, DestinationPage, MethodNote, MonthPage, RankingPage } f
 import { BlogIndex, BlogPostPage } from "@/components/blog/BlogPages";
 import { LongformArticle } from "@/components/seo/LongformArticle";
 import { SiteFooter } from "@/components/layout/SiteFooter";
+import { GlobePage } from "@/components/globe/GlobePage";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { getAllDestinations, getComparison, getComparisonIndex, getDestination, getRanking, getSearchIndex } from "@/lib/data/load";
@@ -56,7 +57,10 @@ export async function generateMetadata({params}:{params:Params}):Promise<Metadat
     ...(heroImage.width ? {width: heroImage.width} : {}),
     ...(heroImage.height ? {height: heroImage.height} : {}),
     alt: blogPost?.translations[locale].heroAlt ?? seo.title,
-  } : {url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: seo.title};
+  } : page.kind === "globe"
+    // The globe is the page most likely to be shared, so it gets its own picture.
+    ? {url: absoluteUrl(`/images/social/hiking-globe-${locale}.jpeg`), width: 1200, height: 630, alt: seo.title}
+    : {url: absoluteUrl("/opengraph-image"), width: 1200, height: 630, alt: seo.title};
   return {
     title: seo.title,
     description: seo.description,
@@ -155,6 +159,7 @@ function renderPage(locale:Locale,page:PageId):React.ReactNode {
   switch (page.kind) {
     case "home": return <><JsonLd data={webSiteLd(locale)}/><JsonLd data={organisationLd()}/><HomePage locale={locale}/></>;
     case "finder": return <FinderPage locale={locale}/>;
+    case "globe": return <GlobePage locale={locale}/>;
     case "rankingIndex": return <RankingMonthSelectionPage locale={locale}/>;
     case "themeIndex": return <RankingMonthSelectionPage locale={locale} theme={page.theme}/>;
     case "destination": { const destination=getDestination(page.slug); if(!destination) notFound();

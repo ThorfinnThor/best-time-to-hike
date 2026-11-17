@@ -8,7 +8,7 @@ export interface StaticRoute { locale: Locale; segments: string[] }
 export function routeCatalog(): StaticRoute[] {
   const output: StaticRoute[] = [];
   for (const locale of locales) {
-    output.push({locale,segments:[]},{locale,segments:["finder"]},{locale,segments:[routes.compare[locale]]});
+    output.push({locale,segments:[]},{locale,segments:["finder"]},{locale,segments:[routes.globe[locale]]},{locale,segments:[routes.compare[locale]]});
     output.push({locale,segments:[routes.blog[locale]]});
     for (const slug of blogPostSlugs()) output.push({locale,segments:[routes.blog[locale],slug]});
     for (const key of ["rankings", "warm", "snowFree", "lowRain"] as const) output.push({locale, segments:[routes[key][locale]]});

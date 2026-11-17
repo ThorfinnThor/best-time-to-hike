@@ -17,6 +17,7 @@ const themeRoute: Record<ThemeKey, keyof typeof routes> = {
 export const links = {
   home: (locale: Locale) => prefix(locale),
   finder: (locale: Locale) => `${prefix(locale)}/${routes.finder[locale]}`,
+  globe: (locale: Locale) => `${prefix(locale)}/${routes.globe[locale]}`,
   destination: (locale: Locale, slug: string) => `${prefix(locale)}/${routes.destination[locale]}/${slug}`,
   destinationMonth: (locale: Locale, slug: string, month: number) => `${prefix(locale)}/${routes.destination[locale]}/${slug}/${monthSlug(month, locale)}`,
   areaRanking: (locale: Locale, area: string) => `${prefix(locale)}/${routes.rankings[locale]}/${area}`,
