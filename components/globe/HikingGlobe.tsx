@@ -29,10 +29,15 @@ export interface GlobeLabels {
   hint: string;
   noWebgl: string;
   canvasLabel: string;
+  random: string;
+  randomTitle: string;
 }
 
 const COLOR: Record<string, number> = {E: 0x7ee2a2, V: 0x5cc98a, G: 0xf2b84b, F: 0xee7f55, P: 0xee7f55, "-": 0x56635b};
 const RADIUS = 1;
+/** Camera distance from the centre when a destination is in focus (the globe has radius 1). */
+const FOCUS_DISTANCE = 1.7;
+const FLIGHT_MS = 1400;
 
 function toVector(lat: number, lon: number, radius: number): [number, number, number] {
   const phi = ((90 - lat) * Math.PI) / 180;
@@ -49,6 +54,8 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
   // The scene reads the month through a ref so a slider change recolours points without rebuilding.
   const monthRef = useRef(month);
   const recolourRef = useRef<(month: number) => void>(() => {});
+  // Turns the camera to a destination and zooms in; set once the scene exists.
+  const flyRef = useRef<(index: number) => void>(() => {});
 
   // Start on ?month= when shared, otherwise on the current month.
   useEffect(() => {
@@ -138,8 +145,26 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
       geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
       // Normal blending, not additive: overlapping grey lights in a dense cluster must stay grey,
       // never add up to a white that reads as a strong recommendation.
-      const points = new THREE.Points(geometry, new THREE.PointsMaterial({size: 0.07, map: dot, vertexColors: true, transparent: true, depthWrite: false}));
+      const pointsMaterial = new THREE.PointsMaterial({size: 0.07, map: dot, vertexColors: true, transparent: true, depthWrite: false});
+      const points = new THREE.Points(geometry, pointsMaterial);
       scene.add(points);
+
+      // A ring that marks the destination in focus.
+      const ringCanvas = document.createElement("canvas");
+      ringCanvas.width = ringCanvas.height = 64;
+      const ringContext = ringCanvas.getContext("2d")!;
+      ringContext.strokeStyle = "rgba(255,255,255,0.95)";
+      ringContext.lineWidth = 5;
+      ringContext.beginPath();
+      ringContext.arc(32, 32, 24, 0, Math.PI * 2);
+      ringContext.stroke();
+      const ringTexture = new THREE.CanvasTexture(ringCanvas);
+      const ringGeometry = new THREE.BufferGeometry();
+      ringGeometry.setAttribute("position", new THREE.BufferAttribute(new Float32Array(3), 3));
+      const ringMaterial = new THREE.PointsMaterial({size: 0.11, map: ringTexture, transparent: true, depthWrite: false});
+      const ring = new THREE.Points(ringGeometry, ringMaterial);
+      ring.visible = false;
+      scene.add(ring);
 
       const colour = new THREE.Color();
       recolourRef.current = (selectedMonth: number) => {
@@ -161,20 +186,45 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
       controls.autoRotateSpeed = 0.45;
       // Until the reader drags or zooms, the camera backs off on narrow screens so the whole globe fits.
       let touched = false;
-      controls.addEventListener("start", () => { controls.autoRotate = false; touched = true; });
+      let flight: {from: InstanceType<typeof THREE.Vector3>; to: InstanceType<typeof THREE.Vector3>; fromLength: number; start: number} | null = null;
+      controls.addEventListener("start", () => { controls.autoRotate = false; touched = true; flight = null; });
 
-      // Tap or click picks the nearest light; a drag does not.
-      const raycaster = new THREE.Raycaster();
-      raycaster.params.Points = {threshold: 0.035};
-      const pointer = new THREE.Vector2();
+      flyRef.current = (index: number) => {
+        const target = new THREE.Vector3(...toVector(destinations[index].la, destinations[index].lo, 1));
+        ringGeometry.attributes.position.setXYZ(0, ...toVector(destinations[index].la, destinations[index].lo, RADIUS * 1.014));
+        ringGeometry.attributes.position.needsUpdate = true;
+        ring.visible = true;
+        controls.autoRotate = false;
+        touched = true;
+        if (reducedMotion) {
+          camera.position.copy(target.multiplyScalar(FOCUS_DISTANCE));
+          return;
+        }
+        flight = {from: camera.position.clone().normalize(), to: target, fromLength: camera.position.length(), start: performance.now()};
+      };
+
+      // Tap or click picks the nearest front-facing light within a few pixels (more for a finger); a drag does not.
+      // Measured on screen rather than in world units, so a light is as easy to hit zoomed out as zoomed in.
+      const projected = new THREE.Vector3();
       let downAt: [number, number] | null = null;
       const pick = (event: PointerEvent) => {
         const rect = renderer.domElement.getBoundingClientRect();
-        pointer.set(((event.clientX - rect.left) / rect.width) * 2 - 1, -((event.clientY - rect.top) / rect.height) * 2 + 1);
-        raycaster.setFromCamera(pointer, camera);
-        const facing = raycaster.intersectObject(points).filter((hit) => hit.point.clone().normalize().dot(camera.position.clone().normalize()) > 0.15);
-        const hit = facing.sort((a, b) => (a.distanceToRay ?? 0) - (b.distanceToRay ?? 0))[0];
-        setSelected(hit?.index !== undefined ? destinations[hit.index] : null);
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+        const reach = event.pointerType === "touch" ? 24 : 14;
+        const eye = camera.position.clone().normalize();
+        let best = -1;
+        let bestDistance = reach;
+        for (let index = 0; index < destinations.length; index += 1) {
+          projected.fromArray(positions, index * 3);
+          if (projected.clone().normalize().dot(eye) < 0.15) continue;
+          projected.project(camera);
+          const distance = Math.hypot((projected.x + 1) / 2 * rect.width - x, (1 - projected.y) / 2 * rect.height - y);
+          if (distance < bestDistance) { best = index; bestDistance = distance; }
+        }
+        if (best < 0) { setSelected(null); return; }
+        setSelected(destinations[best]);
+        flyRef.current(best);
       };
       const onDown = (event: PointerEvent) => { downAt = [event.clientX, event.clientY]; };
       const onUp = (event: PointerEvent) => {
@@ -200,7 +250,22 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
       let frame = 0;
       const render = () => {
         frame = requestAnimationFrame(render);
+        if (flight) {
+          const progress = Math.min(1, (performance.now() - flight.start) / FLIGHT_MS);
+          const eased = progress < 0.5 ? 4 * progress ** 3 : 1 - (-2 * progress + 2) ** 3 / 2;
+          // Along the great circle (a lerp that is renormalised); a nudge keeps an exactly opposite target from collapsing to zero.
+          const direction = flight.from.clone().lerp(flight.to, eased);
+          if (direction.lengthSq() < 1e-6) direction.set(0, 1, 0);
+          // Pull back a little mid-flight, then settle close in, so a long jump reads as a flight.
+          const lift = Math.sin(Math.PI * eased) * 0.5;
+          camera.position.copy(direction.normalize().multiplyScalar(flight.fromLength + (FOCUS_DISTANCE - flight.fromLength) * eased + lift));
+          if (progress >= 1) flight = null;
+        }
         controls.update();
+        // Lights are sized in world units, so they grow as the camera closes in; shrink them back so a zoomed-in cluster stays readable.
+        const scale = Math.min(1, Math.max(0.45, (camera.position.length() - RADIUS) / 2.1));
+        pointsMaterial.size = 0.07 * scale;
+        ringMaterial.size = 0.11 * scale;
         renderer.render(scene, camera);
       };
       render();
@@ -214,6 +279,8 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
         renderer.dispose();
         geometry.dispose();
         landGeometry.dispose();
+        ringGeometry.dispose();
+        ringTexture.dispose();
         dot.dispose();
         renderer.domElement.remove();
       };
@@ -221,6 +288,15 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
 
     return () => { disposed = true; cleanup(); };
   }, [destinations, labels.canvasLabel]);
+
+  const surprise = () => {
+    const candidates = destinations.map((destination, index) => ({destination, index})).filter(({destination}) => destination.l[month - 1] !== "-");
+    const pool = candidates.length ? candidates : destinations.map((destination, index) => ({destination, index}));
+    const choice = pool[Math.floor(Math.random() * pool.length)];
+    setPlaying(false);
+    setSelected(choice.destination);
+    flyRef.current(choice.index);
+  };
 
   const recommended = useMemo(() => destinations.filter((destination) => destination.l[month - 1] !== "-").length, [destinations, month]);
   const selectedScore = selected?.m[month - 1] ?? null;
@@ -238,6 +314,7 @@ export function HikingGlobe({destinations, labels, hrefs}: {destinations: GlobeD
     </div>
     <div className="globe-controls">
       <button type="button" className="button" onClick={() => setPlaying((value) => !value)} aria-pressed={playing}>{playing ? labels.pause : labels.play}</button>
+      <button type="button" className="button secondary globe-random" onClick={surprise} title={labels.randomTitle}>{labels.random}</button>
       <label className="globe-month">
         <span>{labels.month}: <strong>{labels.months[month - 1]}</strong></span>
         <input type="range" min={1} max={12} step={1} value={month} onChange={(event) => { setPlaying(false); setMonth(Number(event.target.value)); }} aria-valuetext={labels.months[month - 1]}/>
