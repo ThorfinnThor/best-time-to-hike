@@ -236,6 +236,19 @@ export function pageSeo(page: PageId, locale: Locale): PageSeo {
         : "Put destinations side by side and see month by month when each one is recommendable."),
       // A tool whose output depends on what the reader picks, like the finder.
       index: false, reasons: ["interactive-tool-not-a-document"]};
+    case "globe": {
+      // A shareable visual, and a document too: the page carries a written
+      // month-by-month summary with the leading destinations, so it earns an
+      // index slot where the finder (results only on the client) does not.
+      const indexable = publicIndexingEnabled();
+      return {
+        title: de ? "Wander-Globus: wo gerade Wandersaison ist, Monat für Monat" : "Hiking globe: where the hiking season is, month by month",
+        description: clamp(de
+          ? "Ein 3D-Globus mit 315 Wanderzielen, eingefärbt nach dem historischen Klima jedes Monats. Drück auf Play und sieh, wie die Wandersaison um die Welt wandert."
+          : "A 3D globe of 315 hiking destinations, coloured by each month's historical climate. Press play and watch the hiking season travel around the world."),
+        index: indexable,
+        reasons: indexable ? [] : ["public-indexing-not-approved"]};
+    }
     case "finder": return {
       title: de ? "Wanderziel-Finder" : "Hiking destination finder",
       description: clamp(de ? "Filtere Wanderziele nach Monat, Region, Temperatur und Gelände." : "Filter hiking destinations by month, region, temperature and terrain."),

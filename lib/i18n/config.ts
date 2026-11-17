@@ -83,6 +83,7 @@ export function seasonRange(input: readonly number[], locale: Locale): string | 
 /** Route-type path segment per locale. Destination slugs themselves stay canonical. */
 export const routes = {
   finder: {en:"finder",de:"finder"},
+  globe: {en:"hiking-globe",de:"wander-globus"},
   destination: {en:"hiking-destinations",de:"wanderziele"},
   rankings: {en:"best-hiking-destinations",de:"beste-wanderziele"},
   compare: {en:"compare",de:"vergleich"},

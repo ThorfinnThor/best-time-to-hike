@@ -440,3 +440,23 @@ h1,h2,h3{hyphens:manual;overflow-wrap:normal;word-break:normal}
 .ranking-explorer[data-region="europe"] .ranking-result-card:not([data-continent="europe"]),.ranking-explorer[data-region="asia"] .ranking-result-card:not([data-continent="asia"]),.ranking-explorer[data-region="africa"] .ranking-result-card:not([data-continent="africa"]),.ranking-explorer[data-region="oceania"] .ranking-result-card:not([data-continent="oceania"]),.ranking-explorer[data-region="north-america"] .ranking-result-card:not([data-continent="north-america"]),.ranking-explorer[data-region="south-america"] .ranking-result-card:not([data-continent="south-america"]),.ranking-explorer[data-region="americas"] .ranking-result-card:not([data-continent="north-america"]):not([data-continent="south-america"]){display:none}
 /* A reader who already chose: the head script in app/layout.tsx sets this before first paint. */
 html[data-consent-set] .cookie-consent{display:none}
+/* Hiking globe (components/globe). Colours match the level codes in HikingGlobe's COLOR map. */
+.globe-hero{background:radial-gradient(120% 80% at 50% 35%,#163225 0%,#0b1611 62%,#08100c 100%);color:#f3f6f1;padding:72px max(24px,6vw) 48px}
+.globe-intro{max-width:860px;margin:0 auto;text-align:center}.globe-intro h1{font-size:clamp(2.6rem,5.2vw,4.6rem);line-height:1.03;margin:14px 0 18px;color:#fff}.globe-intro p{color:#c9d7cd;font-size:1.08rem;line-height:1.6;margin:0 auto;max-width:760px}
+.globe-explorer{max-width:1180px;margin:28px auto 0}
+.globe-stage{position:relative;height:min(74vh,720px);min-height:420px;cursor:grab;touch-action:none}.globe-stage:active{cursor:grabbing}
+.globe-fallback{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:#c9d7cd}
+.globe-card{position:absolute;left:16px;bottom:16px;display:grid;gap:4px;min-width:220px;max-width:min(320px,calc(100% - 32px));padding:16px 40px 16px 18px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(8,16,12,.86);backdrop-filter:blur(6px)}
+.globe-card span{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:#9fb5a6}.globe-card strong{font:500 1.35rem/1.15 Georgia,serif;color:#fff}.globe-card p{margin:0;color:#c9d7cd;font-size:.88rem}.globe-card a{color:#7ee2a2;font-weight:700;font-size:.88rem;margin-top:4px}
+.globe-card button{position:absolute;top:8px;right:10px;border:0;background:none;color:#c9d7cd;font-size:1.3rem;cursor:pointer}
+.globe-controls{display:flex;align-items:center;gap:20px;flex-wrap:wrap;justify-content:center;margin-top:8px}.globe-controls .button{cursor:pointer;min-width:150px}
+.globe-month{display:grid;gap:8px;min-width:min(420px,100%);color:#c9d7cd;font-size:.9rem}.globe-month strong{color:#fff}.globe-month input{width:100%;accent-color:#7ee2a2}
+.globe-count{margin:0;color:#c9d7cd;font-size:.9rem}
+.globe-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:10px 18px;list-style:none;padding:0;margin:22px 0 0;color:#c9d7cd;font-size:.82rem}.globe-legend li{display:flex;align-items:center;gap:8px}
+.globe-legend i{width:10px;height:10px;border-radius:50%;background:#56635b;box-shadow:0 0 8px currentColor}.globe-legend i[data-level="E"]{background:#7ee2a2;color:#7ee2a2}.globe-legend i[data-level="V"]{background:#5cc98a;color:#5cc98a}.globe-legend i[data-level="G"]{background:#f2b84b;color:#f2b84b}.globe-legend i[data-level="F"]{background:#ee7f55;color:#ee7f55}.globe-legend i[data-level="-"]{color:transparent}
+.globe-hint{text-align:center;color:#8fa697;font-size:.8rem;margin:12px 0 0}
+.globe-caveat{max-width:760px;margin:26px auto 0;text-align:center;color:#8fa697;font-size:.8rem;line-height:1.55}
+.globe-summary ol{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;list-style:none;padding:0;margin:28px 0 0}.globe-summary li{display:grid;align-content:start;gap:8px;padding:18px 20px;border:1px solid var(--line);border-radius:14px;background:var(--paper)}
+.globe-summary h3{margin:0;font:500 1.3rem Georgia,serif}.globe-summary h3 small{font:600 .75rem system-ui,sans-serif;color:var(--fern);margin-left:6px}.globe-summary p{margin:0;color:#56635a;font-size:.9rem;line-height:1.55}.globe-summary-link{color:var(--moss);font-weight:800;font-size:.82rem}
+@media(max-width:900px){.globe-summary ol{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.globe-hero{padding:48px 16px 36px}.globe-stage{height:min(62vh,112vw);min-height:360px}.globe-summary ol{grid-template-columns:1fr}.globe-controls{gap:14px}}

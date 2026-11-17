@@ -14,6 +14,7 @@ import { blogPostSlugs } from "@/lib/blog/content";
 export type PageId =
   | { kind: "home" }
   | { kind: "finder" }
+  | { kind: "globe" }
   | { kind: "destination"; slug: string }
   | { kind: "destinationMonth"; slug: string; month: number }
   | { kind: "ranking"; month: number }
@@ -33,6 +34,7 @@ export function resolvePageId(locale: Locale, segments: string[]): PageId | null
   const [head, ...rest] = segments;
 
   if (head === routes.finder[locale] && rest.length === 0) return { kind: "finder" };
+  if (head === routes.globe[locale] && rest.length === 0) return { kind: "globe" };
 
   if (head === routes.destination[locale] && rest[0]) {
     if (rest.length === 1) return { kind: "destination", slug: rest[0] };
@@ -82,6 +84,7 @@ export function pathFor(page: PageId, locale: Locale): string {
   switch (page.kind) {
     case "home": return links.home(locale);
     case "finder": return links.finder(locale);
+    case "globe": return links.globe(locale);
     case "destination": return links.destination(locale, page.slug);
     case "destinationMonth": return links.destinationMonth(locale, page.slug, page.month);
     case "ranking": return links.ranking(locale, page.month);

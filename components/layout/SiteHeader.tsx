@@ -15,6 +15,7 @@ export function SiteHeader({locale,page}:{locale:Locale;page?:PageId}) {
   const inLocale = (target: Locale) => (page ? pathFor(page, target) : links.home(target));
   const navLinks = [
     {href:links.finder(locale),label:copy.nav.finder},
+    {href:links.globe(locale),label:copy.nav.globe},
     {href:links.rankingIndex(locale),label:copy.nav.rankings},
     {href:links.compareIndex(locale),label:copy.nav.compare},
     {href:links.themeIndex(locale,"warm"),label:copy.nav.warm},
