@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Locale } from "@/lib/data/types";
 import { getBlogPost, blogPostsForLocale, type BlogBlock, type BlogPost } from "@/lib/blog/content";
-import { imageFor } from "@/lib/media/images";
+import { cardFileFor, imageFor } from "@/lib/media/images";
 import { t } from "@/lib/i18n/dict";
 import { links } from "@/lib/i18n/links";
 
@@ -56,7 +56,7 @@ export function BlogIndex({locale}: {locale: Locale}) {
         const image = post.heroImageSlug ? imageFor(post.heroImageSlug) : null;
         return <Link className="blog-card" href={links.blogPost(locale, post.slug)} key={post.slug}>
           <div className="blog-card-media">
-            {image ? <Image src={image.file} alt="" fill sizes="(max-width: 720px) 100vw, (max-width: 1050px) 50vw, 33vw" /> : <div className="blog-card-media-fallback" aria-hidden="true" />}
+            {image ? <Image src={cardFileFor(image.file)} alt="" fill sizes="(max-width: 720px) 100vw, (max-width: 1050px) 50vw, 33vw" /> : <div className="blog-card-media-fallback" aria-hidden="true" />}
             <span className="blog-card-badge">{copy.categories[translation.category]}</span>
           </div>
           <div className="blog-card-body">

@@ -65,4 +65,9 @@ test("every usable photograph has a small card copy, and cards never load the 24
   assert.match(component, /size === "hero" \? image\.file : cardFileFor\(image\.file\)/);
   const heroes = readFileSync("components/hiking/Pages.tsx", "utf8").match(/<DestinationImage[^>]*size="hero"/g) ?? [];
   assert.equal(heroes.length, 1, "only the destination hero loads the full source");
+  const blog = readFileSync("components/blog/BlogPages.tsx", "utf8");
+  assert.match(blog, /<Image src=\{cardFileFor\(image\.file\)\} alt="" fill/,
+    "blog archive cards should load the small copy");
+  assert.match(blog, /<Image src=\{image\.file\} alt=\{translation\.heroAlt\}/,
+    "article heroes must retain the full-resolution original");
 });

@@ -27,6 +27,8 @@ import { bestTimeToHikeAustraliaRegions } from "./best-time-to-hike-australia-re
 import { bestTimeToHikeSoutheastAsiaMountains } from "./best-time-to-hike-southeast-asia-mountains";
 import { winterHikingSpainIslandsMainland } from "./winter-hiking-spain-islands-mainland";
 import { salkantayVsAusangateTrekkingMonthsPeru } from "./salkantay-vs-ausangate-trekking-months-peru";
+import { norwayHikingJuneJulySeptember } from "./norway-hiking-june-july-september";
+import { patagoniaHikingDecemberJanuaryMarch } from "./patagonia-hiking-december-january-march";
 
 export const BLOG_POSTS: readonly BlogPost[] = [
   dryDoesNotMeanHikeable,
@@ -57,4 +59,6 @@ export const BLOG_POSTS: readonly BlogPost[] = [
   bestTimeToHikeSoutheastAsiaMountains,
   winterHikingSpainIslandsMainland,
   salkantayVsAusangateTrekkingMonthsPeru,
+  norwayHikingJuneJulySeptember,
+  patagoniaHikingDecemberJanuaryMarch,
 ];
