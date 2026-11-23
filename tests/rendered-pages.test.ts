@@ -2,8 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { DICT } from "../lib/i18n/dict";
-import { getDestinationIndex } from "../lib/data/load";
-import { locales, monthName, themeKeys } from "../lib/i18n/config";
+import { getDestinationIndex, getRanking } from "../lib/data/load";
+import { locales, monthName, themeKeys, themes } from "../lib/i18n/config";
 import { links } from "../lib/i18n/links";
 import { publicIndexTargetUrlCount } from "../lib/seo/editorial-index";
 import { blogPostsForLocale } from "../lib/blog/content";
@@ -69,6 +69,24 @@ test("category links open unselected month pickers in both languages", {skip: !b
         assert.ok(switcher.includes(`href="${theme ? links.themeRanking(locale, theme, another) : links.ranking(locale, another)}/"`));
       }
     }
+  }
+});
+
+test("every month ranking leads to its destinations' year-round pages and to the month's other lists", {skip: !built}, () => {
+  for (const locale of locales) for (let month = 1; month <= 12; month++) for (const theme of [undefined, ...themeKeys]) {
+    const path = theme ? links.themeRanking(locale, theme, month) : links.ranking(locale, month);
+    const html = page(`${path.slice(1)}/index.html`).replace(/<script[\s\S]*?<\/script>/g, "");
+    const main = /<main[\s\S]*?<\/main>/.exec(html)?.[0] ?? html;
+    for (const entry of getRanking(month, theme ? themes[theme] : "all").entries) {
+      assert.ok(main.includes(`<h2><a href="${links.destination(locale, entry.slug)}/">`), `${path} does not link ${entry.slug}`);
+      assert.ok(main.includes(`href="${links.destinationMonth(locale, entry.slug, month)}/"`), `${path} lost the month link of ${entry.slug}`);
+    }
+    const others = /<section class="content-section area-links">[\s\S]*?<\/section>/.exec(main)?.[0] ?? "";
+    for (const key of themeKeys) {
+      const expected = key !== theme && getRanking(month, themes[key]).entries.length > 0;
+      assert.equal(others.includes(`href="${links.themeRanking(locale, key, month)}/"`), expected, `${path} -> ${key}`);
+    }
+    assert.equal(others.includes(`href="${links.ranking(locale, month)}/"`), Boolean(theme), `${path} -> base ranking`);
   }
 });
 
