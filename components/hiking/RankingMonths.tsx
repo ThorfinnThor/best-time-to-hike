@@ -34,6 +34,10 @@ type ExplorerProps = { locale: Locale; theme?: ThemeKey; selectedMonth?: number;
  * filter is a small client island that only flips a data attribute. Card links
  * are plain anchors rather than next/link: a destination-month page is a full
  * document either way, and 336 client links were most of the hydration cost.
+ *
+ * The name links to the destination's year-round page, the picture and the
+ * bottom link to the month page. The year-round page is the one that may be
+ * indexed, so a ranking has to lead there and not only to noindex months.
  */
 export function RankingExplorer({ locale, theme, selectedMonth, entries = [] }: ExplorerProps) {
   const copy = t(locale);
@@ -56,9 +60,9 @@ export function RankingExplorer({ locale, theme, selectedMonth, entries = [] }: 
             <span className="ranking-result-score"><ScoreRing score={entry.score} size="small" locale={locale}/></span>
           </a>
           <div className="ranking-result-body">
-            <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2>{destinationName(entry, locale)}</h2></div></div>
+            <div className="ranking-result-heading"><div><span>{entry.countryCode}</span><h2><a href={`${links.destination(locale, entry.slug)}/`}>{destinationName(entry, locale)}</a></h2></div></div>
             <p>{degreesC(entry.tempC, locale)} · {Math.round(entry.wet * 100)}% {copy.common.wetDays}</p>
-            <a className="ranking-result-link" href={href}>{copy.destination.exploreDestination}</a>
+            <a className="ranking-result-link" href={href}>{copy.ranking.monthDetail(monthName(selectedMonth, locale))}</a>
           </div>
         </article>;
       })}

@@ -9,7 +9,7 @@ import { ExploreLinks } from "./ExploreLinks";
 import { googleEarthUrl } from "@/lib/hiking/earth";
 import { countryName, destinationName } from "@/lib/i18n/names";
 import { blogPostsLinkingTo } from "@/lib/blog/content";
-import { getDestination } from "@/lib/data/load";
+import { getDestination, getRanking } from "@/lib/data/load";
 import { COMPONENT_KEYS, CRITICAL_COMPONENT_FLOOR, CRITICAL_COMPONENT_KEYS, type ComponentKey } from "@/lib/scoring/recommendations";
 import { DestinationPlanning, MonthPlanning } from "./DestinationPlanning";
 import { DestinationImage } from "@/components/media/DestinationImage";
@@ -129,8 +129,15 @@ export const areaLabel = (area: Area, locale: Locale) => taxonomyLabel(locale, a
 export function RankingPage({ranking,locale,title}:{ranking:Ranking;locale:Locale;title?:string}) {
   const copy = t(locale);
   const theme = themeKeys.find((key) => themes[key] === ranking.theme || key === ranking.theme);
+  const month = monthName(ranking.month, locale);
+  // The same month's other lists, so theme pages are reachable from the ranking people land on.
+  const otherRankings = [
+    ...(theme ? [{href: links.ranking(locale, ranking.month), label: copy.ranking.headingIn(month)}] : []),
+    ...themeKeys.filter((key) => key !== theme && getRanking(ranking.month, themes[key]).entries.length > 0)
+      .map((key) => ({href: links.themeRanking(locale, key, ranking.month), label: copy.ranking.themeTitle(copy.ranking.themes[key], month)})),
+  ];
   const entries = ranking.entries.map((entry) => ({ ...entry, continent: getDestination(entry.slug)?.continent ?? "" }));
-  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="content-section"><RankingExplorer locale={locale} theme={theme} selectedMonth={ranking.month} entries={entries}/></section><ExploreLinks eyebrow={copy.explore.eyebrow} heading={copy.explore.rankingHeading(monthName(ranking.month,locale))} groups={[{title: copy.explore.areasGroup, links: areasOpenIn(ranking.month).map(({area, count})=>({href: links.areaRanking(locale, area.id), label: copy.explore.areaCount(areaLabel(area, locale), count)}))}]}/><MethodNote locale={locale}/></>;
+  return <><section className="page-intro"><span className="eyebrow">{monthName(ranking.month,locale)} · {rankingThemeLabel(ranking.theme, locale)}</span><h1>{title ?? copy.ranking.headingIn(monthName(ranking.month,locale))}</h1><p>{copy.ranking.intro}</p></section><section className="content-section"><RankingExplorer locale={locale} theme={theme} selectedMonth={ranking.month} entries={entries}/></section><ExploreLinks eyebrow={copy.explore.eyebrow} heading={copy.explore.rankingHeading(month)} groups={[{title: copy.explore.otherRankingsGroup, links: otherRankings}, {title: copy.explore.openAreasGroup, links: areasOpenIn(ranking.month).map(({area, count})=>({href: links.areaRanking(locale, area.id), label: copy.explore.areaCount(areaLabel(area, locale), count)}))}]}/><MethodNote locale={locale}/></>;
 }
 
 export function ComparisonPage({comparison,locale}:{comparison:Comparison;locale:Locale}) {
